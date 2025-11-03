@@ -3,6 +3,6 @@ To build:
 
 Queries:
 
-    ./build-bst ../data/LA.txt <size> index.bst <bucket_size> range <radius>
+    ./build-bst ../data/LA.txt <size> index.bst <bucket_size> <maxHeight> range <radius>
 
-    ./build-bst ../data/LA.txt <size> index.bst <bucket_size> knn <number>
+    ./build-bst ../data/LA.txt <size> index.bst <bucket_size> <maxHeight> knn <number>
