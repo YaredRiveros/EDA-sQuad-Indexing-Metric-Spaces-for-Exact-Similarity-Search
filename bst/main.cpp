@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
 
     // DB construction
     unique_ptr<ObjectDB> db;
-    if (dbName.find("string") == string::npos)
+    if (dbName.find("words") == string::npos)
         db = make_unique<VectorDB>(dbName, 2);  // vectors
     else
         db = make_unique<StringDB>(dbName);     // strings
