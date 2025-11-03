@@ -26,10 +26,11 @@ class BST {
     ObjectDB *db;
     Node *root;
     int bucketSize;
+    int maxHeight;
 
 public:
-    BST(ObjectDB *db, int bucketSize = 10);
-    Node* build(const vector<int> &ids);
+    BST(ObjectDB *db, int bucketSize = 10, int maxHeight = 10);
+    Node* build(const vector<int> &ids, int h);
     void rangeSearch(int queryId, double radius, vector<int> &result) const;
     void knnSearch(int queryId, int k, vector<ResultElem> &out) const;
 
@@ -37,19 +38,22 @@ private:
     void rangeSearch(Node *node, int q, double radius, vector<int> &res) const;
     void knnSearch(Node *node, int q, int k, priority_queue<ResultElem> &pq, double &tau) const;
 
+    int height(Node *node) const;
 };
 
-BST::BST(ObjectDB *db, int bucketSize) : db(db), root(nullptr), bucketSize(bucketSize)
+BST::BST(ObjectDB *db, int bucketSize, int maxHeight) 
+    : db(db), root(nullptr), bucketSize(bucketSize), maxHeight(maxHeight)
 {
     vector<int> ids(db->size());
     iota(ids.begin(), ids.end(), 0);
-    root = build(ids);
+    root = build(ids, 0);
+    cerr << "[BST] Height: " << height(root) << "\n";
 }
 
-Node* BST::build(const vector<int> &ids) 
+Node* BST::build(const vector<int> &ids, int h) 
 {
     Node *node = new Node();
-    if ((int)ids.size() <= bucketSize) 
+    if ((int)ids.size() <= bucketSize || h+1>=maxHeight) 
     {
         node->leaf = true;
         node->bucket = ids;
@@ -83,8 +87,8 @@ Node* BST::build(const vector<int> &ids)
 
     node->lRadius = maxL;
     node->rRadius = maxR;
-    node->lChild = build(left);
-    node->rChild = build(right);
+    node->lChild = build(left, h+1);
+    node->rChild = build(right, h+1);
 
     return node;
 }
@@ -145,6 +149,13 @@ void BST::knnSearch(Node *node, int q, int k, priority_queue<ResultElem> &pq, do
     // Lemma 4.2
     if (dl - node->lRadius < tau) knnSearch(node->lChild, q, k, pq, tau);
     if (dr - node->rRadius < tau) knnSearch(node->rChild, q, k, pq, tau);
+}
+
+int BST::height(Node *node) const 
+{
+    if (!node) return 0;
+    if (node->leaf) return 1;
+    return 1 + max(height(node->lChild), height(node->rChild));
 }
 
 #endif
