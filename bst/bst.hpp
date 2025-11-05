@@ -29,7 +29,7 @@ class BST {
     int maxHeight;
 
 public:
-    BST(ObjectDB *db, int bucketSize = 10, int maxHeight = 10);
+    BST(ObjectDB *db, int nObjects, int bucketSize = 10, int maxHeight = 10);
     Node* build(const vector<int> &ids, int h);
     void rangeSearch(int queryId, double radius, vector<int> &result) const;
     void knnSearch(int queryId, int k, vector<ResultElem> &out) const;
@@ -41,11 +41,13 @@ private:
     int height(Node *node) const;
 };
 
-BST::BST(ObjectDB *db, int bucketSize, int maxHeight) 
+BST::BST(ObjectDB *db, int nObjects, int bucketSize, int maxHeight) 
     : db(db), root(nullptr), bucketSize(bucketSize), maxHeight(maxHeight)
 {
-    vector<int> ids(db->size());
+    nObjects = min(nObjects, db->size());
+    vector<int> ids(nObjects);
     iota(ids.begin(), ids.end(), 0);
+
     root = build(ids, 0);
     cerr << "[BST] Height: " << height(root) << "\n";
 }
