@@ -15,11 +15,15 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    string dbName = argv[1];
-    int nObjects = stoi(argv[2]);
-    string indexFile = argv[3];
-    int bucketSize = stoi(argv[4]);
-    string mode = argv[5];
+    int idx = 1;
+    string dbName = argv[idx]; idx++;
+    int nObjects = stoi(argv[idx]); idx++;
+    string indexFile = argv[idx]; idx++;
+    int bucketSize = stoi(argv[idx]); idx++;
+    int maxHeight = stoi(argv[idx]); idx++;
+    string mode = argv[idx]; idx++;
+
+    cerr << "Indexing " << nObjects << " objects from " << dbName << "...\n";
 
     // DB construction
     unique_ptr<ObjectDB> db;
@@ -33,7 +37,7 @@ int main(int argc, char **argv) {
 
     
     cerr << "[BST] Building index (bucketSize=" << bucketSize << ")...\n";
-    BST index(db.get(), bucketSize);
+    BST index(db.get(), nObjects, bucketSize, maxHeight);
     cerr << "[BST] Index built.\n";
 
     /*
@@ -56,11 +60,11 @@ int main(int argc, char **argv) {
     // search mode : 'range' |  'knn'
     cout << fixed << setprecision(2);
     if (mode == "range") {
-        if (argc < 7) {
+        if (argc < idx+1) {
             cerr << "Error: need <radius>\n";
             return 1;
         }
-        double radius = stod(argv[6]);
+        double radius = stod(argv[idx]);
         int qid = 0; // objeto de consulta (puedes cambiarlo)
         vector<int> results;
         index.rangeSearch(qid, radius, results);
@@ -72,11 +76,11 @@ int main(int argc, char **argv) {
         cout << "Found " << results.size() << " objects.\n";
     }
     else if (mode == "knn") {
-        if (argc < 7) {
+        if (argc < idx+1) {
             cerr << "Error: need <k>\n";
             return 1;
         }
-        int k = stoi(argv[6]);
+        int k = stoi(argv[idx]);
         int qid = 0;
         vector<ResultElem> knn;
         index.knnSearch(qid, k, knn);
