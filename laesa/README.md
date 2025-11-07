@@ -3,6 +3,6 @@ To build:
 
 Queries:
 
-    ./build-laesa ../data/LA.txt <size> index.laesa <bucket_size> range <radius>
+    ./build-laesa ../data/LA.txt <size> index.laesa <num_pivots> range <radius>
 
-    ./build-laesa ../data/LA.txt <size> index.laesa <bucket_size> knn <number>
+    ./build-laesa ../data/LA.txt <size> index.laesa <num_pivots> knn <number>
