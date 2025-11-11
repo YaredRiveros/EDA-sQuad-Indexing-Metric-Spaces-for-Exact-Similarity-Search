@@ -9,6 +9,9 @@
 #include <limits>
 using namespace std;
 
+int compdists = 0;
+int compdistsBuild = 0;
+
 struct ResultElem {
     int id;
     double dist;
@@ -140,6 +143,7 @@ VPNode* MVPT::build(vector<int> ids)
     vector<ObjDist> objDists;
     for (int id : ids) {
         double d = db->distance(id, node->pivot);
+        compdistsBuild++;
         objDists.push_back({id, d});
     }
     
@@ -187,6 +191,9 @@ VPNode* MVPT::build(vector<int> ids)
         
         startIdx = endIdx;
     }
+
+    
+    compdists = compdistsBuild;  // Start counting from precomputed distances
     
     return node;
 }
@@ -198,12 +205,14 @@ void MVPT::rangeSearch(int queryId, double radius, vector<int> &result) const
 
 void MVPT::rangeSearch(VPNode *node, int queryId, double radius, vector<int> &result) const
 {
-    if (!node) return;
+    if (!node) 
+        return;
     
     if (node->isLeaf) {
         // Leaf node: sequential search in the bucket
         for (int id : node->bucket) {
             double d = db->distance(queryId, id);
+            compdists++;
             if (d <= radius) {
                 result.push_back(id);
             }
@@ -213,6 +222,7 @@ void MVPT::rangeSearch(VPNode *node, int queryId, double radius, vector<int> &re
     
     // Internal node: compute distance to pivot
     double distToPivot = db->distance(queryId, node->pivot);
+    compdists++;
     
     // Check if pivot is in range
     if (distToPivot <= radius) {
@@ -259,6 +269,7 @@ void MVPT::knnSearch(VPNode *node, int queryId, int k, priority_queue<ResultElem
         // Leaf node: process all objects in the bucket
         for (int id : node->bucket) {
             double d = db->distance(queryId, id);
+            compdists++;
             
             if ((int)pq.size() < k) {
                 pq.push({id, d});
@@ -274,6 +285,7 @@ void MVPT::knnSearch(VPNode *node, int queryId, int k, priority_queue<ResultElem
 
     // Internal node: compute distance to pivot
     double distToPivot = db->distance(queryId, node->pivot);
+    compdists++;
 
     // Add pivot to candidates
     if ((int)pq.size() < k) {
@@ -315,6 +327,10 @@ void MVPT::knnSearch(VPNode *node, int queryId, int k, priority_queue<ResultElem
             knnSearch(node->children[i], queryId, k, pq, tau);
         }
     }
+}
+
+int getCompDists() {
+    return compdists;
 }
 
 #endif

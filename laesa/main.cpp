@@ -41,22 +41,6 @@ int main(int argc, char **argv) {
     LAESA index(db.get(), nPivots);
     cerr << "[LAESA] Index built.\n";
 
-    /*
-    // Save index metadata (opcional)
-    ofstream out(indexFile, ios::binary);
-    if (!out.is_open()) {
-        cerr << "Error: cannot open " << indexFile << " for writing.\n";
-        return 1;
-    }
-    out.write((char*)&nPivots, sizeof(int));
-    out.write((char*)&nObjects, sizeof(int));
-    out.close();
-
-    struct stat sdata;
-    stat(indexFile.c_str(), &sdata);
-    cerr << "[LAESA] Index metadata saved (" << sdata.st_size << " bytes)\n";
-    */
-
     // search mode : 'range' |  'knn'
     cout << fixed << setprecision(2);
     if (mode == "range") {
@@ -73,16 +57,17 @@ int main(int argc, char **argv) {
         auto end = chrono::high_resolution_clock::now();
         auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
         
-        cout << "=== Range Search (r=" << radius << ") ===\n";
-        cout << "Query object: ";
+        cout << "\n=== LAESA Range Search ===\n";
+        cout << "Parameters: radius = " << radius << "\n";
+        cout << "Query ID: " << qid << " -> ";
         db->print(qid);
-        cout << "\nResults:\n";
+        cout << "\n\nResults (" << results.size() << " objects found):\n";
         for (int id : results) {
-            cout << "ID " << id << " -> ";
+            cout << "  ID " << id << " -> ";
             db->print(id);
         }
-        cout << "\nFound " << results.size() << " objects.\n";
-        cout << "Time: " << elapsed.count() / 1000.0 << " ms\n";
+        cout << "Distance computations: " << getCompDists() << "\n";
+        cout << "\nExecution time: " << elapsed.count() / 1000.0 << " ms\n";
     }
     else if (mode == "knn") {
         if (argc < 7) {
@@ -98,16 +83,17 @@ int main(int argc, char **argv) {
         auto end = chrono::high_resolution_clock::now();
         auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
         
-        cout << "=== kNN Search (k=" << k << ") ===\n";
-        cout << "Query object: ";
+        cout << "\n=== LAESA k-NN Search ===\n";
+        cout << "Parameters: k = " << k << "\n";
+        cout << "Query ID: " << qid << " -> ";
         db->print(qid);
-        cout << "\nNearest neighbors:\n";
+        cout << "\n\nResults (" << knn.size() << " neighbors found):\n";
         for (auto &e : knn) {
-            cout << "id=" << e.id << " dist=" << e.dist << " -> ";
+            cout << "  ID " << e.id << " (distance: " << e.dist << ") -> ";
             db->print(e.id);
         }
-        cout << "\nReturned " << knn.size() << " neighbors.\n";
-        cout << "Time: " << elapsed.count() / 1000.0 << " ms\n";
+        cout << "\nDistance computations: " << getCompDists() << "\n";
+        cout << "\nExecution time: " << elapsed.count() / 1000.0 << " ms\n";
     }
     else if (mode == "build") {
         cerr << "[LAESA] Build-only mode complete.\n";
