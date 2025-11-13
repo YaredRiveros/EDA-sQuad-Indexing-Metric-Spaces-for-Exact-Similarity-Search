@@ -143,7 +143,7 @@ Each entry follows the unified experiment format:
   "run_id": 1
 }
 
-These JSON files can be merged later by your Python aggregation script.
+These JSON files can be merged later by a Python aggregation script.
 ```
 
 ---
