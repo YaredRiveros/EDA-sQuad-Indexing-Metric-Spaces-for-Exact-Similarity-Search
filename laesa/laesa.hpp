@@ -9,6 +9,9 @@
 #include <limits>
 using namespace std;
 
+int compdists = 0;
+int compdistsBuild = 0;
+
 struct ResultElem {
     int id;
     double dist;
@@ -81,6 +84,7 @@ LAESA::LAESA(ObjectDB *db, int nPivots)
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < nPivots; j++) {
             distMatrix[i][j] = db->distance(i, pivots[j]);
+            compdistsBuild++;
         }
     }
 
@@ -102,11 +106,13 @@ double LAESA::lowerBound(const vector<double> &queryDists, int objectIdx) const
 void LAESA::rangeSearch(int queryId, double radius, vector<int> &result) const 
 {
     int n = db->size();
+    compdists = compdistsBuild;  // Start counting from precomputed distances
 
     // 1. Calculate distances from the query to the pivots
     vector<double> queryDists(nPivots);
     for (int j = 0; j < nPivots; j++) {
         queryDists[j] = db->distance(queryId, pivots[j]);
+        compdists++;
         // Check if the pivot is within range
         if (queryDists[j] <= radius) {
             result.push_back(pivots[j]);
@@ -130,6 +136,7 @@ void LAESA::rangeSearch(int queryId, double radius, vector<int> &result) const
         if (lb <= radius) {
             // The object may be in range, calculate actual distance
             double d = db->distance(queryId, i);
+            compdists++;
             if (d <= radius) {
                 result.push_back(i);
             }
@@ -142,11 +149,14 @@ void LAESA::knnSearch(int queryId, int k, vector<ResultElem> &out) const
 {
     int n = db->size();
     priority_queue<ResultElem> pq;  // Max-heap to maintain top k results
+    
+    compdists = compdistsBuild;  // Start counting from precomputed distances
 
     // 1. Calculate distances from the query to the pivots and add them
     vector<double> queryDists(nPivots);
     for (int j = 0; j < nPivots; j++) {
         queryDists[j] = db->distance(queryId, pivots[j]);
+        compdists++;
         if ((int)pq.size() < k) {
             pq.push({pivots[j], queryDists[j]});
         } else if (queryDists[j] < pq.top().dist) {
@@ -191,6 +201,7 @@ void LAESA::knnSearch(int queryId, int k, vector<ResultElem> &out) const
         if (lb <= tau || (int)pq.size() < k) {
             // Calculate actual distance
             double d = db->distance(queryId, i);
+            compdists++;
             if ((int)pq.size() < k) {
                 pq.push({i, d});
                 if ((int)pq.size() == k) tau = pq.top().dist;
@@ -209,6 +220,10 @@ void LAESA::knnSearch(int queryId, int k, vector<ResultElem> &out) const
         pq.pop();
     }
     reverse(out.begin(), out.end());
+}
+
+int getCompDists() {
+    return compdists;
 }
 
 #endif
