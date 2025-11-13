@@ -5,7 +5,9 @@
 #include <vector>
 #include <queue>
 #include <cmath>
+#include <chrono>
 using namespace std;
+using namespace std::chrono;
 
 struct Node {
     int pl = -1, pr = -1;
@@ -27,16 +29,22 @@ class BST {
     Node *root;
     int bucketSize;
     int maxHeight;
-
+    int compDist;
+    double queryTime;
+    
 public:
     BST(ObjectDB *db, int nObjects, int bucketSize = 10, int maxHeight = 10);
     Node* build(const vector<int> &ids, int h);
-    void rangeSearch(int queryId, double radius, vector<int> &result) const;
-    void knnSearch(int queryId, int k, vector<ResultElem> &out) const;
+    void rangeSearch(int queryId, double radius, vector<int> &result);
+    void knnSearch(int queryId, int k, vector<ResultElem> &out);
+
+    double get_queryTime() const;
+    double get_compDist() const;
+    int get_height() const;
 
 private:
-    void rangeSearch(Node *node, int q, double radius, vector<int> &res) const;
-    void knnSearch(Node *node, int q, int k, priority_queue<ResultElem> &pq, double &tau) const;
+    void rangeSearch(Node *node, int q, double radius, vector<int> &res);
+    void knnSearch(Node *node, int q, int k, priority_queue<ResultElem> &pq, double &tau);
 
     int height(Node *node) const;
 };
@@ -49,8 +57,25 @@ BST::BST(ObjectDB *db, int nObjects, int bucketSize, int maxHeight)
     iota(ids.begin(), ids.end(), 0);
 
     root = build(ids, 0);
+    compDist = 0;
     cerr << "[BST] Height: " << height(root) << "\n";
 }
+
+double BST::get_queryTime() const
+{
+    return queryTime;
+}
+
+double BST::get_compDist() const
+{
+    return compDist;
+}
+
+int BST::get_height() const
+{
+    return height(root);
+}
+    
 
 Node* BST::build(const vector<int> &ids, int h) 
 {
@@ -68,7 +93,7 @@ Node* BST::build(const vector<int> &ids, int h)
     double maxDist = -1;
     for (int id : ids) 
     {
-        double d = db->distance(i, id);
+        double d = db->distance(i, id); 
         if (d > maxDist) { maxDist = d; j = id; }
     }
 
@@ -95,22 +120,31 @@ Node* BST::build(const vector<int> &ids, int h)
     return node;
 }
 
-void BST::rangeSearch(int queryId, double radius, vector<int> &result) const
+void BST::rangeSearch(int queryId, double radius, vector<int> &result) 
 {
+    compDist = 0;
+    auto t1 = chrono::high_resolution_clock::now();
     rangeSearch(root, queryId, radius, result);
+    auto t2 = chrono::high_resolution_clock::now();
+    queryTime = chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
+
 }
 
-void BST::rangeSearch(Node *node, int q, double radius, vector<int> &res) const 
+void BST::rangeSearch(Node *node, int q, double radius, vector<int> &res) 
 {
     if (!node) return;
     if (node->leaf) {
+    
         for (int id : node->bucket)
-
+        {   
+            compDist++;
             if (db->distance(q, id) <= radius)
-                res.push_back(id);
+            res.push_back(id);
+        }
         return;
     }
 
+    compDist+=2;
     double dl = db->distance(q, node->pl);
     double dr = db->distance(q, node->pr);
     if (dl <= radius) res.push_back(node->pl);
@@ -121,27 +155,36 @@ void BST::rangeSearch(Node *node, int q, double radius, vector<int> &res) const
     if (dr - node->rRadius <= radius) rangeSearch(node->rChild, q, radius, res);
 }
 
-void BST::knnSearch(int queryId, int k, vector<ResultElem> &out) const 
+void BST::knnSearch(int queryId, int k, vector<ResultElem> &out)  
 {
+    compDist = 0;
+    
+    auto t1 = chrono::high_resolution_clock::now();
     priority_queue<ResultElem> pq;
     double tau = 1e18;
+
     knnSearch(root, queryId, k, pq, tau);
     while (!pq.empty()) { out.push_back(pq.top()); pq.pop(); }
     reverse(out.begin(), out.end());
+    
+    auto t2 = chrono::high_resolution_clock::now();
+     queryTime = chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
 }
 
-void BST::knnSearch(Node *node, int q, int k, priority_queue<ResultElem> &pq, double &tau) const 
+void BST::knnSearch(Node *node, int q, int k, priority_queue<ResultElem> &pq, double &tau) 
 {
     if (!node) return;
     if (node->leaf) {
         for (int id : node->bucket) {
             double d = db->distance(q, id);
+            compDist++;
             if ((int)pq.size() < k) pq.push({id, d});
             else if (d < pq.top().dist) { pq.pop(); pq.push({id, d}); tau = pq.top().dist; }
         }
         return;
     }
 
+    compDist+=2;
     double dl = db->distance(q, node->pl);
     double dr = db->distance(q, node->pr);
     if (dl <= tau) pq.push({node->pl, dl});
