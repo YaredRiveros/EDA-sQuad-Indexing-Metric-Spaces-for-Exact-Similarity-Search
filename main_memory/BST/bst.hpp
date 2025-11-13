@@ -29,8 +29,8 @@ class BST {
     Node *root;
     int bucketSize;
     int maxHeight;
-    int compDist;
-    double queryTime;
+    mutable long long compDist;
+    mutable long long queryTime;
     
 public:
     BST(ObjectDB *db, int nObjects, int bucketSize = 10, int maxHeight = 10);
@@ -38,8 +38,8 @@ public:
     void rangeSearch(int queryId, double radius, vector<int> &result);
     void knnSearch(int queryId, int k, vector<ResultElem> &out);
 
-    double get_queryTime() const;
-    double get_compDist() const;
+    long long get_queryTime() const;
+    long long get_compDist() const;
     int get_height() const;
 
     void clear_counters();
@@ -63,12 +63,12 @@ BST::BST(ObjectDB *db, int nObjects, int bucketSize, int maxHeight)
     cerr << "[BST] Height: " << height(root) << "\n";
 }
 
-double BST::get_queryTime() const
+long long BST::get_queryTime() const
 {
     return queryTime;
 }
 
-double BST::get_compDist() const
+long long BST::get_compDist() const
 {
     return compDist;
 }
