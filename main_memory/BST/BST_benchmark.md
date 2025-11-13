@@ -117,10 +117,10 @@ Then averaged over all queries (typically 100).
 
 For each dataset, a JSON file is created:
 
-- results_BST_LA.json
-- results_BST_Words.json
-- results_BST_Color.json
-- results_BST_Synthetic.json
+- results/results_BST_LA.json
+- results/results_BST_Words.json
+- results/results_BST_Color.json
+- results/results_BST_Synthetic.json
 
 
 Each entry follows the unified experiment format:
