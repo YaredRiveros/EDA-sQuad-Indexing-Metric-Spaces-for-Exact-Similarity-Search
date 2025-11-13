@@ -1,0 +1,9 @@
+=== DSACLT centers=3 ===
+build_time_s=506.2331 build_compdists=66692957.0000
+knn,k=1,avg_time_ms=0.1433,avg_compdists=325.6200
+knn,k=5,avg_time_ms=0.1790,avg_compdists=358.0000
+knn,k=10,avg_time_ms=0.1671,avg_compdists=377.7400
+knn,k=20,avg_time_ms=0.1925,avg_compdists=423.9100
+knn,k=50,avg_time_ms=0.2763,avg_compdists=555.0400
+knn,k=100,avg_time_ms=0.3688,avg_compdists=687.0600
+
