@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 #include "bst.hpp"
 #include "../../datasets/paths.hpp"
-
+#include <filesystem>
 using namespace std;
 
 // ============================================================
@@ -11,8 +11,6 @@ using namespace std;
 static const vector<double> SELECTIVITIES = {0.02, 0.04, 0.08, 0.16, 0.32};
 static const vector<int>    K_VALUES      = {5, 10, 20, 50, 100};
 static const vector<string> DATASETS      = {"LA", "Words", "Color", "Synthetic"};
-
-// BST heights = {3, 5, 10, 15, 20}
 static const vector<int> HEIGHT_VALUES = {3, 5, 10, 15, 20};
 
 
@@ -21,6 +19,9 @@ static const vector<int> HEIGHT_VALUES = {3, 5, 10, 15, 20};
 // ============================================================
 int main()
 {
+    // CREAR SUBCARPETA 'RESULTS'
+    std::filesystem::create_directories("results");
+
     for (const string& dataset : DATASETS)
     {
         // ------------------------------------------------------------
@@ -90,7 +91,7 @@ int main()
         // ------------------------------------------------------------
         // 4. Archivo JSON (modo append)
         // ------------------------------------------------------------
-        string jsonOut = "results_BST_" + dataset + ".json";
+        string jsonOut = "results/results_BST_" + dataset + ".json";
         ofstream J(jsonOut);
         if (!J.is_open()) {
             cerr << "[ERROR] No se pudo abrir JSON para escribir.\n";
@@ -118,6 +119,7 @@ int main()
             cerr << "[INFO] Altura real del BST = " << realHeight << "\n";
 
 
+            
             // ========================================================
             //  MRQ (range queries)
             // ========================================================
@@ -129,83 +131,92 @@ int main()
                 }
 
                 double R = radii[sel];
-                long long totalD = 0, totalT = 0;
+                long long totalD = 0;
+
+                auto t1 = chrono::high_resolution_clock::now();
 
                 for (int q : queries)
                 {
                     vector<int> out;
                     bst.clear_counters();
                     bst.rangeSearch(q, R, out);
-
                     totalD += bst.get_compDist();
-                    totalT += bst.get_queryTime();
                 }
 
-                long long avgD = double(totalD) / queries.size();
-                long long avgT = double(totalT) / queries.size();
+                auto t2 = chrono::high_resolution_clock::now();
+                double totalTimeUS = chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
+
+                double avgD = double(totalD) / queries.size();
+                double avgT = totalTimeUS / queries.size();
 
                 if (!firstOutput) J << ",\n";
                 firstOutput = false;
 
                 J << fixed << setprecision(6);
                 J << "{"
-                  << "\"index\":\"BST\","
-                  << "\"dataset\":\"" << dataset << "\","
-                  << "\"category\":\"CP\","
-                  << "\"num_pivots\":0,"
-                  << "\"num_centers_path\":" << realHeight << ","
-                  << "\"arity\":null,"
-                  << "\"query_type\":\"MRQ\","
-                  << "\"selectivity\":" << sel << ","
-                  << "\"radius\":" << R << ","
-                  << "\"k\":null,"
-                  << "\"compdists\":" << avgD << ","
-                  << "\"time_ms\":" << (avgT / 1000.0) << ","
-                  << "\"n_queries\":" << queries.size() << ","
-                  << "\"run_id\":1"
-                  << "}";
+                << "\"index\":\"BST\","
+                << "\"dataset\":\"" << dataset << "\","
+                << "\"category\":\"CP\","
+                << "\"num_pivots\":0,"
+                << "\"num_centers_path\":" << realHeight << ","
+                << "\"arity\":null,"
+                << "\"query_type\":\"MRQ\","
+                << "\"selectivity\":" << sel << ","
+                << "\"radius\":" << R << ","
+                << "\"k\":null,"
+                << "\"compdists\":" << avgD << ","
+                << "\"time_ms\":" << (avgT / 1000.0) << ","
+                << "\"n_queries\":" << queries.size() << ","
+                << "\"run_id\":1"
+                << "}";
             }
-
 
             // ========================================================
             //  MkNN
             // ========================================================
             for (int k : K_VALUES)
             {
-                long long totalD = 0, totalT = 0;
+                long long totalD = 0;
+
+                auto t1 = chrono::high_resolution_clock::now();
 
                 for (int q : queries)
                 {
                     vector<ResultElem> out;
                     bst.clear_counters();
                     bst.knnSearch(q, k, out);
-
                     totalD += bst.get_compDist();
-                    totalT += bst.get_queryTime();
                 }
 
-                long long avgD = double(totalD) / queries.size();
-                long long avgT = double(totalT) / queries.size();
+                auto t2 = chrono::high_resolution_clock::now();
+                double totalTimeUS = chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
 
-                J << ",\n";
+                double avgD = double(totalD) / queries.size();
+                double avgT = totalTimeUS / queries.size();
+
+                if (!firstOutput) J << ",\n";
+                firstOutput = false;
+
                 J << fixed << setprecision(6);
                 J << "{"
-                  << "\"index\":\"BST\","
-                  << "\"dataset\":\"" << dataset << "\","
-                  << "\"category\":\"CP\","
-                  << "\"num_pivots\":0,"
-                  << "\"num_centers_path\":" << realHeight << ","
-                  << "\"arity\":null,"
-                  << "\"query_type\":\"MkNN\","
-                  << "\"selectivity\":null,"
-                  << "\"radius\":null,"
-                  << "\"k\":" << k << ","
-                  << "\"compdists\":" << avgD << ","
-                  << "\"time_ms\":" << (avgT / 1000.0) << ","
-                  << "\"n_queries\":" << queries.size() << ","
-                  << "\"run_id\":1"
-                  << "}";
+                << "\"index\":\"BST\","
+                << "\"dataset\":\"" << dataset << "\","
+                << "\"category\":\"CP\","
+                << "\"num_pivots\":0,"
+                << "\"num_centers_path\":" << realHeight << ","
+                << "\"arity\":null,"
+                << "\"query_type\":\"MkNN\","
+                << "\"selectivity\":null,"
+                << "\"radius\":null,"
+                << "\"k\":" << k << ","
+                << "\"compdists\":" << avgD << ","
+                << "\"time_ms\":" << (avgT / 1000.0) << ","
+                << "\"n_queries\":" << queries.size() << ","
+                << "\"run_id\":1"
+                << "}";
             }
+
+
         }
 
         J << "\n]\n";
