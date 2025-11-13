@@ -141,8 +141,8 @@ int main()
                     totalT += bst.get_queryTime();
                 }
 
-                double avgD = double(totalD) / queries.size();
-                double avgT = double(totalT) / queries.size();
+                long long avgD = double(totalD) / queries.size();
+                long long avgT = double(totalT) / queries.size();
 
                 if (!firstOutput) J << ",\n";
                 firstOutput = false;
@@ -184,8 +184,8 @@ int main()
                     totalT += bst.get_queryTime();
                 }
 
-                double avgD = double(totalD) / queries.size();
-                double avgT = double(totalT) / queries.size();
+                long long avgD = double(totalD) / queries.size();
+                long long avgT = double(totalT) / queries.size();
 
                 J << ",\n";
                 J << fixed << setprecision(6);
