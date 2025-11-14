@@ -114,7 +114,8 @@ double LAESA::lowerBound(const vector<double> &queryDists, int objectIdx) const
 void LAESA::rangeSearch(int queryId, double radius, vector<int> &result) const 
 {
     int n = db->size();
-    compdists = compdistsBuild;  // Start counting from precomputed distances
+    //compdists = compdistsBuild;  // Start counting from precomputed distances
+    compdists = 0;
 
     // 1. Calculate distances from the query to the pivots
     vector<double> queryDists(nPivots);
@@ -158,7 +159,8 @@ void LAESA::knnSearch(int queryId, int k, vector<ResultElem> &out) const
     int n = db->size();
     priority_queue<ResultElem> pq;  // Max-heap to maintain top k results
     
-    compdists = compdistsBuild;  // Start counting from precomputed distances
+    //compdists = compdistsBuild;  // Start counting from precomputed distances
+    compdists = 0;
 
     // 1. Calculate distances from the query to the pivots and add them
     vector<double> queryDists(nPivots);
