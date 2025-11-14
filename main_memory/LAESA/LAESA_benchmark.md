@@ -186,7 +186,7 @@ These JSON files can be merged with other index results (BST, BKT, GNAT, PM-Tree
 1. **Compile**
 
 ```bash
-g++ -O3 -std=gnu++17 test_laesa.cpp -o laesa_test
+g++ -O3 -std=gnu++17 test.cpp -o laesa_test
 ```
 
 2. **Run**
