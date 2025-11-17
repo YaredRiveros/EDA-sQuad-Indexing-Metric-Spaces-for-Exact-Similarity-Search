@@ -1,0 +1,51 @@
+
+==========================================
+[INFO] Dataset: LA   File=../../datasets/LA.txt
+==========================================
+read from file.
+finish reading.
+[INFO] Objetos: 1073727  Dimensión: 2
+[SKIP] Omitiendo LA temporalmente
+
+==========================================
+[INFO] Dataset: Words   File=../../datasets/Words.txt
+==========================================
+read from file.
+finish reading.
+[INFO] Objetos: 21963  Dimensión: 0
+[ERROR] Query index fuera de rango: 112102 (max: 21962)
+[ERROR] Query index fuera de rango: 240642 (max: 21962)
+[ERROR] Query index fuera de rango: 160198 (max: 21962)
+[ERROR] Query index fuera de rango: 287307 (max: 21962)
+[ERROR] Query index fuera de rango: 52563 (max: 21962)
+[ERROR] Query index fuera de rango: 335832 (max: 21962)
+[ERROR] Query index fuera de rango: 348020 (max: 21962)
+[ERROR] Query index fuera de rango: 391649 (max: 21962)
+[ERROR] Query index fuera de rango: 73005 (max: 21962)
+[ERROR] Query index fuera de rango: 44907 (max: 21962)
+[ERROR] Query index fuera de rango: 277967 (max: 21962)
+[ERROR] Query index fuera de rango: 316494 (max: 21962)
+[ERROR] Query index fuera de rango: 230704 (max: 21962)
+[ERROR] Query index fuera de rango: 153212 (max: 21962)
+[ERROR] Query index fuera de rango: 458400 (max: 21962)
+[ERROR] Query index fuera de rango: 537063 (max: 21962)
+[ERROR] Query index fuera de rango: 378058 (max: 21962)
+[ERROR] Query index fuera de rango: 269238 (max: 21962)
+[ERROR] Query index fuera de rango: 397404 (max: 21962)
+[ERROR] Query index fuera de rango: 245142 (max: 21962)
+[ERROR] Query index fuera de rango: 67354 (max: 21962)
+[ERROR] Query index fuera de rango: 454658 (max: 21962)
+[ERROR] Query index fuera de rango: 194360 (max: 21962)
+[ERROR] Query index fuera de rango: 521124 (max: 21962)
+[ERROR] Query index fuera de rango: 405269 (max: 21962)
+[ERROR] Query index fuera de rango: 79351 (max: 21962)
+[ERROR] Query index fuera de rango: 472807 (max: 21962)
+[ERROR] Query index fuera de rango: 128600 (max: 21962)
+[ERROR] Query index fuera de rango: 194674 (max: 21962)
+[ERROR] Query index fuera de rango: 281448 (max: 21962)
+[ERROR] Query index fuera de rango: 163441 (max: 21962)
+[ERROR] Query index fuera de rango: 132694 (max: 21962)
+[ERROR] Query index fuera de rango: 321409 (max: 21962)
+[ERROR] Query index fuera de rango: 391932 (max: 21962)
+[ERROR] Query index fuera de rango: 268220 (max: 21962)
+[ERROR] Query index fuera de rango: 49894 (max: 21962)

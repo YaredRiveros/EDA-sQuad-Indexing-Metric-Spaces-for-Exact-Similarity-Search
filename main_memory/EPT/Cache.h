@@ -4,8 +4,9 @@
 
 #include <iostream>
 #include <vector>
+#include <fstream>
 
-#include <io.h>
+// #include <io.h>  // Windows-specific, not needed
 extern double PageFault;
 
 extern int BLOCK_SIZE;
