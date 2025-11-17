@@ -1,0 +1,8 @@
+[
+{"index":"MIndex*_Improved","dataset":"Synthetic","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MRQ","selectivity":0.020000,"radius":2740.211800,"k":null,"compdists":3490.380000,"time_ms":1.495890,"pages":4.230000,"n_queries":100,"run_id":1},
+{"index":"MIndex*_Improved","dataset":"Synthetic","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MkNN","selectivity":null,"radius":null,"k":1,"compdists":1033.430000,"time_ms":0.445910,"pages":1.460000,"n_queries":100,"run_id":1},
+{"index":"MIndex*_Improved","dataset":"Synthetic","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MkNN","selectivity":null,"radius":null,"k":5,"compdists":1153.500000,"time_ms":0.548060,"pages":2.170000,"n_queries":100,"run_id":1},
+{"index":"MIndex*_Improved","dataset":"Synthetic","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MkNN","selectivity":null,"radius":null,"k":10,"compdists":1245.040000,"time_ms":0.781720,"pages":2.340000,"n_queries":100,"run_id":1},
+{"index":"MIndex*_Improved","dataset":"Synthetic","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MkNN","selectivity":null,"radius":null,"k":20,"compdists":1377.400000,"time_ms":0.827410,"pages":2.470000,"n_queries":100,"run_id":1},
+{"index":"MIndex*_Improved","dataset":"Synthetic","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MkNN","selectivity":null,"radius":null,"k":50,"compdists":1666.450000,"time_ms":1.151100,"pages":2.610000,"n_queries":100,"run_id":1}
+]
