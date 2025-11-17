@@ -8,6 +8,7 @@ class db_t
 public:
 	virtual size_t size() const = 0;
 	virtual void read(string path) = 0;
+	virtual void read(string path, int max_objects) { read(path); } // Default: sin límite
 	virtual double dist(int x, int y) const = 0;
 };
 
@@ -57,5 +58,6 @@ public:
 		return objs.size();
 	}
 	void read(string path);
+	void read(string path, int max_objects);
 	double dist(int x, int y) const;
 };
