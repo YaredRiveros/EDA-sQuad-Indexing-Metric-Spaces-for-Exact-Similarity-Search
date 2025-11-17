@@ -1,5 +1,5 @@
 #include <bits/stdc++.h>
-#include "mindex_improved.hpp"
+#include "mindex.hpp"
 #include "../../objectdb.hpp"
 #include "../../datasets/paths.hpp"
 
