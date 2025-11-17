@@ -2,6 +2,8 @@
 #include <fstream>
 #include <iterator>
 #include <iostream>
+#include <sstream>
+#include <cmath>
 
 #include "db.h"
 using namespace std;
@@ -59,13 +61,56 @@ double Linf_db_t::dist(int x, int y) const
 
 void str_db_t::read(string path)
 {
+	read(path, -1); // Sin límite
+}
+
+void str_db_t::read(string path, int max_objects)
+{
 	ifstream in(path);
-	size_t n;
-	in >> n;
-	for (int i = 0; i < n; ++i) {
-		objs.emplace_back();
-		in >> objs.back();
+	if (!in.is_open()) {
+		cerr << "[ERROR] No se pudo abrir archivo: " << path << endl;
+		return;
 	}
+	
+	string first_line;
+	getline(in, first_line);
+	
+	// Detectar encabezado tipo "n p" (igual que StringDB)
+	stringstream ss(first_line);
+	int maybe_n, maybe_p;
+	bool has_header = false;
+	
+	if (ss >> maybe_n >> maybe_p && ss.eof()) {
+		// Es un encabezado, leer hasta maybe_n líneas (o max_objects si está definido)
+		has_header = true;
+		int limit = (max_objects > 0) ? min(maybe_n, max_objects) : maybe_n;
+		objs.reserve(limit);
+		for (int i = 0; i < limit; i++) {
+			string line;
+			if (getline(in, line) && !line.empty()) {
+				objs.push_back(line);
+			}
+		}
+	}
+	
+	if (!has_header) {
+		// No es encabezado, la primera línea es un dato
+		if (!first_line.empty()) {
+			objs.push_back(first_line);
+		}
+		// Leer el resto (hasta max_objects si está definido)
+		string line;
+		int count = 1; // Ya leímos first_line
+		while (getline(in, line)) {
+			if (max_objects > 0 && count >= max_objects) break;
+			if (!line.empty()) {
+				objs.push_back(line);
+				count++;
+			}
+		}
+	}
+	
+	cerr << "[str_db_t] Cargadas " << objs.size() << " cadenas (edit distance)\n";
 }
 
 double str_db_t::dist(int x, int y) const
