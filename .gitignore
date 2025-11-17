@@ -2,6 +2,22 @@
 /laesa/build-laesa
 /mvpt/build-mvpt
 
+# Ignorar archivos de índice grandes generados por EPT, GNAT, etc.
+**/*.idx
+**/index_*.idx
+main_memory/EPT/*.idx
+main_memory/GNAT/**/*.idx
+
+# Ignorar archivos de log
+**/*_benchmark.log
+**/*_test.log
+**/*.log
+nohup.out
+
+# Ignorar ejecutables de test
+**/*_test
+!**/*_test.cpp
+
 # Ignorar cualquier entorno virtual
 venv/
 **/venv/
