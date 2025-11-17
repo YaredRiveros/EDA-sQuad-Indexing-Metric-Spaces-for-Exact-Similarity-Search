@@ -9,6 +9,8 @@
 #include "Cache.h"
 #define MAX(x, y) ((x>y)? (x): (y))
 #include <iostream>
+#include <cfloat>
+#include <cstring>
 
 using namespace std;
 
@@ -864,6 +866,8 @@ bool readIndex(Tuple* t, char* fname)
 // Paper: "The construction cost of EPT* is O(n*l*l_c*n_s)"
 // Paper: "The pivot selection is costly, and thus, the construction cost of EPT* is very high"
 // ============================================================================
+// Original main() commented out - using test.cpp main() instead
+#if 0
 int main(int argc, char **argv)
 {
 	clock_t begin, buildEnd, queryEnd;
@@ -1009,3 +1013,4 @@ int main(int argc, char **argv)
 	cout << "main end." << endl;
 	return 0;
 }
+#endif  // End of commented original main()
