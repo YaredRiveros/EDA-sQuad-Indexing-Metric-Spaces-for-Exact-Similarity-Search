@@ -1,0 +1,67 @@
+[
+  {
+    "index": "MB+-tree",
+    "dataset": "Words",
+    "category": "Range",
+    "num_pivots": 0,
+    "query_type": "MRQ",
+    "selectivity": 0.0001,
+    "compDist": 1,
+    "time_ms": 0.0015,
+    "pages": 0,
+    "n_queries": 100,
+    "run_id": 1
+  },
+  {
+    "index": "MB+-tree",
+    "dataset": "Words",
+    "category": "Range",
+    "num_pivots": 0,
+    "query_type": "MRQ",
+    "selectivity": 0.001,
+    "compDist": 1,
+    "time_ms": 0.00076,
+    "pages": 0,
+    "n_queries": 100,
+    "run_id": 1
+  },
+  {
+    "index": "MB+-tree",
+    "dataset": "Words",
+    "category": "Range",
+    "num_pivots": 0,
+    "query_type": "MRQ",
+    "selectivity": 0.01,
+    "compDist": 1,
+    "time_ms": 0.00069,
+    "pages": 0,
+    "n_queries": 100,
+    "run_id": 1
+  },
+  {
+    "index": "MB+-tree",
+    "dataset": "Words",
+    "category": "Range",
+    "num_pivots": 0,
+    "query_type": "MRQ",
+    "selectivity": 0.02,
+    "compDist": 1,
+    "time_ms": 0.00062,
+    "pages": 0,
+    "n_queries": 100,
+    "run_id": 1
+  },
+  {
+    "index": "MB+-tree",
+    "dataset": "Words",
+    "category": "Range",
+    "num_pivots": 0,
+    "query_type": "MRQ",
+    "selectivity": 0.05,
+    "compDist": 1,
+    "time_ms": 0.00064,
+    "pages": 0,
+    "n_queries": 100,
+    "run_id": 1
+  }
+]
