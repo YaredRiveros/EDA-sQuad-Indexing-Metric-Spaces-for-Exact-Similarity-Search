@@ -1,7 +1,0 @@
-
-
-##########################################
-### TESTING DATASET: LA
-##########################################
-[VectorDB] Archivo sin encabezado, usando p=2
-[VectorDB] Cargados 1073728 objetos (3D, p=2)
