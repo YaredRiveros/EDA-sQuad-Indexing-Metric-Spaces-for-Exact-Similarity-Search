@@ -3,6 +3,10 @@
 **/index_*.idx
 main_memory/EPT/*.idx
 main_memory/GNAT/**/*.idx
+secondary_memory/EGNAT/egn_indexes/*
+secondary_memory/MB_plus_tree/*.mbpt_index
+secondary_memory/MB_plus_tree/*.mbpt_raf
+secondary_memory/M-index_star/midx_indexes/*
 
 # Ignorar archivos de log
 **/*_benchmark.log

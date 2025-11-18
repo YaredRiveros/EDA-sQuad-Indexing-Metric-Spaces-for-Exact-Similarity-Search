@@ -1,201 +1,215 @@
-// test.cpp - MB+-tree benchmark con demos (similar a M-index_star)
+// test.cpp - MB+-tree benchmark siguiendo especificación del paper
 #include "mbpt.hpp"
 #include "../../objectdb.hpp"
+#include "../../datasets/paths.hpp"
 #include <bits/stdc++.h>
 
 using namespace std;
 
-struct TestResult {
-    string index_name;
-    string dataset;
-    string category;  // "Range" o "kNN"
-    int num_pivots;
-    string query_type;
-    double selectivity_or_k;
-    long long comp_dists;
-    double time_ms;
-    long long pages;
-    int n_queries;
-    int run_id;
-};
+// Parámetros según el paper
+static const vector<double> SELECTIVITIES = {0.02, 0.04, 0.08, 0.16, 0.32};
+static const vector<int> K_VALUES = {5, 10, 20, 50, 100};
 
-void writeJSON(const vector<TestResult>& results, const string& filename) {
-    ofstream out(filename);
-    out << "[\n";
-    for (size_t i = 0; i < results.size(); i++) {
-        const auto& r = results[i];
-        out << "  {\n";
-        out << "    \"index\": \"" << r.index_name << "\",\n";
-        out << "    \"dataset\": \"" << r.dataset << "\",\n";
-        out << "    \"category\": \"" << r.category << "\",\n";
-        out << "    \"num_pivots\": " << r.num_pivots << ",\n";
-        out << "    \"query_type\": \"" << r.query_type << "\",\n";
-        out << "    \"" << (r.category == "Range" ? "selectivity" : "k") << "\": " << r.selectivity_or_k << ",\n";
-        out << "    \"compDist\": " << r.comp_dists << ",\n";
-        out << "    \"time_ms\": " << r.time_ms << ",\n";
-        out << "    \"pages\": " << r.pages << ",\n";
-        out << "    \"n_queries\": " << r.n_queries << ",\n";
-        out << "    \"run_id\": " << r.run_id << "\n";
-        out << "  }" << (i + 1 < results.size() ? "," : "") << "\n";
+void test_dataset(const string& dataset) {
+    cout << "\n##########################################\n";
+    cout << "### TESTING DATASET: " << dataset << "\n";
+    cout << "### (MB+-tree)\n";
+    cout << "##########################################\n";
+
+    string dbfile = path_dataset(dataset);
+    
+    unique_ptr<ObjectDB> db;
+    if (dataset == "LA") {
+        db = make_unique<VectorDB>(dbfile, 2);
+    } else if (dataset == "Synthetic") {
+        db = make_unique<VectorDB>(dbfile, 0);
+    } else if (dataset == "Words") {
+        db = make_unique<StringDB>(dbfile);
+    } else {
+        cout << "[ERROR] Dataset desconocido: " << dataset << "\n";
+        return;
     }
-    out << "]\n";
+    
+    cout << "\n==========================================\n";
+    cout << "[MB+-tree] Dataset: " << dataset
+         << "   N=" << db->size() << "\n";
+    cout << "==========================================\n";
+
+    // Cargar queries y radii
+    vector<int> queries = load_queries_file(path_queries(dataset));
+    auto radii = load_radii_file(path_radii(dataset));
+    
+    if (queries.empty()) {
+        cout << "[WARN] No hay queries para " << dataset << "\n";
+        return;
+    }
+    
+    cout << "\n[QUERIES] Cargadas " << queries.size() << " queries\n";
+    cout << "[QUERIES] Radii para " << radii.size() << " selectividades\n";
+
+    // Construir MB+-tree
+    cout << "\n[BUILD] Construyendo MB+-tree con rho=0.1...\n";
+    MBPT_Disk mbpt(db.get(), 0.1);
+    
+    auto t0 = chrono::high_resolution_clock::now();
+    mbpt.build("index_mbpt_" + dataset);
+    auto t1 = chrono::high_resolution_clock::now();
+    auto buildTime = chrono::duration_cast<chrono::milliseconds>(t1 - t0).count();
+    
+    cout << "[BUILD] Tiempo: " << buildTime << " ms\n";
+
+    // Crear archivo JSON de salida
+    filesystem::create_directories("results");
+    string jsonOut = "results/results_MBPT_" + dataset + ".json";
+    ofstream J(jsonOut);
+    J << "[\n";
+    bool firstOutput = true;
+
+    // Valores por defecto según el paper
+    const double DEFAULT_SELECTIVITY = 0.08;
+    const int DEFAULT_K = 20;
+
+    // ===================================================================
+    // EXPERIMENTO 1: Variar selectividad en MRQ
+    // ===================================================================
+    cout << "\n========================================\n";
+    cout << "[EXP 1] Variando SELECTIVIDAD en MRQ\n";
+    cout << "========================================\n";
+    
+    for (double selectivity : SELECTIVITIES) {
+        if (!radii.count(selectivity)) {
+            cout << "  [SKIP] Selectividad " << selectivity << " no disponible\n";
+            continue;
+        }
+
+        double radius = radii[selectivity];
+        long long totalD = 0, totalT = 0, totalPages = 0;
+        
+        cout << "  sel=" << selectivity << " (R=" << radius << ")... " << flush;
+
+        for (size_t i = 0; i < queries.size(); i++) {
+            vector<int> out;
+            mbpt.clear_counters();
+            
+            t0 = chrono::high_resolution_clock::now();
+            mbpt.rangeSearch(queries[i], radius, out);
+            t1 = chrono::high_resolution_clock::now();
+            
+            totalD += mbpt.get_compDist();
+            totalT += chrono::duration_cast<chrono::microseconds>(t1 - t0).count();
+            totalPages += mbpt.get_pageReads();
+        }
+
+        if (!firstOutput) J << ",\n";
+        firstOutput = false;
+
+        double avgD = double(totalD) / queries.size();
+        double avgTms = double(totalT) / (1000.0 * queries.size());
+        double avgPA = double(totalPages) / queries.size();
+
+        J << fixed << setprecision(6)
+          << "{"
+          << "\"index\":\"MB+-tree\","
+          << "\"dataset\":\"" << dataset << "\","
+          << "\"category\":\"DM\","
+          << "\"num_pivots\":null,"
+          << "\"num_centers_path\":null,"
+          << "\"arity\":null,"
+          << "\"query_type\":\"MRQ\","
+          << "\"selectivity\":" << selectivity << ","
+          << "\"radius\":" << radius << ","
+          << "\"k\":null,"
+          << "\"compdists\":" << avgD << ","
+          << "\"time_ms\":" << avgTms << ","
+          << "\"pages\":" << avgPA << ","
+          << "\"n_queries\":" << queries.size() << ","
+          << "\"run_id\":1"
+          << "}";
+          
+        cout << " OK (" << (int)avgD << " compdists)\n";
+    }
+
+    // ===================================================================
+    // EXPERIMENTO 2: Variar k en MkNN
+    // ===================================================================
+    cout << "\n========================================\n";
+    cout << "[EXP 2] Variando K en MkNN\n";
+    cout << "========================================\n";
+    
+    for (int k : K_VALUES) {
+        long long totalD = 0, totalT = 0, totalPages = 0;
+        
+        cout << "  k=" << k << "... " << flush;
+
+        for (size_t i = 0; i < queries.size(); i++) {
+            vector<pair<double,int>> out;
+            mbpt.clear_counters();
+            
+            t0 = chrono::high_resolution_clock::now();
+            mbpt.knnSearch(queries[i], k, out);
+            t1 = chrono::high_resolution_clock::now();
+            
+            totalD += mbpt.get_compDist();
+            totalT += chrono::duration_cast<chrono::microseconds>(t1 - t0).count();
+            totalPages += mbpt.get_pageReads();
+        }
+
+        if (!firstOutput) J << ",\n";
+        firstOutput = false;
+
+        double avgD = double(totalD) / queries.size();
+        double avgTms = double(totalT) / (1000.0 * queries.size());
+        double avgPA = double(totalPages) / queries.size();
+
+        J << fixed << setprecision(6)
+          << "{"
+          << "\"index\":\"MB+-tree\","
+          << "\"dataset\":\"" << dataset << "\","
+          << "\"category\":\"DM\","
+          << "\"num_pivots\":null,"
+          << "\"num_centers_path\":null,"
+          << "\"arity\":null,"
+          << "\"query_type\":\"MkNN\","
+          << "\"selectivity\":null,"
+          << "\"radius\":null,"
+          << "\"k\":" << k << ","
+          << "\"compdists\":" << avgD << ","
+          << "\"time_ms\":" << avgTms << ","
+          << "\"pages\":" << avgPA << ","
+          << "\"n_queries\":" << queries.size() << ","
+          << "\"run_id\":1"
+          << "}";
+          
+        cout << " OK (" << (int)avgD << " compdists)\n";
+    }
+
+    J << "\n]\n";
+    J.close();
+    
+    cout << "\n[JSON] Archivo generado: " << jsonOut << "\n";
+
+    cout << "\n==========================================\n";
+    cout << "[MB+-tree] " << dataset << " completado\n";
+    cout << "==========================================\n";
 }
 
 int main() {
-    cout << "====================================\n";
-    cout << "MB+-tree Benchmark (Chen et al.)\n";
-    cout << "====================================\n\n";
+    srand(12345);
 
-    const int NUM_QUERIES = 100;
-
-    // Dataset LA
-    {
-        cout << "[1] Loading LA dataset...\n";
-        vector<TestResult> results;
-        
-        VectorDB dbLA("../../datasets/LA.txt", 2);
-        cout << "    LA: n=" << dbLA.size() << " (2D vectors, L2)\n";
-
-        MBPT_Disk mbpt(&dbLA, 0.1);  // rho = 0.1
-        mbpt.build("index_mbpt_la");
-        
-        vector<double> selectivities = {0.0001, 0.001, 0.01, 0.02, 0.05};
-
-        // Range queries
-        cout << "\n    Range queries:\n";
-        for (double sel : selectivities) {
-            double R = 408.82 * sqrt(sel / 0.02);
-            mbpt.clear_counters();
-            
-            mt19937_64 rng(42);
-            uniform_int_distribution<int> qdist(0, dbLA.size() - 1);
-            
-            for (int i = 0; i < NUM_QUERIES; i++) {
-                int qId = qdist(rng);
-                vector<int> res;
-                mbpt.rangeSearch(qId, R, res);
-            }
-            
-            TestResult tr;
-            tr.index_name = "MB+-tree";
-            tr.dataset = "LA";
-            tr.category = "Range";
-            tr.num_pivots = 0;
-            tr.query_type = "MRQ";
-            tr.selectivity_or_k = sel;
-            tr.comp_dists = mbpt.get_compDist() / NUM_QUERIES;
-            tr.time_ms = mbpt.get_queryTime() / (1000.0 * NUM_QUERIES);
-            tr.pages = mbpt.get_pageReads() / NUM_QUERIES;
-            tr.n_queries = NUM_QUERIES;
-            tr.run_id = 1;
-            results.push_back(tr);
-            
-            cout << "      sel=" << sel << " -> compDist=" << tr.comp_dists << " time=" << tr.time_ms << "ms\n";
-        }
-        
-        writeJSON(results, "results/results_MBPT_LA.json");
-        cout << "    LA results written!\n";
-    }
-
-    // Dataset Synthetic
-    {
-        cout << "\n[2] Loading Synthetic dataset...\n";
-        vector<TestResult> results;
-        
-        VectorDB dbSyn("../../datasets/Synthetic.txt", 2);
-        cout << "    Synthetic: n=" << dbSyn.size() << " (2D vectors, L2)\n";
-
-        MBPT_Disk mbpt(&dbSyn, 0.1);
-        mbpt.build("index_mbpt_synthetic");
-        
-        vector<double> selectivities = {0.0001, 0.001, 0.01, 0.02, 0.05};
-
-        cout << "\n    Range queries:\n";
-        for (double sel : selectivities) {
-            double R = 2740.21 * sqrt(sel / 0.02);
-            mbpt.clear_counters();
-            
-            mt19937_64 rng(42);
-            uniform_int_distribution<int> qdist(0, dbSyn.size() - 1);
-            
-            for (int i = 0; i < NUM_QUERIES; i++) {
-                int qId = qdist(rng);
-                vector<int> res;
-                mbpt.rangeSearch(qId, R, res);
-            }
-            
-            TestResult tr;
-            tr.index_name = "MB+-tree";
-            tr.dataset = "Synthetic";
-            tr.category = "Range";
-            tr.num_pivots = 0;
-            tr.query_type = "MRQ";
-            tr.selectivity_or_k = sel;
-            tr.comp_dists = mbpt.get_compDist() / NUM_QUERIES;
-            tr.time_ms = mbpt.get_queryTime() / (1000.0 * NUM_QUERIES);
-            tr.pages = mbpt.get_pageReads() / NUM_QUERIES;
-            tr.n_queries = NUM_QUERIES;
-            tr.run_id = 1;
-            results.push_back(tr);
-            
-            cout << "      sel=" << sel << " -> compDist=" << tr.comp_dists << " time=" << tr.time_ms << "ms\n";
-        }
-        
-        writeJSON(results, "results/results_MBPT_Synthetic.json");
-        cout << "    Synthetic results written!\n";
-    }
-
-    // Dataset Words
-    {
-        cout << "\n[3] Loading Words dataset...\n";
-        vector<TestResult> results;
-        
-        StringDB dbWords("../../datasets/Words.txt");
-        cout << "    Words: n=" << dbWords.size() << " (strings, Levenshtein)\n";
-
-        MBPT_Disk mbpt(&dbWords, 0.1);
-        mbpt.build("index_mbpt_words");
-        
-        vector<double> selectivities = {0.0001, 0.001, 0.01, 0.02, 0.05};
-
-        cout << "\n    Range queries:\n";
-        for (double sel : selectivities) {
-            double R = 7.37 * sqrt(sel / 0.02);
-            mbpt.clear_counters();
-            
-            mt19937_64 rng(42);
-            uniform_int_distribution<int> qdist(0, dbWords.size() - 1);
-            
-            for (int i = 0; i < NUM_QUERIES; i++) {
-                int qId = qdist(rng);
-                vector<int> res;
-                mbpt.rangeSearch(qId, R, res);
-            }
-            
-            TestResult tr;
-            tr.index_name = "MB+-tree";
-            tr.dataset = "Words";
-            tr.category = "Range";
-            tr.num_pivots = 0;
-            tr.query_type = "MRQ";
-            tr.selectivity_or_k = sel;
-            tr.comp_dists = mbpt.get_compDist() / NUM_QUERIES;
-            tr.time_ms = mbpt.get_queryTime() / (1000.0 * NUM_QUERIES);
-            tr.pages = mbpt.get_pageReads() / NUM_QUERIES;
-            tr.n_queries = NUM_QUERIES;
-            tr.run_id = 1;
-            results.push_back(tr);
-            
-            cout << "      sel=" << sel << " -> compDist=" << tr.comp_dists << " time=" << tr.time_ms << "ms\n";
-        }
-        
-        writeJSON(results, "results/results_MBPT_Words.json");
-        cout << "    Words results written!\n";
-    }
+    vector<string> datasets = {"LA", "Synthetic", "Words"};
     
-    cout << "\n====================================\n";
-    cout << "All results written to results/ directory\n";
-    cout << "====================================\n";
+    for (const auto& dataset : datasets) {
+        try {
+            test_dataset(dataset);
+        } catch (const exception& e) {
+            cout << "\n[ERROR] al procesar " << dataset << ": " << e.what() << "\n";
+        }
+    }
+
+    cout << "\n\n";
+    cout << "##########################################\n";
+    cout << "### TODAS LAS PRUEBAS COMPLETADAS\n";
+    cout << "##########################################\n";
 
     return 0;
 }
