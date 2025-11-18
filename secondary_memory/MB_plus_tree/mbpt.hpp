@@ -431,47 +431,6 @@ public:
         queryTime += std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
     }
 
-private:
-    // Traversa block tree para encontrar hojas que intersectan (q, R)
-    void traverseBlockTree(int nodeIdx, int qId, double R, std::vector<int>& outLeaves) const {
-        const BlockNode& B = blockNodes[nodeIdx];
-        
-        if (B.isLeaf) {
-            if (B.leafIdx >= 0) outLeaves.push_back(B.leafIdx);
-            return;
-        }
-
-        if (B.center < 0) {
-            // Conservador: visitar ambos hijos
-            if (B.left >= 0) traverseBlockTree(B.left, qId, R, outLeaves);
-            if (B.right >= 0) traverseBlockTree(B.right, qId, R, outLeaves);
-            return;
-        }
-
-        double dqc = distObj(qId, B.center);
-        double threshold = B.dmed - B.rho;
-
-        // Lemma 4.7: decidir qué subtrees visitar
-        // Left: d(o,c) ∈ [0, dmed-ρ]
-        // Right: d(o,c) ∈ (dmed-ρ, ∞)
-        
-        bool visitLeft = false;
-        bool visitRight = false;
-
-        // Si d(q,c) - R <= threshold, intersecta left
-        if (dqc - R <= threshold) visitLeft = true;
-        
-        // Si d(q,c) + R > threshold, intersecta right
-        if (dqc + R > threshold) visitRight = true;
-
-        if (visitLeft && B.left >= 0) {
-            traverseBlockTree(B.left, qId, R, outLeaves);
-        }
-        if (visitRight && B.right >= 0) {
-            traverseBlockTree(B.right, qId, R, outLeaves);
-        }
-    }
-
     // =================================================
     // KNN SEARCH (MkNNQ) - Estrategia 3 del paper
     // =================================================
@@ -518,6 +477,47 @@ private:
 
         auto t1 = clock::now();
         queryTime += std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
+    }
+
+private:
+    // Traversa block tree para encontrar hojas que intersectan (q, R)
+    void traverseBlockTree(int nodeIdx, int qId, double R, std::vector<int>& outLeaves) const {
+        const BlockNode& B = blockNodes[nodeIdx];
+        
+        if (B.isLeaf) {
+            if (B.leafIdx >= 0) outLeaves.push_back(B.leafIdx);
+            return;
+        }
+
+        if (B.center < 0) {
+            // Conservador: visitar ambos hijos
+            if (B.left >= 0) traverseBlockTree(B.left, qId, R, outLeaves);
+            if (B.right >= 0) traverseBlockTree(B.right, qId, R, outLeaves);
+            return;
+        }
+
+        double dqc = distObj(qId, B.center);
+        double threshold = B.dmed - B.rho;
+
+        // Lemma 4.7: decidir qué subtrees visitar
+        // Left: d(o,c) ∈ [0, dmed-ρ]
+        // Right: d(o,c) ∈ (dmed-ρ, ∞)
+        
+        bool visitLeft = false;
+        bool visitRight = false;
+
+        // Si d(q,c) - R <= threshold, intersecta left
+        if (dqc - R <= threshold) visitLeft = true;
+        
+        // Si d(q,c) + R > threshold, intersecta right
+        if (dqc + R > threshold) visitRight = true;
+
+        if (visitLeft && B.left >= 0) {
+            traverseBlockTree(B.left, qId, R, outLeaves);
+        }
+        if (visitRight && B.right >= 0) {
+            traverseBlockTree(B.right, qId, R, outLeaves);
+        }
     }
 
 private:

@@ -67,10 +67,10 @@ All JSON files in `results/` directory:
 ### test_silent.cpp (Recommended)
 ```bash
 # Compile
-wsl bash -c "cd /mnt/c/.../MB_plus_tree && g++ -O3 -std=c++17 -o test_silent test_silent.cpp"
+wsl bash -c "g++ -O3 -std=c++17 -o test_silent test_silent.cpp"
 
 # Execute
-wsl bash -c "cd /mnt/c/.../MB_plus_tree && ./test_silent"
+wsl bash -c "./test_silent"
 ```
 
 This generates `results_MBPT_Silent_All.json` with results for all 3 datasets (selectivity 0.02 only).

@@ -1,8 +1,0 @@
-[
-{"index":"MIndex*_Improved","dataset":"Words","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MRQ","selectivity":0.020000,"radius":7.370000,"k":null,"compdists":576740.230000,"time_ms":325.353770,"pages":5.000000,"n_queries":100,"run_id":1},
-{"index":"MIndex*_Improved","dataset":"Words","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MkNN","selectivity":null,"radius":null,"k":1,"compdists":191457.050000,"time_ms":117.877430,"pages":2.340000,"n_queries":100,"run_id":1},
-{"index":"MIndex*_Improved","dataset":"Words","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MkNN","selectivity":null,"radius":null,"k":5,"compdists":361115.350000,"time_ms":212.044170,"pages":4.830000,"n_queries":100,"run_id":1},
-{"index":"MIndex*_Improved","dataset":"Words","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MkNN","selectivity":null,"radius":null,"k":10,"compdists":403649.950000,"time_ms":233.179980,"pages":4.840000,"n_queries":100,"run_id":1},
-{"index":"MIndex*_Improved","dataset":"Words","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MkNN","selectivity":null,"radius":null,"k":20,"compdists":438647.170000,"time_ms":259.561500,"pages":4.890000,"n_queries":100,"run_id":1},
-{"index":"MIndex*_Improved","dataset":"Words","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MkNN","selectivity":null,"radius":null,"k":50,"compdists":477870.540000,"time_ms":273.911790,"pages":4.920000,"n_queries":100,"run_id":1}
-]
