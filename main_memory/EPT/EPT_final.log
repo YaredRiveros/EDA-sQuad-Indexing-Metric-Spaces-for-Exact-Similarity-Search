@@ -1,8 +1,0 @@
-
-==========================================
-[INFO] Dataset: Words   File=../../datasets/Words.txt
-==========================================
-read from file.
-finish reading.
-[INFO] Objetos: 23165  Dimensión: 0
-timeout: the monitored command dumped core

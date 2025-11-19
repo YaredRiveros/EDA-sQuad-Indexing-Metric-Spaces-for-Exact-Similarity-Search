@@ -1,41 +1,27 @@
-//
-// Created by YANGHANYU on 8/21/15.
-//
-
 #include "Tuple.h"
 
+Tuple::Tuple() : pivId(-1), objId(-1), distance(0.0) {}
 
-Tuple::Tuple()
-{
-	distance = 0;
+int Tuple::getPivId() const {
+    return pivId;
 }
 
-
-int Tuple::getPivId() {
-	return pivId;
+int Tuple::getObjId() const {
+    return objId;
 }
 
-int Tuple::getObjId()
-{
-	return objId;
+double Tuple::getDistance() const {
+    return distance;
 }
 
-double Tuple::getDistance()
-{
-	return distance;
+void Tuple::setPivId(int p) {
+    pivId = p;
 }
 
-void Tuple::setPivId(int p)
-{
-	pivId = p;
+void Tuple::setObjId(int o) {
+    objId = o;
 }
 
-void Tuple::setObjId(int o)
-{
-	objId = o;
-}
-
-void Tuple::setDistance(double d)
-{
-	distance = d;
+void Tuple::setDistance(double d) {
+    distance = d;
 }

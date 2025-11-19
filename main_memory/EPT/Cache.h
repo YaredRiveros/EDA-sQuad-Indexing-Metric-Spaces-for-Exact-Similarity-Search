@@ -2,141 +2,200 @@
 #ifndef __CACHE__H
 #define __CACHE__H
 
-#include <iostream>
-#include <vector>
 #include <fstream>
+#include <vector>
+#include <string>
+#include <stdexcept>
+#include <cstdint>
+#include <cstring>
 
-// #include <io.h>  // Windows-specific, not needed
 extern double PageFault;
-
-extern int BLOCK_SIZE;
-
-
-using namespace std;
+extern int BLOCK_SIZE; // definido en algún otro módulo / configuración
 
 class CacheBlock
 {
 public:
-	unsigned long page;
-	char * data;
+    unsigned long page;
+    char *data;
+    size_t length;
 
-	CacheBlock()
-	{
-		data = NULL;
-	}
-	CacheBlock(const CacheBlock& CB)
-	{
-		page = CB.page;
-		data = CB.data;
+    CacheBlock() : page(0), data(nullptr), length(0) {}
+    // deep copy
+    CacheBlock(const CacheBlock& CB) : page(CB.page), data(nullptr), length(CB.length)
+    {
+        if (CB.data && CB.length > 0) {
+            data = new char[CB.length];
+            memcpy(data, CB.data, CB.length);
+        }
+    }
+    CacheBlock& operator=(const CacheBlock& CB)
+    {
+        if (this == &CB) return *this;
+        delete[] data;
+        page = CB.page;
+        length = CB.length;
+        data = nullptr;
+        if (CB.data && length > 0) {
+            data = new char[length];
+            memcpy(data, CB.data, length);
+        }
+        return *this;
+    }
+    // move
+    CacheBlock(CacheBlock&& o) noexcept : page(o.page), data(o.data), length(o.length)
+    {
+        o.data = nullptr; o.length = 0;
+    }
+    CacheBlock& operator=(CacheBlock&& o) noexcept
+    {
+        if (this != &o) {
+            delete[] data;
+            page = o.page;
+            data = o.data;
+            length = o.length;
+            o.data = nullptr;
+            o.length = 0;
+        }
+        return *this;
+    }
 
-	}
-	~CacheBlock()
-	{
-		data = NULL;
-	}
-
+    ~CacheBlock()
+    {
+        delete[] data;
+        data = nullptr;
+        length = 0;
+    }
 };
 
 class Cache
 {
-	int size;
-	int maxSize;
-	string filename;
+    int size_;
+    int maxSize_;
+    std::string filename_;
+    std::ifstream ifile_;
+    std::vector<CacheBlock> blockVector_;
 
-	ifstream ifile;
-	vector<CacheBlock> blockVector;
 public:
-	
-	Cache(string fn, int maxSize) { 
-		size = 0; 
-		this->maxSize = maxSize; 
-		filename = fn;
-		ifile.open(filename, ios::in|ios::binary);
-	}
+    Cache(const std::string& fn, int maxSize)
+        : size_(0), maxSize_(maxSize), filename_(fn)
+    {
+        ifile_.open(filename_, std::ios::in | std::ios::binary);
+        if (!ifile_.is_open()) {
+            throw std::runtime_error("Cache: failed to open file " + filename_);
+        }
+    }
 
+    ~Cache()
+    {
+        // CacheBlock destructor frees data
+        blockVector_.clear();
+        if (ifile_.is_open()) ifile_.close();
+    }
 
-	~Cache()
-	{
-		vector<CacheBlock>::iterator it;
-		for (it = blockVector.begin(); it != blockVector.end(); it++)
-			delete[](*it).data;
-		size = 0;
-		
-		ifile.close();
-	}
+    bool isFull() const noexcept
+    {
+        return (size_ == maxSize_);
+    }
 
-	bool isFull()
-	{
-		return (size == maxSize) ? true : false;
-	}
+    void reset()
+    {
+        blockVector_.clear();
+        size_ = 0;
+        if (ifile_.is_open()) {
+            ifile_.clear();
+            ifile_.seekg(0);
+        }
+    }
 
-	void reset()
-	{
-		vector<CacheBlock>::iterator it;
-		for (it = blockVector.begin(); it != blockVector.end(); it++)
-			delete[](*it).data;
-		size = 0;
-		blockVector.clear();
-	}
+    // return the block (most-recently used at [0])
+    CacheBlock& getBlock(unsigned long page)
+    {
+        // search
+        for (size_t pos = 0; pos < blockVector_.size(); ++pos) {
+            if (blockVector_[pos].page == page) {
+                if (pos != 0) advanceBlock(static_cast<int>(pos));
+                return blockVector_[0];
+            }
+        }
 
-	
-	CacheBlock &getBlock(unsigned long page)
-	{
-		bool flag = false; int position = 0;
-		vector<CacheBlock>::iterator it;
-		
-		for (it = blockVector.begin(), position = 0; it != blockVector.end(); it++, position++)
-			if ((*it).page == page)
-			{
-				if (position != 0)
-					advanceBlock(position);
-				flag = true;
-				
-				return blockVector[0];
-			}
-		if (!flag)
-		{
-			PageFault++;
-			CacheBlock curBlock;
-			curBlock.page = page;
-			curBlock.data = new char[BLOCK_SIZE];
-			
-			ifile.seekg(page*BLOCK_SIZE, ios::beg);
-			ifile.read(curBlock.data, BLOCK_SIZE);
-			
-			addBlock(curBlock);
-		}
-		
-		return blockVector[0];
-	}
+        // not found -> page fault
+        ++PageFault;
 
-	void addBlock(CacheBlock newBlock) ///ok
-	{
-		if (size + 1>maxSize)
-			lruStrategy(newBlock);
-		else
-		{
-			blockVector.insert(blockVector.begin(), newBlock);
-			size++;
-		}
-	}
+        CacheBlock cur;
+        cur.page = page;
+        cur.length = static_cast<size_t>(BLOCK_SIZE);
+        cur.data = new char[cur.length];
 
-	void lruStrategy(CacheBlock newBlock) ///ok
-	{
-		int position = maxSize - 1;
+        // read from file; if not enough bytes, fill with zeros
+        if (!ifile_.is_open()) {
+            throw std::runtime_error("Cache: underlying file closed");
+        }
+        std::streampos off = static_cast<std::streampos>(page) * static_cast<std::streampos>(BLOCK_SIZE);
+        ifile_.clear(); // clear eof flag
+        ifile_.seekg(off, std::ios::beg);
+        if (!ifile_.good()) {
+            // if seekg failed (page beyond EOF), fill zero
+            std::fill(cur.data, cur.data + cur.length, 0);
+        } else {
+            ifile_.read(cur.data, static_cast<std::streamsize>(cur.length));
+            std::streamsize r = ifile_.gcount();
+            if (r < static_cast<std::streamsize>(cur.length)) {
+                // partial read: zero the remainder
+                std::fill(cur.data + r, cur.data + cur.length, 0);
+            }
+        }
 
-		delete[] blockVector[position].data;
-		blockVector.erase(blockVector.begin() + position);
-		blockVector.insert(blockVector.begin(), newBlock);
-	}
+        addBlock(std::move(cur)); // insert MRU
+        return blockVector_.front();
+    }
 
-	void advanceBlock(int position) ///ok
-	{
-		CacheBlock recBlock = blockVector[position];
+    void addBlock(CacheBlock&& newBlock)
+    {
+        if (size_ + 1 > maxSize_) {
+            lruStrategy(std::move(newBlock));
+        } else {
+            blockVector_.insert(blockVector_.begin(), std::move(newBlock));
+            ++size_;
+        }
+    }
 
-		blockVector.erase(blockVector.begin() + position);
-		blockVector.insert(blockVector.begin(), recBlock);
-	}
+    // overload for lvalue
+    void addBlock(const CacheBlock& newBlock)
+    {
+        if (size_ + 1 > maxSize_) {
+            CacheBlock tmp(newBlock);
+            lruStrategy(std::move(tmp));
+        } else {
+            blockVector_.insert(blockVector_.begin(), newBlock);
+            ++size_;
+        }
+    }
+
+private:
+    void lruStrategy(CacheBlock&& newBlock)
+    {
+        if (maxSize_ <= 0) return;
+        int position = maxSize_ - 1;
+        if (position < 0 || position >= static_cast<int>(blockVector_.size())) {
+            // just insert
+            blockVector_.insert(blockVector_.begin(), std::move(newBlock));
+            return;
+        }
+        // remove LRU at position
+        blockVector_.erase(blockVector_.begin() + position);
+        // insert new as MRU
+        blockVector_.insert(blockVector_.begin(), std::move(newBlock));
+        // size stays maxSize_
+        size_ = static_cast<int>(blockVector_.size());
+    }
+
+    void advanceBlock(int position)
+    {
+        if (position < 0 || position >= static_cast<int>(blockVector_.size())) return;
+        CacheBlock recBlock = std::move(blockVector_[position]);
+        blockVector_.erase(blockVector_.begin() + position);
+        blockVector_.insert(blockVector_.begin(), std::move(recBlock));
+    }
 };
 
-#endif
+#endif // __CACHE__H

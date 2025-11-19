@@ -1,34 +1,33 @@
 #include "Objvector.h"
 
-
 Objvector::Objvector(const Objvector & obj)
+    : value(obj.value)
 {
-	value = obj.value;
 }
 
-Objvector::Objvector(vector<float> v)
+Objvector::Objvector(const vector<float>& v)
+    : value(v)
 {
-	value = v;
 }
 
 Objvector & Objvector::operator=(const Objvector & obj)
 {
-	if (this == &obj) {
-		return *this;
-	}
-	else {
-		value = obj.value;
-	}
+    if (this == &obj) return *this;
+    value = obj.value;
+    return *this;
 }
 
 vector<float> & Objvector::getValue()
 {
-	return value;
+    return value;
 }
 
-
-
-void Objvector::setValue(vector<float> v)
+const vector<float> & Objvector::getValue() const
 {
-	value = v;
+    return value;
+}
+
+void Objvector::setValue(const vector<float>& v)
+{
+    value = v;
 }
