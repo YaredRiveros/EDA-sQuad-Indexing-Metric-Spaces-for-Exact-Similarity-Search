@@ -1,130 +1,71 @@
-#!/bin/bash
-# calcular_bsize.sh - Calcula bsize para obtener l pivotes en FQT
-# 
-# FQT es un índice pivot-based donde:
-#   l (pivotes) = altura del árbol
-#   1 pivote por nivel
-#
-# Para obtener exactamente l pivotes:
-#   bsize = n / (arity^l)
+#!/usr/bin/env bash
+# calcular_bsize.sh - Calcula bsize (bsize = n / (arity^l))
+# Usage: calcular_bsize.sh <n_objetos_or_dataset_file> [l_pivotes] [arity] [record_size]
+# Si el primer parámetro es un fichero existente se estima n = filesize / record_size
 
-# Colores
+set -euo pipefail
+
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-echo -e "${BLUE}╔═══════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║  Calculadora bsize para FQT (Pivot-Based)    ║${NC}"
-echo -e "${BLUE}╚═══════════════════════════════════════════════╝${NC}\n"
-
-# Verificar argumentos
 if [ $# -eq 0 ]; then
-    echo -e "${YELLOW}Uso:${NC} $0 <n_objetos> [l_pivotes] [arity]"
-    echo ""
-    echo -e "${YELLOW}Ejemplos:${NC}"
-    echo "  $0 100000              # Calcula para l={3,5,10,15,20}, arity=5"
-    echo "  $0 100000 5            # Calcula para l=5, arity=5"
-    echo "  $0 100000 5 5          # Calcula para l=5, arity=5"
-    echo ""
-    echo -e "${YELLOW}Parámetros:${NC}"
-    echo "  n_objetos  : Número de objetos en el dataset"
-    echo "  l_pivotes  : Número de pivotes deseado (altura del árbol)"
-    echo "  arity      : Factor de ramificación (default: 5, del paper)"
+    echo -e "${YELLOW}Uso:${NC} $0 <n_objetos | dataset_file> [l_pivotes] [arity] [record_size]"
     exit 0
 fi
 
-n=$1
-arity=${3:-5}  # Default: 5 (del paper)
+INPUT=$1
+L=${2:-5}
+ARITY=${3:-5}
+RECORD_SIZE=${4:-32}
 
-# Función para calcular bsize
-calcular_bsize() {
-    local n=$1
-    local l=$2
-    local arity=$3
-    
-    local bsize=$(echo "$n / ($arity ^ $l)" | bc)
-    
-    # bsize mínimo = 1
-    if [ $bsize -lt 1 ]; then
-        bsize=1
+# obtener n
+if [ -f "$INPUT" ]; then
+    BYTES=$(wc -c < "$INPUT" | tr -d ' ')
+    if [ -z "$BYTES" ] || [ "$BYTES" -eq 0 ]; then
+        echo "ERROR: no se pudo obtener tamaño del fichero" >&2
+        exit 1
     fi
-    
-    echo $bsize
-}
-
-# Función para verificar si l es alcanzable
-verificar_l() {
-    local n=$1
-    local l=$2
-    local arity=$3
-    
-    local altura_max=$(echo "l($n)/l($arity)" | bc -l | awk '{printf "%.0f", $0}')
-    
-    if [ $l -gt $altura_max ]; then
-        echo -e "${YELLOW}⚠ Advertencia: l=$l es mayor que altura máxima ≈$altura_max${NC}"
-        echo -e "  Considera: reducir arity o aumentar n"
-    fi
-}
-
-echo -e "${GREEN}Configuración:${NC}"
-echo -e "  n (objetos): $n"
-echo -e "  arity: $arity"
-echo ""
-
-if [ $# -eq 1 ]; then
-    # Calcular para múltiples valores de l
-    echo -e "${BLUE}═══ Tabla de Configuraciones ═══${NC}\n"
-    echo "┌─────────┬──────────┬──────────────────────────────┐"
-    echo "│ l       │  bsize   │  Comando FQT                 │"
-    echo "├─────────┼──────────┼──────────────────────────────┤"
-    
-    for l in 3 5 10 15 20; do
-        bsize=$(calcular_bsize $n $l $arity)
-        printf "│ %7d │ %8d │  ./fqt dataset.bin %d %d     │\n" $l $bsize $bsize $arity
-        verificar_l $n $l $arity
-    done
-    
-    echo "└─────────┴──────────┴──────────────────────────────┘"
-    
-    # Calcular altura máxima alcanzable
-    altura_max=$(echo "l($n)/l($arity)" | bc -l | awk '{printf "%.0f", $0}')
-    echo -e "\n${YELLOW}Altura máxima alcanzable:${NC} log_${arity}($n) ≈ $altura_max"
-    
+    N=$(( BYTES / RECORD_SIZE ))
+    if [ $N -eq 0 ]; then N=1000; fi
 else
-    # Calcular para un valor específico de l
-    l=${2:-5}
-    
-    echo -e "${BLUE}═══ Cálculo para l=$l pivotes ═══${NC}\n"
-    
-    bsize=$(calcular_bsize $n $l $arity)
-    
-    echo -e "${GREEN}Resultado:${NC}"
-    echo -e "  bsize = $n / ($arity^$l) = ${BLUE}$bsize${NC}"
-    echo ""
-    echo -e "${GREEN}Comando:${NC}"
-    echo -e "  ${BLUE}./fqt dataset.bin $bsize $arity${NC}"
-    echo ""
-    
-    # Verificar si es alcanzable
-    verificar_l $n $l $arity
-    
-    # Información adicional
-    echo ""
-    echo -e "${YELLOW}Información:${NC}"
-    echo -e "  • FQT usará ${BLUE}$l pivotes${NC} (1 por nivel)"
-    echo -e "  • Altura del árbol: ${BLUE}≈$l${NC}"
-    echo -e "  • Tamaño de bucket: ${BLUE}$bsize${NC} objetos"
-    
-    if [ $bsize -eq 1 ]; then
-        echo -e "  ${YELLOW}⚠ bsize=1 (mínimo)${NC}: cada hoja contiene 1 objeto"
+    # asumir que el input es un número (n objetos)
+    if [[ "$INPUT" =~ ^[0-9]+$$ ]]; then
+        N=$INPUT
+    else
+        echo "ERROR: '$INPUT' no es fichero ni número" >&2
+        exit 1
     fi
 fi
 
+# función para pow: preferir bc, fallback python3, fallback pow integer con awk (si disponible)
+pow() {
+    local base=$1; local exp=$2
+    if command -v bc >/dev/null 2>&1; then
+        echo "$(echo "$base ^ $exp" | bc)"
+    elif command -v python3 >/dev/null 2>&1; then
+        python3 - <<PY
+print(int(($base) ** ($exp)))
+PY
+    else
+        # fallback aproximado con awk (enteros pequeños)
+        awk "BEGIN{print int(($base)^($exp))}"
+    fi
+}
+
+DENOM=$(pow "$ARITY" "$L")
+if [ -z "$DENOM" ] || [ "$DENOM" -le 0 ]; then DENOM=1; fi
+
+BSIZE=$(( N / DENOM ))
+if [ $BSIZE -lt 1 ]; then BSIZE=1; fi
+
+echo -e "${BLUE}Configuración:${NC}"
+echo -e "  n (objetos): $N"
+echo -e "  arity: $ARITY"
+echo -e "  l (pivotes): $L"
+echo -e ""
+echo -e "${GREEN}Resultado:${NC}  bsize = $N / ($ARITY ^ $L) = $BSIZE"
 echo ""
-echo -e "${GREEN}═══════════════════════════════════════════════${NC}"
-echo -e "${GREEN}FQT es un índice pivot-based:${NC}"
-echo -e "  • l pivotes = altura del árbol"
-echo -e "  • 1 pivote por nivel (mismo en todo el nivel)"
-echo -e "  • Control directo del número de pivotes"
-echo -e "${GREEN}═══════════════════════════════════════════════${NC}"
+echo "Comando sugerido:"
+echo "  ./fqt dataset.bin $BSIZE $ARITY"
