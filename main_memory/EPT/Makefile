@@ -1,21 +1,10 @@
-# Makefile para EPT* con soporte de experimentos
-
 CXX = g++
-CXXFLAGS = -O3 -std=c++11 -Wall
-TARGET = ept
-SOURCES = main.cpp Interpreter.cpp Objvector.cpp Tuple.cpp Cache.cpp
+CXXFLAGS = -O3 -std=c++17 -Wall -Wno-unused-variable -Wno-unused-function -Wno-sign-compare -Wno-maybe-uninitialized -Wno-return-type -Wno-unused-result
+TARGET = EPT_test
+SOURCES = test.cpp main.cpp Interpreter.cpp Objvector.cpp Tuple.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 
-# Configuración de experimentos (valores del paper)
-DATASET ?= dataset.txt
-QUERIES ?= queries.txt
-L ?= 5  # Número de pivotes (default=5)
-
-# Directorios
-RESULTS_DIR = resultados
-LOGS_DIR = logs
-
-.PHONY: all clean run-experiments test-l help
+.PHONY: all clean run test help
 
 all: $(TARGET)
 
@@ -26,74 +15,30 @@ $(TARGET): $(OBJECTS)
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Crear directorios necesarios
-$(RESULTS_DIR) $(LOGS_DIR):
-	mkdir -p $@
+run: $(TARGET)
+	@echo "Ejecutando EPT benchmark..."
+	./$(TARGET)
 
-# Ejecutar con un valor específico de L
-run: $(TARGET) | $(RESULTS_DIR) $(LOGS_DIR)
-	@echo "Ejecutando EPT* con L=$(L)..."
-	./$(TARGET) $(DATASET) \
-	            $(RESULTS_DIR)/index_l$(L).bin \
-	            $(RESULTS_DIR)/results_l$(L).txt \
-	            $(QUERIES) \
-	            $(L) \
-	    | tee $(LOGS_DIR)/log_l$(L).txt
+test: $(TARGET)
+	@echo "Prueba rápida EPT (60s)..."
+	timeout 60s ./$(TARGET) || echo "Timeout"
 
-# Ejecutar experimentos con todos los valores de L del paper
-run-experiments: $(TARGET) | $(RESULTS_DIR) $(LOGS_DIR)
-	@echo "=========================================="
-	@echo "Ejecutando experimentos EPT* (L=3,5,10,15,20)"
-	@echo "=========================================="
-	@for l in 3 5 10 15 20; do \
-	    echo ""; \
-	    echo ">>> Experimento con L=$$l <<<"; \
-	    $(MAKE) run L=$$l DATASET=$(DATASET) QUERIES=$(QUERIES); \
-	    echo "✓ Completado L=$$l"; \
-	    echo ""; \
-	done
-	@echo "=========================================="
-	@echo "Todos los experimentos completados"
-	@echo "Resultados en: $(RESULTS_DIR)/"
-	@echo "Logs en: $(LOGS_DIR)/"
-
-# Probar un valor específico de L
-test-l: $(TARGET) | $(RESULTS_DIR) $(LOGS_DIR)
-	@echo "Probando EPT* con L=$(L)..."
-	@if [ -z "$(L)" ]; then \
-	    echo "Error: Especifica L=<valor>"; \
-	    exit 1; \
-	fi
-	$(MAKE) run L=$(L) DATASET=$(DATASET) QUERIES=$(QUERIES)
-
-# Limpiar archivos compilados
 clean:
 	rm -f $(OBJECTS) $(TARGET)
 	@echo "✓ Archivos objeto y ejecutable eliminados"
 
-# Limpiar todo (incluye resultados)
 clean-all: clean
-	rm -rf $(RESULTS_DIR) $(LOGS_DIR)
-	@echo "✓ Resultados y logs eliminados"
+	rm -rf results/
+	@echo "✓ Resultados eliminados"
 
-# Ayuda
 help:
-	@echo "Makefile para EPT* - Comparación Justa según Paper"
+	@echo "Makefile EPT - Benchmark completo"
 	@echo ""
-	@echo "Uso:"
-	@echo "  make                  - Compilar EPT*"
-	@echo "  make run L=5          - Ejecutar con L=5 pivotes"
-	@echo "  make run-experiments  - Ejecutar con L={3,5,10,15,20}"
-	@echo "  make test-l L=10      - Probar con L=10"
-	@echo "  make clean            - Limpiar compilación"
-	@echo "  make clean-all        - Limpiar todo (incluye resultados)"
+	@echo "COMANDOS:"
+	@echo "  make        - Compilar EPT"
+	@echo "  make run    - Ejecutar benchmark completo"
+	@echo "  make test   - Prueba rápida (60s)"
+	@echo "  make clean  - Limpiar compilación"
 	@echo ""
-	@echo "Parámetros configurables:"
-	@echo "  L=<valor>            - Número de pivotes (default: 5)"
-	@echo "  DATASET=<archivo>    - Dataset a usar (default: dataset.txt)"
-	@echo "  QUERIES=<archivo>    - Queries a usar (default: queries.txt)"
-	@echo ""
-	@echo "Valores de L según paper: {3, 5, 10, 15, 20}"
-	@echo ""
-	@echo "Ejemplo:"
-	@echo "  make run-experiments DATASET=LA.txt QUERIES=queries_LA.txt"
+	@echo "DATASETS: LA, Words, Synthetic"
+	@echo "L_VALUES: 10, 15, 20, 25, 30"

@@ -1,455 +1,600 @@
-/**
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 3 of the License, or
-   (at your option) any later version.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.
-**/
-
-// ============================================================================
-// IMPLEMENTACIÓN DE FQT (Fixed Queries Tree)
-// ============================================================================
-// Paper: "Unlike BKT, FQT utilizes the same pivot at the same level"
-// Paper: "FQT is an unbalanced tree"
-// 
-// DIFERENCIAS CON BKT:
-// - BKT: usa pivotes diferentes aleatoriamente en cada sub-árbol
-// - FQT: usa el MISMO pivote en todos los nodos del mismo nivel
-//
-// CARACTERÍSTICAS:
-// - Árbol diseñado para funciones de distancia discretas (pero puede extenderse a continuas)
-// - Paper: "p_i ∈ P is set as the pivot for the i-th level"
-// - Estructura desbalanceada donde diferentes ramas pueden tener alturas distintas
-//
-// COMPLEJIDADES:
-// - Construcción: O(n*l) donde n=objetos, l=altura (número de pivotes)
-// - Almacenamiento: O(n*s + n*l)
-// - Paper: "With well-chosen pivots, FQT is expected to perform better than BKT"
-//
-// RELACIÓN CON OTROS ÍNDICES:
-// - FHQT: versión balanceada de FQT (todos los objetos en hojas al mismo nivel)
-// - FQA: representación como tabla de FHQT (equivalente a LAESA)
-// ============================================================================
+/*
+ * fqt.c - Implementación corregida del FQ-Tree.
+ *
+ * Correcciones principales aplicadas:
+ *  - Abrir ficheros en modo binario ("rb"/"wb").
+ *  - Usar sizeof(...) correcto al serializar Obj (queries[i].query).
+ *  - Lectura segura de la cadena descr (control EOF / tamaño dinámico).
+ *  - Validación de bsize y arity en build().
+ *  - Comprobación de retornos de malloc/realloc/fopen.
+ *  - Cálculo de step/prev más robusto (prev = min; cast a Tdist).
+ *  - Manejo de errores y prints de diagnóstico donde procede.
+ *
+ * IMPORTANTE: este fichero asume que ../../index.h y ../../bucket.h
+ * declaran Obj, Tdist, Index, Tod, y las funciones (openDB, closeDB,
+ * createbucket, addbucket, savebucket, loadbucket, freebucket,
+ * distance, searchbucket, searchbucketNN, createCelem, addCelem,
+ * radCelem, showCelem, freeCelem, printobj, etc.). Si alguno difiere,
+ * adapta las llamadas correspondientes.
+ */
 
 #include "fqt.h"
 
-void prnstats (Index S);
+void prnstats (Index S); /* prototipo local */
 
-// Función de comparación para ordenar objetos por distancia al pivote
-// Necesaria para particionar objetos en sub-árboles según rangos de distancia
-int compar (const void  *a, const void *b)
-
-   {
-    Tod *x,*y;
-    x = (Tod *) a;
-    y = (Tod *) b;
-	
+/* compar para qsort: ordena por campo dist */
+int compar (const void *a, const void *b)
+{
+    const Tod *x = (const Tod *) a;
+    const Tod *y = (const Tod *) b;
     if (x->dist > y->dist) return 1;
-     else if (x->dist < y->dist) return -1;
-     else return 0;
-   }
+    if (x->dist < y->dist) return -1;
+    return 0;
+}
 
-// Construcción recursiva del FQT
-// Paper: "The construction cost of FQT is O(n*l)"
-// Paper: "FQT utilizes the same pivot at the same level"
+/* Prototipo interno */
+static fqvpnode buildfqvpt (fqvpt *tree, Tod *od, int nobjs, int depth);
+
+/* Construye recursivamente un nodo (devuelve por valor como en original) */
 static fqvpnode buildfqvpt (fqvpt *tree, Tod *od, int nobjs, int depth)
+{
+    int i, per, pptr;
+    Tdist prev, max, min, step;
+    fqvpnode node;
 
-   { int i,per,pptr;
-     Tdist prev,max,min,step;
-     fqvpnode node;
+    node.hoja = (nobjs <= tree->bsize);
 
-     // Crear nodo hoja si el número de objetos es menor o igual al tamaño de bucket
-     // Paper: "FQT is an unbalanced tree" - las hojas pueden estar a diferentes niveles
-     node.hoja = (nobjs <= tree->bsize);
-     if (node.hoja)
-        { node.u.hoja.bucket = createbucket();
-	  node.u.hoja.size = 0;
-	  for (i=0;i<nobjs;i++) 
-	     { node.u.hoja.bucket = addbucket (node.u.hoja.bucket,
-					node.u.hoja.size, od[i].obj);
-	       node.u.hoja.size++;
-	     }
-	}
-     else
-        { if (nobjs == 0)
-	     { node.u.interno.children = NULL;
-	       return node;
-	     }
-          node.u.interno.children = malloc (tree->arity * sizeof(Tchild));
-          // Paper: "FQT utilizes the same pivot at the same level"
-          // Paper: "p_i ∈ P is set as the pivot for the i-th level"
-          // Seleccionar pivote para este nivel (depth) - se usa el mismo en todos los nodos de este nivel
-          if (tree->height <= depth)  /* add a new query */
-             { 
-	       if ((tree->height % 1000) == 0)
-		  tree->queries = realloc (tree->queries,
-                                             (tree->height+1000)*sizeof(query));
-	       // El pivote para el nivel depth es un objeto de los disponibles
-	       tree->queries[tree->height++].query = od[--nobjs].obj;
-             }
-	  // Calcular distancias de todos los objetos al pivote del nivel actual
-	  // Paper: "It chooses a pivot as the root, and maintains the objects having the distance i to the pivot in its i-th sub-tree"
-	  for (i=0;i<nobjs;i++) 
-	      od[i].dist = distance (tree->queries[depth].query, od[i].obj);
-          qsort (od,nobjs,sizeof(Tod),compar);
+    if (node.hoja) {
+        /* Hoja: crear bucket e insertar objetos */
+        node.u.hoja.bucket = createbucket();
+        if (!node.u.hoja.bucket) {
+            fprintf(stderr, "createbucket() failed\n");
+            node.u.hoja.size = 0;
+            return node;
+        }
+        node.u.hoja.size = 0;
+        for (i = 0; i < nobjs; ++i) {
+            node.u.hoja.bucket = addbucket(node.u.hoja.bucket, node.u.hoja.size, od[i].obj);
+            node.u.hoja.size++;
+        }
+    } else {
+        /* Interno */
+        if (nobjs == 0) {
+            node.u.interno.children = NULL;
+            return node;
+        }
 
-          min = od[0].dist; max = od[nobjs-1].dist;
+        node.u.interno.children = malloc(tree->arity * sizeof(Tchild));
+        if (!node.u.interno.children) {
+            perror("malloc children");
+            node.u.interno.children = NULL;
+            node.hoja = true; /* fallback: marcar hoja vacía */
+            node.u.hoja.bucket = NULL;
+            node.u.hoja.size = 0;
+            return node;
+        }
 
-          // Paper: "The continuous distance range can be partitioned into discrete ranges used for indexing"
-          // Dividir el rango de distancias [min, max] en 'arity' sub-rangos
-          // Cada sub-árbol cubre un rango de distancias [dist, dist_siguiente)
-          step = (max-min)/tree->arity;
-          prev = 0; per = 0; pptr = 0;
-          for (i=0;i<tree->arity;i++)
-              { child(&node,i).dist = prev;
-                prev += step;
-                if (i < tree->arity-1) { while (od[per].dist < prev) per++; }
-                else per = nobjs;
-                // Construcción recursiva: cada sub-árbol contiene objetos en su rango de distancia
-                child(&node,i).child = 
-		    buildfqvpt (tree,od+pptr,per-pptr,depth+1);
-                pptr = per;
-              }
-	}
-     return node;
-   }
+        /* Si no hay pivote en nivel 'depth', añadimos uno */
+        if (tree->height <= depth) {
+            /* realloc en bloques de 1000 para reducir resonancias */
+            int newcap = tree->height + 1000;
+            query *tmp = realloc(tree->queries, newcap * sizeof(query));
+            if (!tmp) {
+                perror("realloc queries");
+                /* liberamos children y salimos */
+                free(node.u.interno.children);
+                node.u.interno.children = NULL;
+                node.hoja = true;
+                node.u.hoja.bucket = NULL;
+                node.u.hoja.size = 0;
+                return node;
+            }
+            tree->queries = tmp;
+            /* añadimos el último objeto como pivote (como hacía el original) */
+            tree->queries[tree->height++].query = od[--nobjs].obj;
+        }
 
+        /* calc distancia desde el pivote de este nivel */
+        for (i = 0; i < nobjs; ++i) {
+            od[i].dist = distance(tree->queries[depth].query, od[i].obj);
+        }
 
-// Construcción del índice FQT
-// Paper: "The construction cost of FQT is O(n*l), where l is the height of FQT"
-// Paper: "The height of FQT is set to the number of pivots"
+        qsort(od, nobjs, sizeof(Tod), compar);
+
+        min = od[0].dist;
+        max = od[nobjs - 1].dist;
+
+        /* prevenir división por cero; arity validada en build() */
+        if (tree->arity <= 0) {
+            fprintf(stderr, "buildfqvpt: invalid arity %d\n", tree->arity);
+            /* fallback: hacer una sola partición */
+            step = 0;
+        } else {
+            /* usar cast para evitar división entera si Tdist es entero */
+            step = (Tdist)((double)(max - min) / (double)tree->arity);
+        }
+
+        /* repartir intervalos dentro de [min, max] */
+        prev = min;
+        per = 0;
+        pptr = 0;
+        for (i = 0; i < tree->arity; ++i) {
+            child(&node, i).dist = prev;
+            prev += step;
+            if (i < tree->arity - 1) {
+                /* avanzar per hasta que od[per].dist >= prev
+                 * cuidado con per >= nobjs
+                 */
+                while (per < nobjs && od[per].dist < prev) per++;
+            } else {
+                per = nobjs;
+            }
+            /* construir recursivamente el hijo con el subarray od+pptr ... od+per-1 */
+            child(&node, i).child = buildfqvpt(tree, od + pptr, per - pptr, depth + 1);
+            pptr = per;
+        }
+    }
+
+    return node;
+}
+
+/* Construye el índice: interfaz principal */
 Index build (char *dbname, int n, int *argc, char ***argv)
+{
+    fqvpt *tree;
+    int i, k;
+    Tod *od;
+    int nobjs;
 
+    if (*argc < 2) {
+        fprintf(stderr, "Usage: <program> <args> BUCKET-SIZE ARITY\n");
+        exit(1);
+    }
 
-   { fqvpt *tree;
-     int i,k;
-     Tod *od;
-     int nobjs;
-     if (*argc < 2)
-        { fprintf (stderr,"Usage: <program> <args> BUCKET-SIZE ARITY\n");
-          exit(1);
-        }
-     tree = malloc (sizeof(fqvpt));
-     tree->descr = malloc (strlen(dbname)+1);
-     strcpy (tree->descr,dbname);
-     
-     tree->n = openDB(dbname);
-     if (n && (n < tree->n)) tree->n = n;          
-     nobjs = tree->n;
-     // bsize: tamaño máximo de bucket (determina cuándo crear hojas)
-     tree->bsize = atoi((*argv)[0]);
-     // arity: número de hijos por nodo (factor de ramificación)
-     // Paper: determina en cuántos rangos de distancia se divide cada nivel
-     tree->arity = atoi((*argv)[1]);
-     tree->queries = NULL;
-     // height: número de niveles = número de pivotes usados
-     // Paper: "l is the height of FQT"
-     tree->height = 0; 
-     *argc -= 2; *argv += 2;
-     od = malloc (nobjs * sizeof (Tod));
-     k=0; i=0;
-     while (k < tree->n) od[i++].obj = ++k; 
-     tree->node = buildfqvpt (tree,od,nobjs,0);
-     free (od);
-     prnstats((Index)tree); 
-     return (Index)tree;
-   }
+    tree = malloc(sizeof(fqvpt));
+    if (!tree) {
+        perror("malloc tree");
+        exit(1);
+    }
+    memset(tree, 0, sizeof(fqvpt));
 
+    tree->descr = malloc(strlen(dbname) + 1);
+    if (!tree->descr) {
+        perror("malloc descr");
+        free(tree);
+        exit(1);
+    }
+    strcpy(tree->descr, dbname);
+
+    tree->n = openDB(dbname);
+    if (tree->n < 0) {
+        fprintf(stderr, "openDB failed for %s\n", dbname);
+        free(tree->descr);
+        free(tree);
+        exit(1);
+    }
+    if (n && (n < tree->n)) tree->n = n;
+    nobjs = tree->n;
+
+    /* leer bsize y arity y validarlos */
+    tree->bsize = atoi((*argv)[0]);
+    tree->arity = atoi((*argv)[1]);
+    if (tree->bsize <= 0) {
+        fprintf(stderr, "Invalid BUCKET-SIZE: %d\n", tree->bsize);
+        free(tree->descr);
+        free(tree);
+        exit(1);
+    }
+    if (tree->arity <= 0) {
+        fprintf(stderr, "Invalid ARITY: %d\n", tree->arity);
+        free(tree->descr);
+        free(tree);
+        exit(1);
+    }
+
+    tree->queries = NULL;
+    tree->height = 0;
+
+    *argc -= 2;
+    *argv += 2;
+
+    od = malloc(nobjs * sizeof(Tod));
+    if (!od) {
+        perror("malloc od");
+        free(tree->descr);
+        free(tree);
+        exit(1);
+    }
+
+    k = 0;
+    i = 0;
+    /* llenar objetos (asumiendo que la DB enumera objetos 1..n) */
+    while (k < tree->n) {
+        od[i++].obj = ++k;
+    }
+
+    tree->node = buildfqvpt(tree, od, nobjs, 0);
+
+    free(od);
+
+    prnstats((Index)tree);
+
+    return (Index)tree;
+}
+
+/* Liberar recursivamente */
 static void freefqvpt (fqvpnode *node, int arity)
+{
+    if (node->hoja) {
+        if (node->u.hoja.bucket) freebucket(node->u.hoja.bucket, node->u.hoja.size);
+    } else {
+        int i;
+        if (node->u.interno.children == NULL) return;
+        for (i = 0; i < arity; ++i) {
+            freefqvpt(&child(node, i).child, arity);
+        }
+        free(node->u.interno.children);
+    }
+}
 
-   { if (node->hoja) freebucket (node->u.hoja.bucket,node->u.hoja.size);
-     else 
-	{ int i;
-          if (node->u.interno.children == NULL) return;
-	  for (i=0;i<arity;i++)
-	      freefqvpt (&child(node,i).child,arity);
-          free (node->u.interno.children);
-	}
-   }
-
+/* Liberar índice */
 void freeIndex (Index S, bool libobj)
+{
+    fqvpt *tree = (fqvpt*)S;
+    if (!tree) return;
+    if (tree->descr) free(tree->descr);
+    if (tree->queries) free(tree->queries);
+    freefqvpt(&tree->node, tree->arity);
+    free(tree);
+    if (libobj) closeDB();
+}
 
-   { fqvpt *tree = (fqvpt*)S;
-     free (tree->descr);
-     free (tree->queries);
-     freefqvpt (&tree->node,tree->arity);
-     free (tree);
-     if (libobj) closeDB();
-   }
-
-// Guardar nodo del FQT recursivamente
-// Paper: "The storage cost of FQT is O(n*s + n*l)"
+/* Guarda un nodo de forma recursiva (binario) */
 static void savenode (fqvpnode *node, FILE *f, int arity)
+{
+    int i;
+    unsigned char hoja = node->hoja ? 1 : 0;
+    if (fwrite(&hoja, sizeof(hoja), 1, f) != 1) {
+        perror("savenode: fwrite hoja");
+        return;
+    }
 
-   { int i;
-     char hoja = node->hoja;
-     putc (hoja,f);
-     if (node->hoja)
-	{ fwrite (&node->u.hoja.size,sizeof(int),1,f);
-	  savebucket (node->u.hoja.bucket,node->u.hoja.size,f);
-	}
-     else
-	{ // Guardar rangos de distancia y sub-árboles
-	  for (i=0;i<arity;i++)
-	      { fwrite (&child(node,i).dist, sizeof(Tdist),1,f);
-		savenode(&child(node,i).child,f,arity);
-	      }
-	}
-   }
+    if (node->hoja) {
+        if (fwrite(&node->u.hoja.size, sizeof(int), 1, f) != 1) {
+            perror("savenode: fwrite size");
+            return;
+        }
+        savebucket(node->u.hoja.bucket, node->u.hoja.size, f);
+    } else {
+        for (i = 0; i < arity; ++i) {
+            if (fwrite(&child(node, i).dist, sizeof(Tdist), 1, f) != 1) {
+                perror("savenode: fwrite dist");
+                return;
+            }
+            savenode(&child(node, i).child, f, arity);
+        }
+    }
+}
 
-// Guardar índice FQT completo en disco
-// Paper: "The storage cost of FQT is O(n*s + n*l)"
-// - O(n*s): almacenar n objetos de tamaño s
-// - O(n*l): almacenar estructura del árbol con l niveles
+/* Guardar índice en fichero (binario) */
 void saveIndex (Index S, char *fname)
+{
+    FILE *f = fopen(fname, "wb"); /* modo binario */
+    if (!f) {
+        perror("saveIndex: fopen");
+        return;
+    }
 
-   { FILE *f = fopen(fname,"w");
-     fqvpt *tree = (fqvpt*)S;
-     int i;
-     fwrite (tree->descr,strlen(tree->descr)+1,1,f);
-     fwrite (&tree->n,sizeof(int),1,f);
-     fwrite (&tree->bsize,sizeof(int),1,f);
-     fwrite (&tree->arity,sizeof(int),1,f);
-     fwrite (&tree->height,sizeof(int),1,f);
-     // Paper: "p_i ∈ P is set as the pivot for the i-th level"
-     // Guardar los l pivotes (uno por nivel)
-     for (i=0;i<tree->height;i++)
-	 fwrite(&tree->queries[i].query,sizeof(int),1,f);
-     savenode (&tree->node,f, tree->arity);
-     fclose (f);
-   }
+    fqvpt *tree = (fqvpt*)S;
+    int i;
 
-// Cargar nodo del FQT recursivamente desde disco
+    /* escribir descr incluyendo '\0' */
+    if (fwrite(tree->descr, strlen(tree->descr) + 1, 1, f) != 1) {
+        perror("saveIndex: fwrite descr");
+        fclose(f);
+        return;
+    }
+
+    if (fwrite(&tree->n, sizeof(int), 1, f) != 1) { perror("fwrite n"); fclose(f); return; }
+    if (fwrite(&tree->bsize, sizeof(int), 1, f) != 1) { perror("fwrite bsize"); fclose(f); return; }
+    if (fwrite(&tree->arity, sizeof(int), 1, f) != 1) { perror("fwrite arity"); fclose(f); return; }
+    if (fwrite(&tree->height, sizeof(int), 1, f) != 1) { perror("fwrite height"); fclose(f); return; }
+
+    /* escribir queries: sólo la parte query.query (Obj), usar sizeof real */
+    for (i = 0; i < tree->height; ++i) {
+        if (fwrite(&tree->queries[i].query, sizeof(tree->queries[i].query), 1, f) != 1) {
+            perror("saveIndex: fwrite query");
+            fclose(f);
+            return;
+        }
+    }
+
+    savenode(&tree->node, f, tree->arity);
+
+    fclose(f);
+}
+
+/* Carga recursiva de un nodo */
 static void loadnode (fqvpnode *node, FILE *f, int arity)
+{
+    int i;
+    int c = getc(f);
+    if (c == EOF) {
+        fprintf(stderr, "loadnode: unexpected EOF while reading hoja flag\n");
+        node->hoja = false;
+        node->u.interno.children = NULL;
+        return;
+    }
+    node->hoja = (c != 0);
 
-   { int i;
-     char hoja = getc(f);
-     node->hoja = hoja;
-     if (hoja)
-	{ fread (&node->u.hoja.size,sizeof(int),1,f);
-	  node->u.hoja.bucket = loadbucket (node->u.hoja.size,f);
-	}
-     else
-	{ node->u.interno.children = malloc(arity*sizeof(Tchild));
-	  // Cargar rangos de distancia y sub-árboles recursivamente
-	  for (i=0;i<arity;i++)
-	      { fread (&child(node,i).dist, sizeof(Tdist),1,f);
-		loadnode (&child(node,i).child,f,arity);
-	      }
-	}
-   }
+    if (node->hoja) {
+        if (fread(&node->u.hoja.size, sizeof(int), 1, f) != 1) {
+            fprintf(stderr, "loadnode: fread size failed\n");
+            node->u.hoja.size = 0;
+            node->u.hoja.bucket = NULL;
+            return;
+        }
+        node->u.hoja.bucket = loadbucket(node->u.hoja.size, f);
+    } else {
+        node->u.interno.children = malloc(arity * sizeof(Tchild));
+        if (!node->u.interno.children) {
+            perror("loadnode: malloc children");
+            node->u.interno.children = NULL;
+            return;
+        }
+        for (i = 0; i < arity; ++i) {
+            if (fread(&child(node, i).dist, sizeof(Tdist), 1, f) != 1) {
+                fprintf(stderr, "loadnode: fread dist failed\n");
+                /* intentar continuar pero marcar hijo vacío */
+                child(node, i).dist = 0;
+                child(node, i).child.u.interno.children = NULL;
+                continue;
+            }
+            loadnode(&child(node, i).child, f, arity);
+        }
+    }
+}
 
-// Cargar índice FQT completo desde disco
-// Paper: "FQT utilizes the same pivot at the same level"
+/* Cargar índice desde fichero binario */
 Index loadIndex (char *fname)
+{
+    FILE *f = fopen(fname, "rb");
+    if (!f) {
+        perror("loadIndex: fopen");
+        return NULL;
+    }
 
-   { char str[1024]; char *ptr = str;
-     FILE *f = fopen(fname,"r");
-     fqvpt *tree = malloc (sizeof(fqvpt));
-     int i;
-     while ((*ptr++ = getc(f)));
-     tree->descr = malloc (ptr-str);
-     strcpy (tree->descr,str);
-     openDB (str);
-     fread (&tree->n,sizeof(int),1,f);
-     fread (&tree->bsize,sizeof(int),1,f);
-     fread (&tree->arity,sizeof(int),1,f);
-     fread (&tree->height,sizeof(int),1,f);
-     // Paper: "The height of FQT is set to the number of pivots"
-     // Cargar los l pivotes (queries) - uno por nivel
-     tree->queries = malloc (tree->height * sizeof(query));
-     for (i=0;i<tree->height;i++)
-         fread(&tree->queries[i].query, sizeof(int),1,f);
-     loadnode (&tree->node,f,tree->arity);
-     fclose (f);
-     return (Index)tree;
-   }
+    fqvpt *tree = malloc(sizeof(fqvpt));
+    if (!tree) {
+        perror("loadIndex: malloc tree");
+        fclose(f);
+        return NULL;
+    }
+    memset(tree, 0, sizeof(fqvpt));
 
-// Búsqueda por rango recursiva (MRQ)
-// Paper: "In order to compute MRQ(q,r), the nodes in BKT are traversed in depth-first fashion, and Lemma 4.1 is used"
-// Paper: "MRQ processing using FQT are the same as when using BKT"
-static int _search (fqvpt *tree, fqvpnode *node, Obj obj, Tdist r, int depth,
-		  int arity, bool show)
+    /* leer descr dinámicamente (hasta '\0') con protección de tamaño */
+    size_t cap = 256;
+    size_t len = 0;
+    char *buf = malloc(cap);
+    if (!buf) { perror("malloc buf"); fclose(f); free(tree); return NULL; }
 
-   { int rep = 0;
-     if (node->hoja)
-        { // Nodo hoja: verificar todos los objetos del bucket
-          rep += searchbucket (node->u.hoja.bucket,node->u.hoja.size,obj,r,show);
+    int ch;
+    while ((ch = getc(f)) != EOF) {
+        buf[len++] = (char)ch;
+        if (buf[len - 1] == '\0') break;
+        if (len + 1 >= cap) {
+            cap *= 2;
+            char *tmp = realloc(buf, cap);
+            if (!tmp) { perror("realloc buf"); free(buf); free(tree); fclose(f); return NULL; }
+            buf = tmp;
         }
-     else
-        { int i;
-          Tdist dist;
-          if (node->u.interno.children == NULL) return rep;
-          // dist: distancia del query al pivote del nivel actual (pre-calculada)
-          dist = tree->queries[depth].dist;
-          // Paper: "Lemma 4.1 is used" - Poda por desigualdad triangular
-          // Si el rango de distancias del sub-árbol [child(i).dist, child(i+1).dist) 
-          // intersecta con [dist-r, dist+r], entonces puede contener resultados
-          for (i=0;i<arity;i++)
-              if (((i==arity-1)||(child(node,i+1).dist > dist-r)) &&
-                  (child(node,i).dist <= dist+r))
-                 rep += _search(tree,&child(node,i).child,obj,
-                                r,depth+1,arity,show);
+    }
+    if (ch == EOF && (len == 0 || buf[len - 1] != '\0')) {
+        fprintf(stderr, "loadIndex: unexpected EOF while reading descr\n");
+        free(buf);
+        free(tree);
+        fclose(f);
+        return NULL;
+    }
+
+    tree->descr = malloc(len);
+    if (!tree->descr) { perror("malloc descr2"); free(buf); free(tree); fclose(f); return NULL; }
+    memcpy(tree->descr, buf, len);
+    free(buf);
+
+    /* leer parámetros */
+    if (fread(&tree->n, sizeof(int), 1, f) != 1) { perror("fread n"); freeIndex((Index)tree, false); fclose(f); return NULL; }
+    if (fread(&tree->bsize, sizeof(int), 1, f) != 1) { perror("fread bsize"); freeIndex((Index)tree, false); fclose(f); return NULL; }
+    if (fread(&tree->arity, sizeof(int), 1, f) != 1) { perror("fread arity"); freeIndex((Index)tree, false); fclose(f); return NULL; }
+    if (fread(&tree->height, sizeof(int), 1, f) != 1) { perror("fread height"); freeIndex((Index)tree, false); fclose(f); return NULL; }
+
+    /* validar arity/bsize leídos */
+    if (tree->arity <= 0 || tree->bsize <= 0) {
+        fprintf(stderr, "loadIndex: invalid arity/bsize read from file\n");
+        freeIndex((Index)tree, false);
+        fclose(f);
+        return NULL;
+    }
+
+    /* reservar queries y leer los Obj */
+    tree->queries = malloc(tree->height * sizeof(query));
+    if (!tree->queries && tree->height > 0) {
+        perror("malloc queries loadIndex");
+        freeIndex((Index)tree, false);
+        fclose(f);
+        return NULL;
+    }
+    for (int i = 0; i < tree->height; ++i) {
+        if (fread(&tree->queries[i].query, sizeof(tree->queries[i].query), 1, f) != 1) {
+            fprintf(stderr, "loadIndex: fread query failed\n");
+            freeIndex((Index)tree, false);
+            fclose(f);
+            return NULL;
         }
-     return rep;
-   }
+        tree->queries[i].dist = 0; /* se calculará en tiempo de búsqueda */
+    }
 
+    loadnode(&tree->node, f, tree->arity);
 
-// Búsqueda por rango (MRQ - Metric Range Query)
-// Paper: "MRQ processing using FQT are the same as when using BKT"
-// Paper: "nodes in BKT are traversed in depth-first fashion"
+    fclose(f);
+
+    /* abrir la base de datos (no cargar objetos) */
+    if (openDB(tree->descr) < 0) {
+        fprintf(stderr, "loadIndex: openDB failed for %s\n", tree->descr);
+        /* no liberamos tree aquí — el llamante decide */
+    }
+
+    return (Index)tree;
+}
+
+/* Búsqueda auxiliar (rango). Implementación consolidada y segura */
+static int _search (fqvpt *tree, fqvpnode *node, Obj obj, Tdist r, int depth, int arity, bool show)
+{
+    int rep = 0;
+    if (node->hoja) {
+        rep += searchbucket(node->u.hoja.bucket, node->u.hoja.size, obj, r, show);
+    } else {
+        int i;
+        Tdist dist;
+        if (node->u.interno.children == NULL) return rep;
+        /* calcular distancia del pivote en este nivel (se almacena en tree->queries[depth].dist por caller) */
+        dist = tree->queries[depth].dist;
+        for (i = 0; i < arity; ++i) {
+            Tdist nextDist = (i + 1 < arity) ? child(node, i + 1).dist : (Tdist) (dist + r + 1);
+            if (((i == arity - 1) || (nextDist > dist - r)) && (child(node, i).dist <= dist + r)) {
+                rep += _search(tree, &child(node, i).child, obj, r, depth + 1, arity, show);
+            }
+        }
+    }
+    return rep;
+}
+
+/* Interfaz pública de búsqueda (rango) */
 int search (Index S, Obj obj, Tdist r, int show)
+{
+    fqvpt *tree = (fqvpt*)S;
+    if (!tree) return 0;
 
-   { int i;
-     int rep = 0;
-     fqvpt *tree = (fqvpt*)S;
-     // Paper: "FQT utilizes the same pivot at the same level"
-     // Pre-calcular distancias del query a todos los pivotes (uno por nivel)
-     for (i=0;i<tree->height;i++) 
-	 { tree->queries[i].dist = distance (obj,tree->queries[i].query);
-	   // Los pivotes también pueden ser parte del resultado
-	   if (tree->queries[i].dist <= r)
-	      { rep++;
-	        if (show) printobj(tree->queries[i].query);
-	      }
-	}
-     // Iniciar búsqueda recursiva en profundidad (depth-first)
-     return rep + _search (tree,&tree->node,obj,r,0,tree->arity,show);
-   }
-
-// Búsqueda de k vecinos más cercanos recursiva (MkNNQ)
-// Paper: "In order to compute MkNNQ(q,k), the nodes in BKT are traversed in best-first manner"
-// Paper: "in ascending order of their minimum distances to the query object q, and Lemma 4.1 is used"
-// Paper: "MkNNQ processing using FQT are the same as when using BKT"
-// Paper: "MkNNQ(q,k) follows the second strategy from Section 2.2"
-static void _searchNN (fqvpt *tree, fqvpnode *node, Obj obj, Tcelem *res, 
-		       int depth)
-
-   { int arity = tree->arity;
-     if (node->hoja)
-        { // Nodo hoja: buscar k-NN en el bucket
-          searchbucketNN (node->u.hoja.bucket,node->u.hoja.size,obj,res);
+    int rep = 0;
+    for (int i = 0; i < tree->height; ++i) {
+        tree->queries[i].dist = distance(obj, tree->queries[i].query);
+        if (tree->queries[i].dist <= r) {
+            rep++;
+            if (show) printobj(tree->queries[i].query);
         }
-     else
-	{ int i,ci,d;
-          Tdist dist;
-	  bool ea,eb;
-          if (node->u.interno.children == NULL) return;
-          // dist: distancia del query al pivote del nivel actual
-          dist = tree->queries[depth].dist;
-				/* pues los pivotes son del conjunto */
-          // Paper: "in ascending order of their minimum distances to the query object q"
-          // Encontrar el sub-árbol cuyo rango de distancias contiene dist
-          for (ci=0;ci<arity;ci++)
-             if (child(node,ci).dist > dist) break;
-          ci--; ea = eb = false;
-          // Explorar sub-árboles en orden de cercanía (best-first)
-          // Comenzar con el sub-árbol más cercano (ci) y expandir hacia ambos lados
-          for (d=0;d<=arity;d++)
-              { i = ci-d;
-                if (i < 0) ea = true;
-                if (!ea)
-                   { // Paper: "Lemma 4.1 is used to prune unqualified nodes"
-                     // Poda: si dist - child(i+1).dist > radCelem(res), no puede contener k-NN
-                     if ((i==arity-1) || (radCelem(res) == -1) ||
-			 (dist-child(node,i+1).dist <= radCelem(res)))
-                       _searchNN (tree,&child(node,i).child,
-                                  obj,res,depth+1);
-                     else ea = true;
-                   }
-                if (d==0) continue;
-		i = ci+d;
-                if (i >= arity) eb = true;
-                if (!eb)
-                   { // Poda simétrica para el lado derecho
-                     if ((radCelem(res) == -1) ||
-			 (child(node,i).dist-dist <= radCelem(res)))
-                        _searchNN (tree,&child(node,i).child,
-                                   obj,res,depth+1);
-                     else eb = true;
-                   }
-              }
-	}
-   }
+    }
+    rep += _search(tree, &tree->node, obj, r, 0, tree->arity, show);
+    return rep;
+}
 
-// Búsqueda de k vecinos más cercanos (MkNNQ - Metric k-Nearest Neighbor Query)
-// Paper: "MkNNQ processing using FQT are the same as when using BKT"
-// Paper: "nodes are traversed in best-first manner, i.e., in ascending order of their minimum distances"
+/* Búsqueda k-NN auxiliar (recursiva) */
+static void _searchNN (fqvpt *tree, fqvpnode *node, Obj obj, Tcelem *res, int depth)
+{
+    int arity = tree->arity;
+
+    if (node->hoja) {
+        searchbucketNN(node->u.hoja.bucket, node->u.hoja.size, obj, res);
+    } else {
+        int ci, i, d;
+        Tdist dist;
+        bool ea, eb;
+        if (node->u.interno.children == NULL) return;
+        dist = tree->queries[depth].dist;
+
+        /* encontrar el primer child con child.dist > dist */
+        for (ci = 0; ci < arity; ++ci) {
+            if (child(node, ci).dist > dist) break;
+        }
+        ci--;
+        ea = eb = false;
+
+        /* explorar en orden creciente de distancia hacia fuera desde ci */
+        for (d = 0; d <= arity; ++d) {
+            /* lado izquierdo */
+            i = ci - d;
+            if (i < 0) ea = true;
+            if (!ea) {
+                if ((i == arity - 1) || (radCelem(res) == -1) || (dist - child(node, i + 1).dist <= radCelem(res))) {
+                    _searchNN(tree, &child(node, i).child, obj, res, depth + 1);
+                } else ea = true;
+            }
+            if (d == 0) continue;
+
+            /* lado derecho */
+            i = ci + d;
+            if (i >= arity) eb = true;
+            if (!eb) {
+                if ((radCelem(res) == -1) || (child(node, i).dist - dist <= radCelem(res))) {
+                    _searchNN(tree, &child(node, i).child, obj, res, depth + 1);
+                } else eb = true;
+            }
+        }
+    }
+}
+
+/* Interfaz pública k-NN */
 Tdist searchNN (Index S, Obj obj, int k, bool show)
+{
+    fqvpt *tree = (fqvpt*)S;
+    if (!tree) return (Tdist)-1;
 
-   { fqvpt *tree = (fqvpt*)S;
-     Tdist mdif;
-     int i;
-     Tcelem res = createCelem(k);
-     // Paper: "FQT utilizes the same pivot at the same level"
-     // Pre-calcular distancias a todos los pivotes (uno por nivel)
-     for (i=0;i<tree->height;i++) 
-	 { tree->queries[i].dist = distance (obj,tree->queries[i].query);
-           // Los pivotes también pueden ser candidatos a k-NN
-           addCelem (&res,tree->queries[i].query,tree->queries[i].dist);
-	 }
-     // Iniciar búsqueda recursiva en best-first order
-     _searchNN (tree,&tree->node,obj,&res,0);
-     if (show) showCelem (&res);
-     mdif = radCelem(&res);
-     freeCelem (&res);
-     return mdif;
-   }
+    Tdist mdif;
+    Tcelem res = createCelem(k);
 
+    for (int i = 0; i < tree->height; ++i) {
+        tree->queries[i].dist = distance(obj, tree->queries[i].query);
+        addCelem(&res, tree->queries[i].query, tree->queries[i].dist);
+    }
 
+    _searchNN(tree, &tree->node, obj, &res, 0);
+
+    if (show) showCelem(&res);
+    mdif = radCelem(&res);
+    freeCelem(&res);
+    return mdif;
+}
+
+/* Estadísticas / utilidades recursivas */
 static int numnodes (fqvpnode *node, int depth, int arity)
-
-   { int i,ret=1;
-     if (node->hoja) return 0;
-     if (node->u.interno.children == NULL) return 0;
-     for (i=0;i<arity;i++)
-	 ret += numnodes(&child(node,i).child,depth-1,arity);
-     return ret;
-   }
+{
+    int i, ret = 1;
+    if (node->hoja) return 0;
+    if (node->u.interno.children == NULL) return 0;
+    for (i = 0; i < arity; ++i) ret += numnodes(&child(node, i).child, depth - 1, arity);
+    return ret;
+}
 
 static int numbucks (fqvpnode *node, int depth, int arity)
-
-   { int i,ret=0;
-     if (node->hoja) return 1;
-     if (node->u.interno.children == NULL) return 0;
-     for (i=0;i<arity;i++)
-	 ret += numbucks(&child(node,i).child,depth-1,arity);
-     return ret;
-   }
+{
+    int i, ret = 0;
+    if (node->hoja) return 1;
+    if (node->u.interno.children == NULL) return 0;
+    for (i = 0; i < arity; ++i) ret += numbucks(&child(node, i).child, depth - 1, arity);
+    return ret;
+}
 
 static int sizebucks (fqvpnode *node, int depth, int arity)
+{
+    int i, ret = 0;
+    if (node->hoja) return node->u.hoja.size;
+    if (node->u.interno.children == NULL) return 0;
+    for (i = 0; i < arity; ++i) ret += sizebucks(&child(node, i).child, depth - 1, arity);
+    return ret;
+}
 
-   { int i,ret=0;
-     if (node->hoja) return node->u.hoja.size;
-     if (node->u.interno.children == NULL) return 0;
-     for (i=0;i<arity;i++)
-	 ret += sizebucks(&child(node,i).child,depth-1,arity);
-     return ret;
-   }
-
-// Imprimir estadísticas del FQT construido
-// Paper: "FQT is an unbalanced tree"
-// Paper: "The construction cost of FQT is O(n*l)"
+/* Imprime estadísticas del índice */
 void prnstats (Index S)
+{
+    fqvpt *tree = (fqvpt*)S;
+    if (!tree) return;
 
-   { fqvpt *tree = (fqvpt*)S;
-     int nbucks = numbucks(&tree->node,tree->height,tree->arity);
-     int sbucks = sizebucks(&tree->node,tree->height,tree->arity);
-     printf ("number of elements: %i\n",sbucks);
-     // Paper: "l is the height of FQT" - número de niveles = número de pivotes
-     printf ("height: %i\n",tree->height);
-     // arity: número de hijos por nodo (factor de ramificación)
-     printf ("arity: %i\n",tree->arity);
-     printf ("number of nodes: %i\n",
-		numnodes(&tree->node,tree->height,tree->arity));
-     printf ("number of buckets: %i\n",nbucks);
-     printf ("average size of bucket: %0.2f\n", sbucks/(double)nbucks);
-   }
-
+    int nbucks = numbucks(&tree->node, tree->height, tree->arity);
+    int sbucks = sizebucks(&tree->node, tree->height, tree->arity);
+    printf("number of elements: %i\n", sbucks);
+    printf("height: %i\n", tree->height);
+    printf("arity: %i\n", tree->arity);
+    printf("number of nodes: %i\n", numnodes(&tree->node, tree->height, tree->arity));
+    printf("number of buckets: %i\n", nbucks);
+    if (nbucks > 0) printf("average size of bucket: %0.2f\n", sbucks / (double)nbucks);
+    else printf("average size of bucket: 0.00\n");
+}
