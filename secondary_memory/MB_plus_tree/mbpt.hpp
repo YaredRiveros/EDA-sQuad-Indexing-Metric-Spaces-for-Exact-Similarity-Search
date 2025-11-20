@@ -18,6 +18,7 @@
 #include <stdexcept>
 #include <queue>
 #include <map>
+#include <set>
 #include <iostream>
 
 /*
@@ -79,8 +80,9 @@ private:
     std::vector<LeafInfo> leaves;
     std::vector<RAFEntry> rafEntries;  // RAF in-memory (sorted by key)
     
-    // B+-tree: map ordenado key -> object id
-    std::map<uint64_t, int32_t> btreeIndex;
+    // B+-tree: map ordenado key -> object ids
+    // IMPORTANTE: Usamos multimap porque múltiples objetos pueden compartir la misma key
+    std::multimap<uint64_t, int32_t> btreeIndex;
 
     // Archivos
     std::string rafPath;
@@ -108,8 +110,19 @@ public:
     void clear_counters() const { compDist = pageReads = pageWrites = queryTime = 0; }
     long long get_compDist()  const { return compDist; }
     long long get_pageReads() const { return pageReads; }
-    long long get_pageWrites()const { return pageWrites; }
+    long long get_pageWrites() const { return pageWrites; }
     long long get_queryTime() const { return queryTime; }
+    
+    // DEBUG: métodos temporales para diagnóstico
+    size_t debug_get_blockNodes_size() const { return blockNodes.size(); }
+    size_t debug_get_leaves_size() const { return leaves.size(); }
+    void debug_print_root() const {
+        if (!blockNodes.empty()) {
+            const auto& root = blockNodes[0];
+            std::cout << "  Root: isLeaf=" << root.isLeaf << " center=" << root.center 
+                      << " left=" << root.left << " right=" << root.right << std::endl;
+        }
+    }
 
 private:
     inline double distObj(int a, int b) const {
@@ -195,7 +208,8 @@ public:
                 entry.key = key;
                 rafEntries.push_back(entry);
                 
-                btreeIndex[key] = id;
+                // Multimap permite múltiples valores por key
+                btreeIndex.insert({key, id});
             }
 
             int leafIdx = leaves.size();
@@ -258,40 +272,43 @@ public:
 private:
     // Construcción recursiva del block tree con ρ-split
     void buildBlockTree(int nodeIdx) {
-        BlockNode& B = blockNodes[nodeIdx];
+        // IMPORTANTE: NO usar referencias a blockNodes[nodeIdx] porque
+        // push_back puede realocar el vector e invalidar referencias
         
-        if ((int)B.objects.size() <= leafCap) {
-            B.isLeaf = true;
+        if ((int)blockNodes[nodeIdx].objects.size() <= leafCap) {
+            blockNodes[nodeIdx].isLeaf = true;
             // Seleccionar center para hoja
-            B.center = selectCenter(B.objects);
-            B.maxDist = computeMaxDist(B.objects, B.center);
+            blockNodes[nodeIdx].center = selectCenter(blockNodes[nodeIdx].objects);
+            blockNodes[nodeIdx].maxDist = computeMaxDist(blockNodes[nodeIdx].objects, blockNodes[nodeIdx].center);
             return;
         }
 
         // Seleccionar partition center
-        B.center = selectCenter(B.objects);
-        B.rho = rho;
+        int center = selectCenter(blockNodes[nodeIdx].objects);
+        blockNodes[nodeIdx].center = center;
+        blockNodes[nodeIdx].rho = rho;
 
         // Calcular distancias y encontrar mediana
         std::vector<std::pair<double, int>> distances;
-        distances.reserve(B.objects.size());
+        distances.reserve(blockNodes[nodeIdx].objects.size());
         double maxD = 0.0;
         
-        for (int id : B.objects) {
-            double d = distObj(id, B.center);
+        for (int id : blockNodes[nodeIdx].objects) {
+            double d = distObj(id, center);
             distances.emplace_back(d, id);
             if (d > maxD) maxD = d;
         }
         
         std::sort(distances.begin(), distances.end());
-        B.dmed = distances[distances.size() / 2].first;
-        B.maxDist = maxD;
+        double dmed = distances[distances.size() / 2].first;
+        blockNodes[nodeIdx].dmed = dmed;
+        blockNodes[nodeIdx].maxDist = maxD;
 
         // ρ-split: dividir según Definition 4.3
         // Bucket 0: d(o,c) ∈ [0, dmed-ρ]
         // Bucket 1: d(o,c) ∈ (dmed-ρ, ∞)
         std::vector<int> leftObjs, rightObjs;
-        double threshold = B.dmed - B.rho;
+        double threshold = dmed - rho;
         
         for (const auto& [d, id] : distances) {
             if (d <= threshold) {
@@ -303,35 +320,38 @@ private:
 
         // Si no se puede dividir, convertir en hoja
         if (leftObjs.empty() || rightObjs.empty()) {
-            B.isLeaf = true;
+            blockNodes[nodeIdx].isLeaf = true;
             return;
         }
 
-        // Crear nodos hijos
+        // Crear nodos hijos - guardar valores antes de push_back
+        int currentBlockValue = blockNodes[nodeIdx].blockValue;
+        int currentLevel = blockNodes[nodeIdx].level;
+        
         int leftIdx = blockNodes.size();
         BlockNode leftNode;
         leftNode.isLeaf = false;
-        leftNode.level = B.level + 1;
-        leftNode.blockValue = (B.blockValue << 1) | 0;
+        leftNode.level = currentLevel + 1;
+        leftNode.blockValue = (currentBlockValue << 1) | 0;
         leftNode.objects = std::move(leftObjs);
         blockNodes.push_back(leftNode);
 
         int rightIdx = blockNodes.size();
         BlockNode rightNode;
         rightNode.isLeaf = false;
-        rightNode.level = B.level + 1;
-        rightNode.blockValue = (B.blockValue << 1) | 1;
+        rightNode.level = currentLevel + 1;
+        rightNode.blockValue = (currentBlockValue << 1) | 1;
         rightNode.objects = std::move(rightObjs);
         blockNodes.push_back(rightNode);
 
-        B.left = leftIdx;
-        B.right = rightIdx;
+        blockNodes[nodeIdx].left = leftIdx;
+        blockNodes[nodeIdx].right = rightIdx;
 
         // Recursión
         buildBlockTree(leftIdx);
         buildBlockTree(rightIdx);
 
-        B.objects.clear();
+        blockNodes[nodeIdx].objects.clear();
     }
 
     // Selecciona center heurísticamente
@@ -503,14 +523,11 @@ private:
         // Left: d(o,c) ∈ [0, dmed-ρ]
         // Right: d(o,c) ∈ (dmed-ρ, ∞)
         
-        bool visitLeft = false;
-        bool visitRight = false;
-
-        // Si d(q,c) - R <= threshold, intersecta left
-        if (dqc - R <= threshold) visitLeft = true;
+        // Para que la esfera B(q,R) intersecte con Left: dqc - R <= dmed - ρ
+        // Para que la esfera B(q,R) intersecte con Right: dqc + R > dmed - ρ
         
-        // Si d(q,c) + R > threshold, intersecta right
-        if (dqc + R > threshold) visitRight = true;
+        bool visitLeft = (dqc - R <= threshold);
+        bool visitRight = (dqc + R > threshold);
 
         if (visitLeft && B.left >= 0) {
             traverseBlockTree(B.left, qId, R, outLeaves);
