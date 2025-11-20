@@ -1,65 +1,66 @@
+#ifndef FQT_H
+#define FQT_H
+
+/* Encabezado corregido para FQ-Tree (FQVP tree).
+ * Mantiene las mismas dependencias originales. Asegúrate que
+ * ../../index.h y ../../bucket.h declaren Obj, Tdist, Index, etc.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <errno.h>
+
 #include "../../index.h"
 #include "../../bucket.h"
 
-// ============================================================================
-// ESTRUCTURAS DE DATOS PARA FQT (Fixed Queries Tree)
-// ============================================================================
-// Paper: "FQT utilizes the same pivot at the same level"
-// Paper: "FQT is an unbalanced tree"
-// ============================================================================
+/* Nodo del árbol FQ (hoja o interno). Se conserva la unión original. */
+typedef struct sfqnode {
+    bool hoja;
+    union {
+        struct {
+            void *bucket;    /* bucket creado por bucket.h */
+            int size;        /* número de objetos en el bucket */
+        } hoja;
+        struct {
+            void *children;  /* puntero a array de Tchild (se castea) */
+        } interno;
+    } u;
+} fqvpnode;
 
-// Nodo del FQT - puede ser hoja o interno
-// Paper: "FQT is an unbalanced tree" - hojas pueden estar a diferentes niveles
-typedef struct sfqnode
-   { bool hoja;
-     union
-        { struct
-             { void *bucket;  // Almacena objetos en nodos hoja
-               int size;
-             } hoja;
-          struct
-             { void *children;  // Array de hijos (Tchild) en nodos internos
-             } interno;
-        } u;
-   } fqvpnode;
+/* Un hijo contiene el límite (dist) y el nodo hijo. 
+ * Nota: el diseño original tenía fqvpnode por valor dentro de Tchild.
+ * Lo dejamos por compatibilidad (evita cambiar API externa).
+ */
+typedef struct {
+    Tdist dist;     /* [dist, dist siguiente) */
+    fqvpnode child; /* subárbol */
+} Tchild;
 
-// Estructura de un hijo en nodo interno
-// Paper: "maintains the objects having the distance i to the pivot in its i-th sub-tree"
-// Paper: "each sub-tree covers a range of distance values"
-typedef struct
-   { Tdist dist;  /* [dist,dist sgte) - rango de distancias que cubre este sub-árbol */
-     fqvpnode child;
-   } Tchild;
+/* Query del nivel: almacena un objeto pivote y su distancia calculada. */
+typedef struct {
+    Obj query;
+    Tdist dist;
+} query;
 
-// Estructura de query/pivote
-// Paper: "FQT utilizes the same pivot at the same level"
-// Paper: "p_i ∈ P is set as the pivot for the i-th level"
-typedef struct
-   { Obj query;   // El pivote para un nivel específico
-     Tdist dist;  // Distancia del query actual a este pivote (calculada durante búsqueda)
-   } query;
+/* Estructura principal del índice FQ */
+typedef struct {
+    query *queries;     /* array dinámico de queries (pivotes por nivel) */
+    int height;         /* número de pivotes (niveles) */
+    int bsize;          /* tamaño de bucket */
+    int arity;          /* aridad del árbol */
+    int n;              /* número de objetos en la BD */
+    fqvpnode node;      /* nodo raíz (por valor, como en el original) */
+    char *descr;        /* descripción / nombre BD */
+} fqvpt;
 
-// Estructura principal del FQT
-// Paper: "The construction cost of FQT is O(n*l)"
-// Paper: "The storage cost of FQT is O(n*s + n*l)"
-typedef struct
-   { query *queries;  // Array de pivotes, uno por nivel (tamaño = height)
-     int height;      // Paper: "l is the height of FQT" (número de niveles = número de pivotes)
-     int bsize;       // Tamaño máximo de bucket (hojas)
-     int arity;       // Número de hijos por nodo (factor de ramificación)
-      int n;          // Número total de objetos en el índice
-     fqvpnode node;   // Nodo raíz del árbol
-     char *descr;     // Descripción/nombre de la base de datos
-   } fqvpt;
-
-// Macro para acceder al i-ésimo hijo de un nodo interno
 #define child(node,i) (((Tchild*)((node)->u.interno.children))[i])
 
-// Estructura temporal para construcción del árbol
-// Almacena un objeto y su distancia al pivote del nivel actual
-typedef struct
-   { Obj obj;
-     Tdist dist;
-   } Tod;
+/* Entrada auxiliar para ordenamiento (objeto + distancia) */
+typedef struct {
+    Obj obj;
+    Tdist dist;
+} Tod;
 
-
+#endif /* FQT_H */
