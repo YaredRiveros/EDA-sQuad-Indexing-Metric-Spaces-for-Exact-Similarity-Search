@@ -133,3 +133,8 @@ Según el paper, los valores de L recomendados son:
 **Paper:** "On the Hierarchy of Covering-based Space-partitioning Structures for Similarity Search"
 
 **Clasificación:** EPT* es un índice **pivot-based** con selección adaptativa de pivotes (PSA).
+
+
+```
+g++ -O3 -std=gnu++17 test.cpp -o bst_test
+```
