@@ -22,6 +22,8 @@ void test_dataset(const string& dataset) {
     unique_ptr<ObjectDB> db;
     if (dataset == "LA") {
         db = make_unique<VectorDB>(dbfile, 2);
+    } else if (dataset == "Color") {
+        db = make_unique<VectorDB>(dbfile, 1);
     } else if (dataset == "Synthetic") {
         db = make_unique<VectorDB>(dbfile, 0);
     } else if (dataset == "Words") {
@@ -291,7 +293,7 @@ void test_dataset(const string& dataset) {
 int main() {
     srand(12345);
 
-    vector<string> datasets = {"LA", "Synthetic", "Words"};
+    vector<string> datasets = {"LA", "Words", "Color", "Synthetic"};
     
     for (const auto& dataset : datasets) {
         try {

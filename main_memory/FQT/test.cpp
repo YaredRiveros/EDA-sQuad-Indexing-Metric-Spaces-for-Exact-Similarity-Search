@@ -11,7 +11,7 @@ using namespace chrono;
 
 static const vector<double> SELECTIVITIES = {0.02, 0.04, 0.08, 0.16, 0.32};
 static const vector<int>    K_VALUES      = {5, 10, 20, 50, 100};
-static const vector<string> DATASETS      = {"LA", "Words", "Synthetic"};
+static const vector<string> DATASETS      = {"LA", "Words", "Color", "Synthetic"};
 
 // Parámetros FQT: {bucket_size, arity}
 // Altura implícita por el número de pivotes seleccionados durante construcción
@@ -45,6 +45,14 @@ static const vector<FQT_Params> PARAMS_SYNTH = {
     {  5, 5}
 };
 
+static const vector<FQT_Params> PARAMS_COLOR = {
+    {100, 5},
+    { 50, 5},
+    { 20, 5},
+    { 10, 5},
+    {  5, 5}
+};
+
 // ============================================================
 // MAIN — EXPERIMENTACIÓN COMPLETA
 // ============================================================
@@ -70,6 +78,7 @@ int main()
         unique_ptr<ObjectDB> db;
         
         if (dataset == "LA")              db = make_unique<VectorDB>(dbfile, 2);
+        else if (dataset == "Color")      db = make_unique<VectorDB>(dbfile, 1);
         else if (dataset == "Synthetic")  db = make_unique<VectorDB>(dbfile, 999999);
         else if (dataset == "Words")      db = make_unique<StringDB>(dbfile);
         else continue;
@@ -99,6 +108,7 @@ int main()
         vector<FQT_Params> params;
         if (dataset == "LA")              params = PARAMS_LA;
         else if (dataset == "Words")      params = PARAMS_WORDS;
+        else if (dataset == "Color")      params = PARAMS_COLOR;
         else if (dataset == "Synthetic")  params = PARAMS_SYNTH;
 
         // ------------------------------------------------------------
