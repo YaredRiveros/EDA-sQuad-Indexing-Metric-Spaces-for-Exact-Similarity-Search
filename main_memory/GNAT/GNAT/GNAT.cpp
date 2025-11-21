@@ -6,6 +6,7 @@ using namespace std;
 #include <chrono>
 #include <set>
 #include <cassert>
+#include <cfloat>
 using namespace chrono;
 
 // GNAT (Geometric Near-neighbor Access Tree) es una generalización m-aria del GHT (Generalized Hyperplane Tree)
