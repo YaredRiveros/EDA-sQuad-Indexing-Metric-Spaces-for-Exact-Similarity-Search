@@ -1,270 +1,251 @@
 #include <bits/stdc++.h>
-#include "pm_tree.hpp"
-#include "../../datasets/paths.hpp"
-#include <filesystem>
+#include <sys/stat.h>
 
+#include "DSACLX.h"
+#include "obj.h"
+
+#include "../../datasets/paths.hpp"   // path_dataset, path_queries, path_radii
 using namespace std;
 
 // ============================================================
-// CONFIGURACIÓN DEL PAPER (igual que Chen2022)
+// Global DSACL vars required by DSACLX.cpp
 // ============================================================
+double numDistances = 0.0;
+double IOread       = 0.0;
+double IOwrite      = 0.0;
 
-// Selectividades (MRQ)
+int    MaxArity     = 0;
+int    ClusterSize  = 0;
+double CurrentTime  = 0.0;
+int    dimension    = 0;
+double objNum       = 0.0;
+int    func         = 0;
+int    BlockSize    = 4096;
+
+// ============================================================
+// Configuración Chen2022
+// ============================================================
 static const vector<double> SELECTIVITIES = {0.02, 0.04, 0.08, 0.16, 0.32};
+static const vector<int>    K_VALUES      = {5, 10, 20, 50, 100};
+static const vector<int>    ARITY_VALUES  = {3, 5, 10, 15, 20};
 
-// K para MkNN
-static const vector<int> K_VALUES = {5, 10, 20, 50, 100};
-
-// Números de pivotes l
-static const vector<int> L_VALUES = {3, 5, 10, 15, 20};
-
-// Datasets evaluados
-static const vector<string> DATASETS = {"LA", "Words", "Color", "Synthetic"};
-
+// Solo datasets vectoriales (DSACL)
+static const vector<string> DATASETS = {"LA", "Color", "Synthetic"};
 
 // ============================================================
-// Cargar pivots desde JSON (precomputed by HFI, igual que LAESA)
+// Helpers
 // ============================================================
-
-vector<int> load_pivots_json(const string& path) {
-    vector<int> piv;
-
-    if (path == "" || !file_exists(path)) {
-        cerr << "[WARN] Pivot JSON missing: " << path << "\n";
-        return piv;
-    }
-
-    ifstream f(path);
-    string tok;
-    while (f >> tok) {
-        tok.erase(remove_if(tok.begin(), tok.end(),
-                            [](char c){
-                                return c=='['||c==']'||c==','||c=='"'||c==':';
-                            }),
-                  tok.end());
-
-        if (tok == "pivots") continue;
-        if (!tok.empty() && all_of(tok.begin(), tok.end(), ::isdigit))
-            piv.push_back(stoi(tok));
-    }
-    return piv;
+bool parse_db_header(const string &dbPath, int &dim, int &num, int &fn) {
+    ifstream f(dbPath);
+    if (!f.is_open()) return false;
+    f >> dim >> num >> fn;
+    return f.good();
 }
 
+void load_queries_vec(const string &path, int dim, int maxQ, vector<vector<float>> &Q) {
+    Q.clear();
+    ifstream f(path);
+    if (!f.is_open()) return;
+    Q.reserve(maxQ);
+
+    for (int i=0;i<maxQ;i++) {
+        vector<float> q(dim);
+        for (int j=0;j<dim;j++) {
+            if (!(f >> q[j])) return;
+        }
+        Q.push_back(q);
+    }
+}
 
 // ============================================================
-// MAIN — EXPERIMENTACIÓN COMPLETA PARA PM-tree
+// MAIN
 // ============================================================
 int main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
     std::filesystem::create_directories("results");
+    const int MAX_Q = 100;
 
-    for (const string& dataset : DATASETS) {
-        // ------------------------------------------------------------
-        // 1. Resolver dataset físico
-        // ------------------------------------------------------------
-        string dbfile = path_dataset(dataset);
-        if (dbfile == "") {
-            cerr << "[WARN] Dataset no encontrado: " << dataset << "\n";
+    for (const string &dataset : DATASETS) {
+
+        // -----------------------------------------
+        // Obtener rutas desde paths.hpp
+        // -----------------------------------------
+        string dbPath     = path_dataset(dataset);
+        string queriesPath= path_queries(dataset);
+        string radiiPath  = path_radii(dataset);
+
+        if (dbPath=="" || queriesPath=="") {
+            cerr << "[WARN] Missing dataset paths for " << dataset << "\n";
             continue;
         }
 
-        // ------------------------------------------------------------
-        // 2. Cargar dataset con su métrica
-        // ------------------------------------------------------------
-        unique_ptr<ObjectDB> db;
-
-        if (dataset == "LA") {
-            db = make_unique<VectorDB>(dbfile, 2);       // L2
-        }
-        else if (dataset == "Color") {
-            db = make_unique<VectorDB>(dbfile, 1);       // L1
-        }
-        else if (dataset == "Synthetic") {
-            db = make_unique<VectorDB>(dbfile, 999999);  // L∞
-        }
-        else if (dataset == "Words") {
-            db = make_unique<StringDB>(dbfile);          // Edit distance
-        }
-        else {
-            cerr << "[WARN] Tipo de dataset desconocido: " << dataset << "\n";
+        if (!file_exists(dbPath) || !file_exists(queriesPath)) {
+            cerr << "[WARN] Missing files for " << dataset << "\n";
             continue;
         }
 
-        int nObjects = db->size();
-        cerr << "\n==========================================\n";
-        cerr << "[INFO] Dataset: " << dataset
-             << "   N=" << nObjects << "\n";
-        cerr << "==========================================\n";
-
-        if (nObjects == 0) {
-            cerr << "[WARN] Dataset vacío, se omite.\n";
+        // -----------------------------------------
+        // Header DB
+        // -----------------------------------------
+        int dim=0, num=0, fn=0;
+        if (!parse_db_header(dbPath, dim, num, fn)) {
+            cerr << "[WARN] Invalid DB header\n";
             continue;
         }
 
-        // ------------------------------------------------------------
-        // 3. Cargar queries + radios
-        // ------------------------------------------------------------
-        vector<int> queries = load_queries_file(path_queries(dataset));
-        auto radii = load_radii_file(path_radii(dataset));
+        dimension = dim;
+        objNum    = num;
+        func      = fn;
 
-        if (queries.empty()) {
-            cerr << "[WARN] No hay queries para " << dataset << "\n";
+        // -----------------------------------------
+        // Cargar queries
+        // -----------------------------------------
+        vector<vector<float>> Q;
+        load_queries_vec(queriesPath, dim, MAX_Q, Q);
+        if (Q.empty()) {
+            cerr << "[WARN] No queries for " << dataset << "\n";
             continue;
         }
 
-        // ------------------------------------------------------------
-        // 4. Calcular arity (nodeCapacity) como en M-tree
-        // ------------------------------------------------------------
-        int pageBytes;
-        if (dataset == "LA" || dataset == "Words")
-            pageBytes = 4096;      // 4KB
-        else
-            pageBytes = 40960;     // 40KB
-
-        int entryBytes =
-            sizeof(int32_t) +      // objId
-            sizeof(double)  +      // radius
-            sizeof(double)  +      // parentDist
-            sizeof(int64_t);       // childOffset
-
-        int nodeCapacity = pageBytes / entryBytes;
-
-        // ------------------------------------------------------------
-        // 5. Archivo JSON
-        // ------------------------------------------------------------
-        string jsonOut = "results/results_PMTREE_" + dataset + ".json";
-        ofstream J(jsonOut);
-        if (!J.is_open()) {
-            cerr << "[ERROR] No se pudo abrir " << jsonOut << " para escritura.\n";
-            continue;
+        // -----------------------------------------
+        // Cargar radios (viene de paths.hpp)
+        // -----------------------------------------
+        auto radii = load_radii_file(radiiPath);
+        if (radii.empty()) {
+            cerr << "[WARN] No radii JSON\n";
         }
 
-        J << "[\n";
-        bool firstOutput = true;
+        // -----------------------------------------
+        // Archivo JSON output
+        // -----------------------------------------
+        string out = "results/results_SATCTL_" + dataset + ".json";
+        ofstream J(out);
+        bool first=true;
+        J<<"[\n";
 
-        // ------------------------------------------------------------
-        // 6. Bucle sobre números de pivotes l
-        // ------------------------------------------------------------
-        for (int l : L_VALUES) {
-            // Cargar pivots HFI para este dataset y l
-            string pivfile = path_pivots(dataset, l);
-            vector<int> pivots = load_pivots_json(pivfile);
+        // -----------------------------------------
+        // Loop aridades
+        // -----------------------------------------
+        for (int arity : ARITY_VALUES) {
 
-            if (pivots.empty()) {
-                cerr << "[WARN] No hay pivots para dataset=" << dataset
-                     << " l=" << l << " (" << pivfile << ")\n";
-                continue;
-            }
+            MaxArity = arity;
+            BlockSize = (dataset=="LA") ? 4096 : 40960;
 
-            cerr << "\n------------------------------------------\n";
-            cerr << "[INFO] Construyendo PM-tree para dataset=" << dataset
-                 << " con l=" << l << " pivots\n";
-            cerr << "------------------------------------------\n";
+            string idxPath = dataset + ".satctl_index";
 
-            // Construir PM-tree sobre el mismo M-tree en disco (<dataset>.mtree_index)
-            PMTree pmt(db.get(), l);
-            pmt.buildFromMTree(dataset);
-            pmt.overridePivots(pivots);   // construye distMatrix + HR/PD
+            // BUILD
+            numDistances = 0.0;
+            IOread=IOwrite=0.0;
 
-            // =======================
-            //  MRQ (Metric Range Query)
-            // =======================
-            for (double sel : SELECTIVITIES) {
-                if (radii.find(sel) == radii.end())
-                    continue;
+            auto t0 = chrono::high_resolution_clock::now();
+            buildSecondaryMemory(const_cast<char*>(idxPath.c_str()),
+                                 const_cast<char*>(dbPath.c_str()));
+            auto t1 = chrono::high_resolution_clock::now();
 
+            double build_s = chrono::duration<double>(t1-t0).count();
+            cerr<<"[BUILD "<<dataset<<" a="<<arity<<"] "<<build_s<<"s pages="<<IOread<<" dists="<<numDistances<<"\n";
+
+            // ==========================
+            // MRQ
+            // ==========================
+            for (auto sel : SELECTIVITIES) {
+                if (!radii.count(sel)) continue;
                 double R = radii[sel];
-                long long totalD     = 0;
-                long long totalT     = 0;
-                long long totalPages = 0;
 
-                for (int q : queries) {
-                    vector<int> out;
-                    pmt.clear_counters();
-                    pmt.rangeSearch(q, R, out);
+                numDistances=0; IOread=IOwrite=0;
+                auto t0 = chrono::high_resolution_clock::now();
 
-                    totalD     += pmt.get_compDist();
-                    totalT     += pmt.get_queryTime();
-                    totalPages += pmt.get_pageReads();
+                for (auto &v : Q) {
+                    Objvector q;
+                    q.dim=dim;
+                    q.value=new float[dim];
+                    for (int i=0;i<dim;i++) q.value[i]=v[i];
+                    rangeSearch(q, R);
+                    q.freeResources();
                 }
 
-                double avgD     = double(totalD) / queries.size();
-                double avgTus   = double(totalT) / queries.size();
-                double avgPages = double(totalPages) / queries.size();
+                auto t1 = chrono::high_resolution_clock::now();
 
-                if (!firstOutput) J << ",\n";
-                firstOutput = false;
+                double total_ms=chrono::duration<double,milli>(t1-t0).count();
+                double avgT = total_ms / Q.size();
+                double avgD = numDistances / Q.size();
+                double avgP = IOread / Q.size();
 
-                J << fixed << setprecision(6);
-                J << "{"
-                  << "\"index\":\"PMTREE\","
-                  << "\"dataset\":\"" << dataset << "\","
+                if(!first) J<<",\n";
+                first=false;
+
+                J << fixed << setprecision(6)
+                  << "{"
+                  << "\"index\":\"SATCTL\","
+                  << "\"dataset\":\""<<dataset<<"\","
                   << "\"category\":\"DM\","
-                  << "\"num_pivots\":" << l << ","
-                  << "\"num_centers_path\":1,"     // mismo que M-tree
-                  << "\"arity\":" << nodeCapacity << ","
+                  << "\"num_pivots\":null,"
+                  << "\"num_centers_path\":null,"
+                  << "\"arity\":"<<arity<<","
                   << "\"query_type\":\"MRQ\","
-                  << "\"selectivity\":" << sel << ","
-                  << "\"radius\":" << R << ","
+                  << "\"selectivity\":"<<sel<<","
+                  << "\"radius\":"<<R<<","
                   << "\"k\":null,"
-                  << "\"compdists\":" << avgD << ","
-                  << "\"time_ms\":" << (avgTus / 1000.0) << ","
-                  << "\"pages\":" << avgPages << ","
-                  << "\"n_queries\":" << queries.size() << ","
+                  << "\"compdists\":"<<avgD<<","
+                  << "\"time_ms\":"<<avgT<<","
+                  << "\"pages\":"<<avgP<<","
+                  << "\"n_queries\":"<<Q.size()<<","
                   << "\"run_id\":1"
                   << "}";
             }
 
-            // =======================
-            //  MkNN
-            // =======================
+            // ==========================
+            // MkNN
+            // ==========================
             for (int k : K_VALUES) {
-                long long totalD     = 0;
-                long long totalT     = 0;
-                long long totalPages = 0;
 
-                for (int q : queries) {
-                    vector<pair<double,int>> out;
-                    pmt.clear_counters();
-                    pmt.knnSearch(q, k, out);
+                numDistances=0; IOread=IOwrite=0;
+                auto t0 = chrono::high_resolution_clock::now();
 
-                    totalD     += pmt.get_compDist();
-                    totalT     += pmt.get_queryTime();
-                    totalPages += pmt.get_pageReads();
+                for (auto &v : Q) {
+                    Objvector q;
+                    q.dim=dim;
+                    q.value=new float[dim];
+                    for (int i=0;i<dim;i++) q.value[i]=v[i];
+                    knnSearch(q, k);
+                    q.freeResources();
                 }
 
-                double avgD     = double(totalD) / queries.size();
-                double avgTus   = double(totalT) / queries.size();
-                double avgPages = double(totalPages) / queries.size();
+                auto t1 = chrono::high_resolution_clock::now();
 
-                J << ",\n";
-                J << fixed << setprecision(6);
-                J << "{"
-                  << "\"index\":\"PMTREE\","
-                  << "\"dataset\":\"" << dataset << "\","
+                double total_ms=chrono::duration<double,milli>(t1-t0).count();
+                double avgT = total_ms / Q.size();
+                double avgD = numDistances / Q.size();
+                double avgP = IOread / Q.size();
+
+                J<<",\n";
+                J << fixed << setprecision(6)
+                  << "{"
+                  << "\"index\":\"SATCTL\","
+                  << "\"dataset\":\""<<dataset<<"\","
                   << "\"category\":\"DM\","
-                  << "\"num_pivots\":" << l << ","
-                  << "\"num_centers_path\":1,"
-                  << "\"arity\":" << nodeCapacity << ","
+                  << "\"num_pivots\":null,"
+                  << "\"num_centers_path\":null,"
+                  << "\"arity\":"<<arity<<","
                   << "\"query_type\":\"MkNN\","
                   << "\"selectivity\":null,"
                   << "\"radius\":null,"
-                  << "\"k\":" << k << ","
-                  << "\"compdists\":" << avgD << ","
-                  << "\"time_ms\":" << (avgTus / 1000.0) << ","
-                  << "\"pages\":" << avgPages << ","
-                  << "\"n_queries\":" << queries.size() << ","
+                  << "\"k\":"<<k<<","
+                  << "\"compdists\":"<<avgD<<","
+                  << "\"time_ms\":"<<avgT<<","
+                  << "\"pages\":"<<avgP<<","
+                  << "\"n_queries\":"<<Q.size()<<","
                   << "\"run_id\":1"
                   << "}";
             }
         }
 
-        J << "\n]\n";
+        J<<"\n]\n";
         J.close();
 
-        cerr << "[DONE] Archivo generado: " << jsonOut << "\n";
+        cerr<<"[DONE] "<<out<<"\n";
     }
 
     return 0;
