@@ -16,13 +16,14 @@
 
 class MTree_Disk {
 public:
-    // ========= Métricas (solo queries, como en tu framework) =========
+    
+    // to evaluate and compare queries 
     mutable long long compDist   = 0;  // # distancias
     mutable long long pageReads  = 0;  // páginas (nodos) leídos
     mutable long long pageWrites = 0;  // páginas (nodos) escritos en build
     mutable long long queryTime  = 0;  // tiempo acumulado en µs (solo queries)
 
-    // ========= Constructor =========
+
     // nodeCapacity ≈ m del M-tree (máx entradas por nodo)
     explicit MTree_Disk(const ObjectDB* db_, int nodeCapacity_ = 64)
         : db(db_), n(db_ ? db_->size() : 0),
@@ -32,67 +33,65 @@ public:
           rootOffset(-1)
     {}
 
-    ~MTree_Disk() {
+    ~MTree_Disk() 
+    {
         if (fpIndex) {
             std::fclose(fpIndex);
             fpIndex = nullptr;
         }
     }
 
-    // ========= API de métricas =========
-    void clear_counters() const {
+    void clear_counters() const 
+    {
         compDist  = 0;
         pageReads = 0;
         queryTime = 0;
-        // pageWrites se mantiene como métrica del build
     }
     long long get_compDist()   const { return compDist;   }
     long long get_pageReads()  const { return pageReads;  }
     long long get_pageWrites() const { return pageWrites; }
     long long get_queryTime()  const { return queryTime;  }
 
-    // ========= Métodos requeridos =========
-    // Build: construye M-tree en RAM (bulk-load fiel a ball partitioning)
-    //        y lo materializa en disco en basePath.mtree_index
+    
+
+    
     void build(const std::string& basePath) {
         if (!db) throw std::runtime_error("[MTree_Disk] db == nullptr");
 
         indexPath = basePath + ".mtree_index";
 
-        // Abrimos archivo índice (solo uno, los objetos están en ObjectDB)
         fpIndex = std::fopen(indexPath.c_str(), "wb+");
         if (!fpIndex)
             throw std::runtime_error("[MTree_Disk] No se pudo crear " + indexPath);
 
         pageWrites = 0;
 
-        // Escribimos placeholder para rootOffset al inicio
+        // placeholder <> offset
         int64_t placeholder = -1;
         std::fwrite(&placeholder, sizeof(int64_t), 1, fpIndex);
 
-        // ==== Construcción en RAM (ball partitioning tipo M-tree) ====
         std::vector<int> objs(n);
         for (int i = 0; i < n; ++i) objs[i] = i;
 
-        NodeRAM* rootRAM = build_recursive(objs, -1);  // -1 → sin padre (root)
+        NodeRAM* rootRAM = build_recursive(objs, -1);  // -1 → root
 
-        // ==== Serialización a disco (post-order para tener offsets hijos) ====
+        // post-order save
         rootOffset = writeNodeRec(rootRAM);
 
-        // Escribimos rootOffset real en el header
+        // real offset (from root) in the header
         std::fflush(fpIndex);
         std::fseek(fpIndex, 0, SEEK_SET);
         std::fwrite(&rootOffset, sizeof(int64_t), 1, fpIndex);
         std::fflush(fpIndex);
 
-        // Liberar memoria RAM del árbol
+        // Free RAM
         freeTree(rootRAM);
 
         std::fclose(fpIndex);
         fpIndex = nullptr;
     }
 
-    // Restore: abre basePath.mtree_index y carga rootOffset
+    // load an existing index and load 'rootOffset'
     void restore(const std::string& basePath) {
         indexPath = basePath + ".mtree_index";
 
@@ -111,13 +110,13 @@ public:
             throw std::runtime_error("[MTree_Disk] Archivo corrupto (no rootOffset)");
         }
 
-        // No contamos esta lectura como pageRead (es cabecera, no nodo lógico)
         if (rootOffset < 0)
             std::cerr << "[MTree_Disk] Advertencia: rootOffset < 0\n";
     }
 
-    // ========= MRQ: Range / Radius Query (Lemma 4.2 ball partitioning) =========
-    void rangeSearch(int qId, double R, std::vector<int>& out) const {
+    // MRQ: Range (Lemma 4.2)
+    void rangeSearch(int qId, double R, std::vector<int>& out) const 
+    {
         using clock = std::chrono::high_resolution_clock;
         auto t0 = clock::now();
 
@@ -126,15 +125,16 @@ public:
             throw std::runtime_error("[MTree_Disk] rangeSearch: fpIndex==nullptr (¿faltó restore?)");
         if (rootOffset < 0) return; // índice vacío
 
-        // DFS con poda de bolas (Lemma 4.2) + parent filtering
+        // DFS + Lemma 4.2 + parent filtering
         dfs_range(rootOffset, -1, 0.0, qId, R, out);
 
         auto t1 = clock::now();
         queryTime += std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
     }
 
-    // ========= MkNN: kNN Query (best-first, ball lower-bound) =========
-    void knnSearch(int qId, int k, std::vector<std::pair<double,int>>& out) const {
+    // MkNN (best-first, ball lower-bound, Lemma 4.2) =========
+    void knnSearch(int qId, int k, std::vector<std::pair<double,int>>& out) const 
+    {
         using clock = std::chrono::high_resolution_clock;
         auto t0 = clock::now();
 
@@ -143,7 +143,7 @@ public:
             throw std::runtime_error("[MTree_Disk] knnSearch: fpIndex==nullptr (¿faltó restore?)");
         if (rootOffset < 0 || k <= 0) return;
 
-        // ---- Cola de prioridad (min-heap) de candidatos de subárbol ----
+        // min-heap (of candidates)
         struct NodeCand {
             double lb;              // lower bound a la región (bola)
             int64_t offset;         // offset del nodo hijo
@@ -151,35 +151,34 @@ public:
             double distParentQ;     // δ(P,Q)
         };
         struct CmpCand {
-            bool operator()(const NodeCand& a, const NodeCand& b) const {
+            bool operator()(const NodeCand& a, const NodeCand& b) const 
+            {
                 return a.lb > b.lb; // min-heap
             }
         };
 
         std::priority_queue<NodeCand, std::vector<NodeCand>, CmpCand> pq;
 
-        // ---- k mejores resultados (max-heap por distancia) ----
+        // max-heap (based on distance)
         using Res = std::pair<double,int>;
         std::priority_queue<Res> best;
 
-        // ==== Inicializar con entradas de la raíz ====
         NodeDisk root;
-        readNode(rootOffset, root); // cuenta como 1 pageRead
+        readNode(rootOffset, root); // page read
 
-        for (const auto& e : root.entries) {
+        for (const auto& e : root.entries) 
+        {
             double dQR = dist(qId, e.objId);          // δ(Q,R)
             double lb   = std::max(0.0, dQR - e.radius); // LB = max(0, δ(Q,R) - r)
 
-            if (root.isLeaf) {
-                // Entrada de hoja: objeto directo
+            if (root.isLeaf) 
                 insertBest(best, k, dQR, e.objId);
-            } else {
-                // Subárbol
+            else 
                 pq.push(NodeCand{lb, e.childOffset, e.objId, dQR});
-            }
+            
         }
 
-        // ==== Búsqueda best-first en la jerarquía de bolas ====
+        // best-first search
         while (!pq.empty()) {
             double worst = best.empty()
                          ? std::numeric_limits<double>::infinity()
@@ -190,31 +189,31 @@ public:
             pq.pop();
 
             NodeDisk node;
-            readNode(cand.offset, node); // cuenta 1 pageRead por nodo
+            readNode(cand.offset, node); // pageRead 
 
             if (node.isLeaf) {
-                // Cada entrada es un objeto
-                for (const auto& e : node.entries) {
+                for (const auto& e : node.entries) 
+                {
                     double d = dist(qId, e.objId);
                     insertBest(best, k, d, e.objId);
                 }
             } else {
-                // Entradas de routing: bolas
-                for (const auto& e : node.entries) {
-                    double dQR = dist(qId, e.objId);              // δ(Q,R)
+                for (const auto& e : node.entries) 
+                {
+                    double dQR = dist(qId, e.objId);  // δ(Q,R)
                     double lb   = std::max(0.0, dQR - e.radius);  // lower bound
 
                     double worstNow = best.empty()
                                       ? std::numeric_limits<double>::infinity()
                                       : best.top().first;
-                    if (lb > worstNow) continue; // poda (Lemma 4.2 adaptado a kNN)
+                    if (lb > worstNow) continue; // (Lemma 4.2)
 
                     pq.push(NodeCand{lb, e.childOffset, e.objId, dQR});
                 }
             }
         }
 
-        // Pasar resultados del heap a vector ordenado de menor a mayor
+        // save results in a vector
         std::vector<Res> tmp;
         while (!best.empty()) {
             tmp.push_back(best.top());
@@ -228,7 +227,7 @@ public:
     }
 
 private:
-    // ========= Estructuras internas =========
+    
 
     const ObjectDB* db;
     int n;
@@ -253,31 +252,33 @@ private:
     };
 
     // ---- Nodo en disco para consultas ----
-    struct EntryDisk {
+    struct EntryDisk 
+    {
         int32_t objId;
         double  radius;
         double  parentDist;
         int64_t childOffset; // -1 en hojas
     };
 
-    struct NodeDisk {
+    struct NodeDisk 
+    {
         bool isLeaf;
         int32_t count;
         std::vector<EntryDisk> entries;
     };
 
-    // ========= Distancia con contador =========
+
     double dist(int a, int b) const {
         compDist++;
         return db->distance(a, b);
     }
 
-    // Reemplaza tu build_recursive por esta versión optimizada
+
 NodeRAM* build_recursive(const std::vector<int>& objs, int parentCenterId) {
     NodeRAM* node;
 
     if ((int)objs.size() <= leafCapacity) {
-        // ---- Nodo hoja ----
+        // leaf node
         node = new NodeRAM(true);
         node->entries.reserve(objs.size());
         for (int oid : objs) {
@@ -477,7 +478,7 @@ NodeRAM* build_recursive(const std::vector<int>& objs, int parentCenterId) {
         delete node;
     }
 
-    // ========= Lectura de nodo desde disco =========
+    // read from disk
     void readNode(int64_t offset, NodeDisk& node) const {
         if (!fpIndex)
             throw std::runtime_error("[MTree_Disk] readNode: fpIndex==nullptr");
@@ -505,10 +506,10 @@ NodeRAM* build_recursive(const std::vector<int>& objs, int parentCenterId) {
             node.entries[i] = ed;
         }
 
-        pageReads++; // cada nodo leído = 1 página accedida (PA)
+        pageReads++; // Page Access
     }
 
-    // ========= DFS para MRQ con poda de bolas (Lemma 4.2) =========
+    // dfs for MRQ
     void dfs_range(int64_t offset,
                    int parentCenterId,
                    double distParentQ,
@@ -547,7 +548,7 @@ NodeRAM* build_recursive(const std::vector<int>& objs, int parentCenterId) {
         }
     }
 
-    // ========= Insertar en heap de mejores k =========
+    // maintain k-best in a heap
     static void insertBest(std::priority_queue<std::pair<double,int>>& best,
                            int k, double d, int id)
     {
