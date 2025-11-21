@@ -32,8 +32,8 @@ class SAT
     // Elementos usados solo durante la construcción (cola/queue del SAT original)
     struct BuildQueueElem
     {
-        int objId;    // objeto
-        double dist;  // mejor distancia al centro actual
+        int objId;     // objeto
+        double dist;   // mejor distancia al centro actual
         int bestChild; // índice dentro de "children" del mejor vecino (-1 si ninguno)
     };
 
@@ -90,7 +90,7 @@ public:
         nodes.reserve(n);
         queues.reserve(n);
 
-        // raíz = objeto 0 (como en el código C, obj0 = 1) :contentReference[oaicite:1]{index=1}
+        // raíz = objeto 0 (como en el código C, obj0 = 1)
         rootId = newNode(0);
 
         // Inicializar cola de la raíz con el resto de objetos
@@ -132,7 +132,10 @@ public:
         auto start = Clock::now();
 
         double d0 = distQuery(qId, nodes[rootId].center);
-        searchRangeRec(rootId, qId, r, d0, d0, res);
+        double mind = d0;   // mínima distancia a cualquier centro en el camino
+        double s    = 0.0;  // digresión acumulada (Navarro)
+
+        searchRangeRec(rootId, qId, r, d0, mind, s, res);
 
         queryTime += std::chrono::duration_cast<std::chrono::microseconds>(
                          Clock::now() - start)
@@ -178,7 +181,7 @@ public:
         // vector temporal de distancias a hijos (tamaño máximo: nº de nodos)
         std::vector<double> dd(nodes.size());
 
-        // Inicializar con la raíz (mismo esquema que searchNN en sat.c) :contentReference[oaicite:2]{index=2}
+        // Inicializar con la raíz (mismo esquema que searchNN en sat.c)
         double dist0 = distQuery(qId, nodes[rootId].center);
         double lbound = dist0 - nodes[rootId].maxDist;
         if (lbound < 0.0) lbound = 0.0;
@@ -287,7 +290,7 @@ private:
             return;
         }
 
-        // Ordenar cola por distancia creciente (sort de sat.c) :contentReference[oaicite:3]{index=3}
+        // Ordenar cola por distancia creciente (sort de sat.c)
         std::sort(Q.begin(), Q.end(),
                   [](const BuildQueueElem &a, const BuildQueueElem &b)
                   { return a.dist < b.dist; });
@@ -357,17 +360,21 @@ private:
     }
 
     // ------------------------
-    //  Búsqueda de rango (recursiva)
+    //  Búsqueda de rango (recursiva, con ancestros)
     // ------------------------
     void searchRangeRec(int nodeId, int qId, double r,
-                        double d0, double mind,
+                        double d0, double mind, double s,
                         std::vector<int> &res) const
     {
         const Node &N = nodes[nodeId];
 
-        // poda por bola: si d0 - r > maxd, no hay nada en este subárbol
+        // Poda por digresión de ancestros: si s > 2r, no puede haber resultados
+        if (s > 2.0 * r) return;
+
+        // Poda por bola: si d0 - r > maxDist, no hay nada en este subárbol
         if (d0 - r > N.maxDist) return;
 
+        // El centro del nodo puede ser respuesta
         if (d0 <= r)
             res.push_back(N.center);
 
@@ -375,21 +382,27 @@ private:
         if (m == 0) return;
 
         std::vector<double> dd(m);
+        double newMind = mind;
 
-        // distancias a hijos + actualizar mind (mínima distancia a centros)
+        // distancias a hijos + actualizar newMind (mínima dist a centros)
         for (int j = 0; j < m; ++j)
         {
             int childId = N.children[j];
             dd[j] = distQuery(qId, nodes[childId].center);
-            if (dd[j] < mind) mind = dd[j];
+            if (dd[j] < newMind) newMind = dd[j];
         }
 
-        // poda tipo SAT: dd[j] <= mind + 2r :contentReference[oaicite:4]{index=4}
+        // Poda tipo SAT usando ancestros:
+        //   - condición dd[j] <= newMind + 2r
+        //   - digresión actualizada newS = max(0, s + (dd[j] - d0))
         for (int j = 0; j < m; ++j)
         {
             int childId = N.children[j];
-            if (dd[j] <= mind + 2.0 * r)
-                searchRangeRec(childId, qId, r, dd[j], mind, res);
+            if (dd[j] <= newMind + 2.0 * r)
+            {
+                double newS = std::max(0.0, s + (dd[j] - d0));
+                searchRangeRec(childId, qId, r, dd[j], newMind, newS, res);
+            }
         }
     }
 
