@@ -1,0 +1,12 @@
+[
+{"index":"SAT","dataset":"LA","category":"FQ","num_pivots":1073727,"num_centers_path":1374,"arity":null,"query_type":"MRQ","selectivity":0.020000,"radius":408.823460,"k":null,"compdists":122827.600000,"time_ms":17.921490,"n_queries":100,"run_id":1},
+{"index":"SAT","dataset":"LA","category":"FQ","num_pivots":1073727,"num_centers_path":1374,"arity":null,"query_type":"MRQ","selectivity":0.040000,"radius":625.360535,"k":null,"compdists":178771.560000,"time_ms":22.225480,"n_queries":100,"run_id":1},
+{"index":"SAT","dataset":"LA","category":"FQ","num_pivots":1073727,"num_centers_path":1374,"arity":null,"query_type":"MRQ","selectivity":0.080000,"radius":957.997139,"k":null,"compdists":260958.240000,"time_ms":26.053160,"n_queries":100,"run_id":1},
+{"index":"SAT","dataset":"LA","category":"FQ","num_pivots":1073727,"num_centers_path":1374,"arity":null,"query_type":"MRQ","selectivity":0.160000,"radius":1431.564921,"k":null,"compdists":359553.510000,"time_ms":33.589290,"n_queries":100,"run_id":1},
+{"index":"SAT","dataset":"LA","category":"FQ","num_pivots":1073727,"num_centers_path":1374,"arity":null,"query_type":"MRQ","selectivity":0.320000,"radius":2069.025721,"k":null,"compdists":463644.990000,"time_ms":42.249600,"n_queries":100,"run_id":1},
+{"index":"SAT","dataset":"LA","category":"FQ","num_pivots":1073727,"num_centers_path":1374,"arity":null,"query_type":"MkNN","selectivity":null,"radius":null,"k":5,"compdists":20311.180000,"time_ms":3.712770,"n_queries":100,"run_id":1},
+{"index":"SAT","dataset":"LA","category":"FQ","num_pivots":1073727,"num_centers_path":1374,"arity":null,"query_type":"MkNN","selectivity":null,"radius":null,"k":10,"compdists":23337.950000,"time_ms":4.336190,"n_queries":100,"run_id":1},
+{"index":"SAT","dataset":"LA","category":"FQ","num_pivots":1073727,"num_centers_path":1374,"arity":null,"query_type":"MkNN","selectivity":null,"radius":null,"k":20,"compdists":25980.220000,"time_ms":4.910510,"n_queries":100,"run_id":1},
+{"index":"SAT","dataset":"LA","category":"FQ","num_pivots":1073727,"num_centers_path":1374,"arity":null,"query_type":"MkNN","selectivity":null,"radius":null,"k":50,"compdists":29243.990000,"time_ms":5.679170,"n_queries":100,"run_id":1},
+{"index":"SAT","dataset":"LA","category":"FQ","num_pivots":1073727,"num_centers_path":1374,"arity":null,"query_type":"MkNN","selectivity":null,"radius":null,"k":100,"compdists":32537.570000,"time_ms":6.389590,"n_queries":100,"run_id":1}
+]
