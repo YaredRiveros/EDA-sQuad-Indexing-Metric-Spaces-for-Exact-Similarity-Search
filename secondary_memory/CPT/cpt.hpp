@@ -1,7 +1,7 @@
 #ifndef CPT_HPP
 #define CPT_HPP
 
-#include "../../objectdb.hpp"
+#include "objectdb.hpp"
 
 #include <vector>
 #include <queue>

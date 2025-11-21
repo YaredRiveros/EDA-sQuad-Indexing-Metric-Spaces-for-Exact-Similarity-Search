@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 #include <sys/stat.h>
 #include "cpt.hpp"
-#include "../../datasets/paths.hpp"
+#include "datasets/paths.hpp"
 
 using namespace std;
 

@@ -36,7 +36,7 @@ inline string resolve_path(const string &rel) {
 // ------------------------------------------------------------
 // root from each struct
 static const string BASE_EXPERIMENT_DIR =
-    "../../datasets/dataset_processing/prepared_experiment/";
+    "datasets/dataset_processing/prepared_experiment/";
 
 // Subfolders
 static const string QUERIES_DIR = BASE_EXPERIMENT_DIR + string("queries/");
@@ -47,7 +47,7 @@ static const string PIVOTS_DIR  = BASE_EXPERIMENT_DIR + string("pivots/");
 // DATASETS DIRECTORY (for LA.txt, Words.txt, etc.)
 // ------------------------------------------------------------
 // root from each struct
-static const string DATASET_DIR = "../../datasets/";
+static const string DATASET_DIR = "datasets/";
 
 // dataset file = datasets/<dataset>.txt
 inline string path_dataset(const string &dataset) {
