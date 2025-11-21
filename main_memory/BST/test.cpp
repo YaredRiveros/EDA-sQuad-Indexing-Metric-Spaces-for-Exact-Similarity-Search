@@ -1,6 +1,6 @@
 #include <bits/stdc++.h>
 #include "bst.hpp"
-#include "../../datasets/paths.hpp"
+#include "datasets/paths.hpp"
 #include <filesystem>
 using namespace std;
 

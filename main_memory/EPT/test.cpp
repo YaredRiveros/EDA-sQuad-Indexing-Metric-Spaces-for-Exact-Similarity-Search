@@ -6,7 +6,7 @@
 #include "Interpreter.h"
 #include "Tuple.h"
 #include "Cache.h"
-#include "../../datasets/paths.hpp"
+#include "datasets/paths.hpp"
 
 using namespace std;
 using namespace chrono;

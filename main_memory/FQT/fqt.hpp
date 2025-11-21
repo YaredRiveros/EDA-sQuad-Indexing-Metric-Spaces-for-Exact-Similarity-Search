@@ -1,7 +1,7 @@
 #ifndef FQT_HPP
 #define FQT_HPP
 
-#include "../../objectdb.hpp"
+#include "objectdb.hpp"
 #include <vector>
 #include <queue>
 #include <algorithm>

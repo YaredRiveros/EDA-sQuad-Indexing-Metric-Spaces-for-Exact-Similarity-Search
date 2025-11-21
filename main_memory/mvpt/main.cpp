@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 #include <sys/stat.h>
 #include "mvpt.hpp"  
-#include "../objectdb.hpp"
+#include "objectdb.hpp"
 using namespace std;
 
 long long numDistances = 0;

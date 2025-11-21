@@ -1,7 +1,7 @@
 #ifndef BKT_HPP
 #define BKT_HPP
 
-#include "../../objectdb.hpp"
+#include "objectdb.hpp"
 #include <cmath>
 #include <queue>
 #include <vector>

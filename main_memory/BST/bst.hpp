@@ -1,7 +1,7 @@
 #ifndef BST_GENERIC_HPP
 #define BST_GENERIC_HPP
 
-#include "../../objectdb.hpp"
+#include "objectdb.hpp"
 #include <vector>
 #include <queue>
 #include <cmath>
