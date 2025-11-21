@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 #include "spbtree.hpp"
-#include "../../objectdb.hpp"
-#include "../../datasets/paths.hpp"
+#include "objectdb.hpp"
+#include "datasets/paths.hpp"
 
 using namespace std;
 

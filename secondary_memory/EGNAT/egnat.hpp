@@ -1,7 +1,7 @@
 #ifndef EGNAT_DISK_HPP
 #define EGNAT_DISK_HPP
 
-#include "../../objectdb.hpp"
+#include "objectdb.hpp"
 #include <vector>
 #include <queue>
 #include <random>

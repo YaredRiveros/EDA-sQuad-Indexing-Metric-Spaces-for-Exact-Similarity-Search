@@ -6,7 +6,7 @@
 #ifndef MBPT_DISK_HPP
 #define MBPT_DISK_HPP
 
-#include "../../objectdb.hpp"
+#include "objectdb.hpp"
 #include <vector>
 #include <algorithm>
 #include <random>

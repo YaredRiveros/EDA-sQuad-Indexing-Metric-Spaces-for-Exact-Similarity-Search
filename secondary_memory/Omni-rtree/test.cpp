@@ -1,8 +1,8 @@
 // test.cpp - OmniR-tree benchmark siguiendo formato EGNAT
 #include <bits/stdc++.h>
 #include "omnirtree.hpp"
-#include "../../objectdb.hpp"
-#include "../../datasets/paths.hpp"
+#include "objectdb.hpp"
+#include "datasets/paths.hpp"
 
 using namespace std;
 

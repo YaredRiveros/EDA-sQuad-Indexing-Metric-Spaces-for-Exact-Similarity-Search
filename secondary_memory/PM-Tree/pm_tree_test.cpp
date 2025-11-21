@@ -4,7 +4,7 @@
 #include "DSACLX.h"
 #include "obj.h"
 
-#include "../../datasets/paths.hpp"   // path_dataset, path_queries, path_radii
+#include "datasets/paths.hpp"   // path_dataset, path_queries, path_radii
 using namespace std;
 
 // ============================================================

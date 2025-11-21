@@ -1,7 +1,7 @@
 // simple_test.cpp - Test mínimo para depurar
 #include "mbpt.hpp"
-#include "../../objectdb.hpp"
-#include "../../datasets/paths.hpp"
+#include "objectdb.hpp"
+#include "datasets/paths.hpp"
 #include <iostream>
 #include <fstream>
 

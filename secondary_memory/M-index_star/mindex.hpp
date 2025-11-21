@@ -2,7 +2,7 @@
 #ifndef MINDEX_IMPROVED_HPP
 #define MINDEX_IMPROVED_HPP
 
-#include "../../objectdb.hpp"
+#include "objectdb.hpp"
 #include <vector>
 #include <string>
 #include <fstream>

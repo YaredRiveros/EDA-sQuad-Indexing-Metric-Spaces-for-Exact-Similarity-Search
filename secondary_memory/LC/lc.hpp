@@ -1,7 +1,7 @@
 #ifndef LC_DISK_HPP
 #define LC_DISK_HPP
 
-#include "../../objectdb.hpp"
+#include "objectdb.hpp"
 #include <vector>
 #include <set>
 #include <queue>

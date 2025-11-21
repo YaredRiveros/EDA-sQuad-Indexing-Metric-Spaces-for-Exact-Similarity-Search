@@ -4,7 +4,7 @@
 #include "DSACLX.h"
 #include "obj.h"
 
-#include "../../datasets/paths.hpp"
+#include "datasets/paths.hpp"
 using namespace std;
 
 // ============================================================

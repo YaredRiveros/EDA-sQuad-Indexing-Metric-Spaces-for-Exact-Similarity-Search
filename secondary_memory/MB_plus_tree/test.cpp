@@ -1,7 +1,7 @@
 // test.cpp - MB+-tree benchmark siguiendo especificación del paper
 #include "mbpt.hpp"
-#include "../../objectdb.hpp"
-#include "../../datasets/paths.hpp"
+#include "objectdb.hpp"
+#include "datasets/paths.hpp"
 #include <bits/stdc++.h>
 
 using namespace std;

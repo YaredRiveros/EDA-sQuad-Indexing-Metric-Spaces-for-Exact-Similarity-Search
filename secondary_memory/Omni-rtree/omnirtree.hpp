@@ -3,7 +3,7 @@
 // Implementa pivot mapping + R-tree indexing con RAF simulado
 
 #pragma once
-#include "../../objectdb.hpp"
+#include "objectdb.hpp"
 #include <bits/stdc++.h>
 #include <fstream>
 

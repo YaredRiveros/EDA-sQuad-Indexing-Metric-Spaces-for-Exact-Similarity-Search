@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 #include "egnat.hpp"                // tu EGNAT_Disk corregido
-#include "../../objectdb.hpp"
-#include "../../datasets/paths.hpp"
+#include "objectdb.hpp"
+#include "datasets/paths.hpp"
 
 using namespace std;
 

@@ -1,7 +1,7 @@
 #ifndef MTREE_DISK_HPP
 #define MTREE_DISK_HPP
 
-#include "../../objectdb.hpp"
+#include "objectdb.hpp"
 
 #include <vector>
 #include <queue>

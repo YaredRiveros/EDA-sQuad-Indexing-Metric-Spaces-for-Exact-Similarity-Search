@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 #include "mtree.hpp"          // <— tu implementación final del M-tree Disk
-#include "../../objectdb.hpp"
-#include "../../datasets/paths.hpp"
+#include "objectdb.hpp"
+#include "datasets/paths.hpp"
 
 using namespace std;
 

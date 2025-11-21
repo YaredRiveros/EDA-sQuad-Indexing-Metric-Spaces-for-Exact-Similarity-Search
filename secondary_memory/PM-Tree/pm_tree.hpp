@@ -1,7 +1,7 @@
 #ifndef PM_TREE_HPP
 #define PM_TREE_HPP
 
-#include "../../objectdb.hpp"
+#include "objectdb.hpp"
 
 #include <vector>
 #include <queue>
