@@ -13,8 +13,8 @@ static const vector<int> K_VALUES = {5, 10, 20, 50, 100};
 
 // Datasets del paper
 //static const vector<string> DATASETS = {"LA", "Words", "Color", "Synthetic"};
-static const vector<string> DATASETS = {"LA", "Color", "Synthetic", "Words"};
-
+//static const vector<string> DATASETS = {"LA", "Color", "Synthetic", "Words"};
+static const vector<string> DATASETS = {"Words"};
 int main() {
     srand(12345);
 
@@ -76,6 +76,7 @@ int main() {
         // ===================================================================
         // MRQ
         // ===================================================================
+        cout << "Searching...\n";
         for (double sel : SELECTIVITIES) {
             if (!radii.count(sel)) continue;
 
