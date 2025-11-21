@@ -272,101 +272,156 @@ private:
         return db->distance(a, b);
     }
 
-    // ========= Construcción recursiva: ball partitioning M-tree =========
-    NodeRAM* build_recursive(const std::vector<int>& objs, int parentCenterId) {
-        NodeRAM* node;
+    // Reemplaza tu build_recursive por esta versión optimizada
+NodeRAM* build_recursive(const std::vector<int>& objs, int parentCenterId) {
+    NodeRAM* node;
 
-        if ((int)objs.size() <= leafCapacity) {
-            // ---- Nodo hoja ----
-            node = new NodeRAM(true);
-            node->entries.reserve(objs.size());
-            for (int oid : objs) {
-                typename NodeRAM::EntryRAM e;
-                e.objId = oid;
-                e.radius = 0.0;
-                e.child  = nullptr;
-                if (parentCenterId < 0)
-                    e.parentDist = 0.0; // raíz
-                else
-                    e.parentDist = dist(oid, parentCenterId); // δ(D, Par(D))
-                node->entries.push_back(e);
-            }
-            return node;
-        }
-
-        // ---- Nodo interno: seleccionar centros y crear subárboles ----
-        node = new NodeRAM(false);
-
-        // 1) Elegir hasta nodeCapacity centros por farthest-first traversal
-        int maxCenters = std::min(nodeCapacity, (int)objs.size());
-        std::vector<int> centers;
-        centers.reserve(maxCenters);
-
-        // primer centro: el primero del vector
-        centers.push_back(objs[0]);
-
-        while ((int)centers.size() < maxCenters) {
-            double bestMin = -1.0;
-            int bestObj = -1;
-            for (int oid : objs) {
-                // min distancia a centros ya elegidos
-                double minD = std::numeric_limits<double>::infinity();
-                for (int c : centers) {
-                    double d = dist(oid, c);
-                    if (d < minD) minD = d;
-                }
-                if (minD > bestMin) {
-                    bestMin = minD;
-                    bestObj = oid;
-                }
-            }
-            if (bestObj == -1) break;
-            centers.push_back(bestObj);
-        }
-
-        // 2) Asignar cada objeto a su centro más cercano
-        std::vector<std::vector<int>> groups(centers.size());
+    if ((int)objs.size() <= leafCapacity) {
+        // ---- Nodo hoja ----
+        node = new NodeRAM(true);
+        node->entries.reserve(objs.size());
         for (int oid : objs) {
-            double bestD = std::numeric_limits<double>::infinity();
-            int bestC = 0;
-            for (size_t i = 0; i < centers.size(); ++i) {
-                double d = dist(oid, centers[i]);
-                if (d < bestD) {
-                    bestD = d;
-                    bestC = (int)i;
-                }
-            }
-            groups[bestC].push_back(oid);
-        }
-
-        // 3) Crear entradas de routing y subárboles
-        for (size_t i = 0; i < centers.size(); ++i) {
-            if (groups[i].empty()) continue; // centro sin objetos asignados
-
-            int centerId = centers[i];
-
-            // radio de cobertura r_R = max δ(R, D) para D en grupo
-            double rad = 0.0;
-            for (int oid : groups[i]) {
-                double d = dist(centerId, oid);
-                if (d > rad) rad = d;
-            }
-
-            NodeRAM* child = build_recursive(groups[i], centerId);
-
             typename NodeRAM::EntryRAM e;
-            e.objId = centerId;
-            e.radius = rad;
-            e.child  = child;
+            e.objId = oid;
+            e.radius = 0.0;
+            e.child  = nullptr;
             if (parentCenterId < 0)
-                e.parentDist = 0.0; // entrada de raíz
+                e.parentDist = 0.0; // raíz
             else
-                e.parentDist = dist(centerId, parentCenterId); // δ(R, Par(R))
+                e.parentDist = dist(oid, parentCenterId); // δ(D, Par(D))
             node->entries.push_back(e);
         }
-
         return node;
     }
+
+    // ---- Nodo interno: seleccionar centros y crear subárboles ----
+    node = new NodeRAM(false);
+
+    // 1) Elegir hasta nodeCapacity centros por farthest-first con caching y muestreo
+    int maxCenters = std::min(nodeCapacity, (int)objs.size());
+    std::vector<int> centers;
+    centers.reserve(maxCenters);
+    centers.push_back(objs[0]);
+
+    // Parámetros de muestreo (ajustables)
+    const size_t sampleThreshold = 10000; // si objs.size() > threshold, usamos muestra
+    bool useSampling = objs.size() > sampleThreshold;
+    std::vector<int> sampleIdx; // posiciones dentro de objs
+    if (useSampling) {
+        size_t sampleSize = std::min<size_t>(sampleThreshold, objs.size());
+        sampleIdx.reserve(sampleSize);
+        size_t step = objs.size() / sampleSize;
+        if (step == 0) step = 1;
+        for (size_t i = 0; i < objs.size() && sampleIdx.size() < sampleSize; i += step) {
+            sampleIdx.push_back((int)i);
+        }
+        // si faltan, completar
+        for (size_t i = 0; sampleIdx.size() < sampleSize; ++i) {
+            sampleIdx.push_back((int)(i % objs.size()));
+        }
+    }
+
+    // minDist guarda la distancia mínima al conjunto actual de centros
+    std::vector<double> minDist;
+    if (useSampling) {
+        minDist.assign(sampleIdx.size(), std::numeric_limits<double>::infinity());
+        for (size_t i = 0; i < sampleIdx.size(); ++i) {
+            int oid = objs[sampleIdx[i]];
+            minDist[i] = dist(oid, centers[0]);
+        }
+    } else {
+        minDist.assign(objs.size(), std::numeric_limits<double>::infinity());
+        for (size_t i = 0; i < objs.size(); ++i) {
+            int oid = objs[i];
+            minDist[i] = dist(oid, centers[0]);
+        }
+    }
+
+    while ((int)centers.size() < maxCenters) {
+        double bestMin = -1.0;
+        int bestIdx = -1; // index into objs (not into sampleIdx)
+        if (useSampling) {
+            for (size_t idx = 0; idx < sampleIdx.size(); ++idx) {
+                if (minDist[idx] > bestMin) {
+                    bestMin = minDist[idx];
+                    bestIdx = sampleIdx[idx];
+                }
+            }
+        } else {
+            for (size_t idx = 0; idx < objs.size(); ++idx) {
+                if (minDist[idx] > bestMin) {
+                    bestMin = minDist[idx];
+                    bestIdx = (int)idx;
+                }
+            }
+        }
+        if (bestIdx == -1) break;
+        int bestObj = objs[bestIdx];
+
+        // Evitar repetir un centro ya elegido (muy raro)
+        bool already = false;
+        for (int c : centers) if (c == bestObj) { already = true; break; }
+        if (already) break;
+
+        centers.push_back(bestObj);
+
+        // actualizar minDist: sólo comparando con el nuevo centro
+        if (useSampling) {
+            for (size_t idx = 0; idx < sampleIdx.size(); ++idx) {
+                int oid = objs[sampleIdx[idx]];
+                double d = dist(oid, bestObj);
+                if (d < minDist[idx]) minDist[idx] = d;
+            }
+        } else {
+            for (size_t idx = 0; idx < objs.size(); ++idx) {
+                int oid = objs[idx];
+                double d = dist(oid, bestObj);
+                if (d < minDist[idx]) minDist[idx] = d;
+            }
+        }
+    }
+
+    // 2) Asignar cada objeto a su centro más cercano (k comparaciones por objeto)
+    std::vector<std::vector<int>> groups(centers.size());
+    for (int oid : objs) {
+        double bestD = std::numeric_limits<double>::infinity();
+        int bestC = 0;
+        for (size_t i = 0; i < centers.size(); ++i) {
+            double d = dist(oid, centers[i]);
+            if (d < bestD) { bestD = d; bestC = (int)i; }
+        }
+        groups[bestC].push_back(oid);
+    }
+
+    // 3) Para cada grupo, calcular radio y recursar
+    for (size_t i = 0; i < centers.size(); ++i) {
+        if (groups[i].empty()) continue; // centro sin objetos asignados (puede pasar)
+
+        int centerId = centers[i];
+
+        // radio de cobertura r_R = max δ(R, D) para D en grupo
+        double rad = 0.0;
+        for (int oid : groups[i]) {
+            double d = dist(centerId, oid);
+            if (d > rad) rad = d;
+        }
+
+        NodeRAM* child = build_recursive(groups[i], centerId);
+
+        typename NodeRAM::EntryRAM e;
+        e.objId = centerId;
+        e.radius = rad;
+        e.child  = child;
+        if (parentCenterId < 0)
+            e.parentDist = 0.0; // entrada de raíz
+        else
+            e.parentDist = dist(centerId, parentCenterId); // δ(R, Par(R))
+        node->entries.push_back(e);
+    }
+
+    return node;
+}
+
 
     // ========= Serialización a disco: post-order =========
     int64_t writeNodeRec(NodeRAM* node) {
