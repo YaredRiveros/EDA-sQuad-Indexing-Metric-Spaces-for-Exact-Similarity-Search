@@ -139,9 +139,11 @@ int main()
         if (dataset == "Words")
             paramSet = &PARAMS_WORDS;
         else if (dataset == "Synthetic")
-            paramSet = &PARAMS_WORDS;
+            paramSet = &PARAMS_SYNTH;
+        else if (dataset == "Color")
+            paramSet = &PARAMS_COLOR;
         else
-            paramSet = &PARAMS_LA;    // para LA, Color, Synthetic
+            paramSet = &PARAMS_LA;
 
         for (auto P : *paramSet)
         {

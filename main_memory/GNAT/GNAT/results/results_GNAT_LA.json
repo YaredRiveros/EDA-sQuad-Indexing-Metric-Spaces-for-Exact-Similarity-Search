@@ -12,7 +12,7 @@
     "radius": 344.17,
     "k": 5,
     "compdists": 64450.3,
-    "time_ms": 3.46,
+    "time_ms": 3.99,
     "n_queries": 100,
     "run_id": "GNAT_LA_H3_k5"
   },
@@ -29,7 +29,7 @@
     "radius": 542.345,
     "k": 10,
     "compdists": 64450.3,
-    "time_ms": 4.28,
+    "time_ms": 4.99,
     "n_queries": 100,
     "run_id": "GNAT_LA_H3_k10"
   },
@@ -46,7 +46,7 @@
     "radius": 817.826,
     "k": 20,
     "compdists": 65649.3,
-    "time_ms": 3.6,
+    "time_ms": 4.3,
     "n_queries": 100,
     "run_id": "GNAT_LA_H3_k20"
   },
@@ -63,7 +63,7 @@
     "radius": 1456.83,
     "k": 50,
     "compdists": 66380.7,
-    "time_ms": 3.64,
+    "time_ms": 4.28,
     "n_queries": 100,
     "run_id": "GNAT_LA_H3_k50"
   },
@@ -80,7 +80,7 @@
     "radius": 2155.92,
     "k": 100,
     "compdists": 69040.5,
-    "time_ms": 4.11,
+    "time_ms": 4.42,
     "n_queries": 100,
     "run_id": "GNAT_LA_H3_k100"
   },
@@ -97,7 +97,7 @@
     "radius": 2069.03,
     "k": null,
     "compdists": 623592,
-    "time_ms": 23.5,
+    "time_ms": 26.15,
     "n_queries": 100,
     "run_id": "GNAT_LA_H3_sel0.32"
   },
@@ -114,7 +114,7 @@
     "radius": 1431.56,
     "k": null,
     "compdists": 509581,
-    "time_ms": 20.13,
+    "time_ms": 23.27,
     "n_queries": 100,
     "run_id": "GNAT_LA_H3_sel0.16"
   },
@@ -131,7 +131,7 @@
     "radius": 957.997,
     "k": null,
     "compdists": 379508,
-    "time_ms": 15.36,
+    "time_ms": 20.74,
     "n_queries": 100,
     "run_id": "GNAT_LA_H3_sel0.08"
   },
@@ -148,7 +148,7 @@
     "radius": 625.361,
     "k": null,
     "compdists": 283993,
-    "time_ms": 12.54,
+    "time_ms": -4.69,
     "n_queries": 100,
     "run_id": "GNAT_LA_H3_sel0.04"
   },
@@ -165,7 +165,7 @@
     "radius": 408.823,
     "k": null,
     "compdists": 221972,
-    "time_ms": 9.34,
+    "time_ms": 9.83,
     "n_queries": 100,
     "run_id": "GNAT_LA_H3_sel0.02"
   },
@@ -182,7 +182,7 @@
     "radius": 344.17,
     "k": 5,
     "compdists": 2792.67,
-    "time_ms": 0.13,
+    "time_ms": 0.11,
     "n_queries": 100,
     "run_id": "GNAT_LA_H5_k5"
   },
@@ -216,7 +216,7 @@
     "radius": 817.826,
     "k": 20,
     "compdists": 3094.65,
-    "time_ms": 0.13,
+    "time_ms": 0.14,
     "n_queries": 100,
     "run_id": "GNAT_LA_H5_k20"
   },
@@ -233,7 +233,7 @@
     "radius": 1456.83,
     "k": 50,
     "compdists": 3418.05,
-    "time_ms": 0.14,
+    "time_ms": 0.15,
     "n_queries": 100,
     "run_id": "GNAT_LA_H5_k50"
   },
@@ -250,7 +250,7 @@
     "radius": 2155.92,
     "k": 100,
     "compdists": 3829.94,
-    "time_ms": 0.16,
+    "time_ms": 0.18,
     "n_queries": 100,
     "run_id": "GNAT_LA_H5_k100"
   },
@@ -267,7 +267,7 @@
     "radius": 2069.03,
     "k": null,
     "compdists": 438474,
-    "time_ms": 12.88,
+    "time_ms": 12.38,
     "n_queries": 100,
     "run_id": "GNAT_LA_H5_sel0.32"
   },
@@ -284,7 +284,7 @@
     "radius": 1431.56,
     "k": null,
     "compdists": 330623,
-    "time_ms": 10.18,
+    "time_ms": 9.45,
     "n_queries": 100,
     "run_id": "GNAT_LA_H5_sel0.16"
   },
@@ -301,7 +301,7 @@
     "radius": 957.997,
     "k": null,
     "compdists": 226219,
-    "time_ms": 6.86,
+    "time_ms": 7.35,
     "n_queries": 100,
     "run_id": "GNAT_LA_H5_sel0.08"
   },
@@ -318,7 +318,7 @@
     "radius": 625.361,
     "k": null,
     "compdists": 137065,
-    "time_ms": 4.17,
+    "time_ms": 4.21,
     "n_queries": 100,
     "run_id": "GNAT_LA_H5_sel0.04"
   },
@@ -335,7 +335,7 @@
     "radius": 408.823,
     "k": null,
     "compdists": 80006.8,
-    "time_ms": 2.67,
+    "time_ms": 2.44,
     "n_queries": 100,
     "run_id": "GNAT_LA_H5_sel0.02"
   },
@@ -352,7 +352,7 @@
     "radius": 344.17,
     "k": 5,
     "compdists": 70.65,
-    "time_ms": 0.01,
+    "time_ms": 0.02,
     "n_queries": 100,
     "run_id": "GNAT_LA_H10_k5"
   },
@@ -386,7 +386,7 @@
     "radius": 817.826,
     "k": 20,
     "compdists": 116.65,
-    "time_ms": 0.03,
+    "time_ms": 0.02,
     "n_queries": 100,
     "run_id": "GNAT_LA_H10_k20"
   },
@@ -403,7 +403,7 @@
     "radius": 1456.83,
     "k": 50,
     "compdists": 183.51,
-    "time_ms": 0.04,
+    "time_ms": 0.03,
     "n_queries": 100,
     "run_id": "GNAT_LA_H10_k50"
   },
@@ -437,7 +437,7 @@
     "radius": 2069.03,
     "k": null,
     "compdists": 406359,
-    "time_ms": 35.86,
+    "time_ms": 29.91,
     "n_queries": 100,
     "run_id": "GNAT_LA_H10_sel0.32"
   },
@@ -454,7 +454,7 @@
     "radius": 1431.56,
     "k": null,
     "compdists": 299551,
-    "time_ms": 21.79,
+    "time_ms": 22.08,
     "n_queries": 100,
     "run_id": "GNAT_LA_H10_sel0.16"
   },
@@ -471,7 +471,7 @@
     "radius": 957.997,
     "k": null,
     "compdists": 192989,
-    "time_ms": 13.54,
+    "time_ms": 14.28,
     "n_queries": 100,
     "run_id": "GNAT_LA_H10_sel0.08"
   },
@@ -488,7 +488,7 @@
     "radius": 625.361,
     "k": null,
     "compdists": 107176,
-    "time_ms": 10.64,
+    "time_ms": 8.05,
     "n_queries": 100,
     "run_id": "GNAT_LA_H10_sel0.04"
   },
@@ -505,7 +505,7 @@
     "radius": 408.823,
     "k": null,
     "compdists": 54025.1,
-    "time_ms": 5.49,
+    "time_ms": 4.11,
     "n_queries": 100,
     "run_id": "GNAT_LA_H10_sel0.02"
   },
@@ -522,7 +522,7 @@
     "radius": 344.17,
     "k": 5,
     "compdists": 70.86,
-    "time_ms": 0.01,
+    "time_ms": 0.02,
     "n_queries": 100,
     "run_id": "GNAT_LA_H15_k5"
   },
@@ -539,7 +539,7 @@
     "radius": 542.345,
     "k": 10,
     "compdists": 86.41,
-    "time_ms": 0.02,
+    "time_ms": 0.01,
     "n_queries": 100,
     "run_id": "GNAT_LA_H15_k10"
   },
@@ -556,7 +556,7 @@
     "radius": 817.826,
     "k": 20,
     "compdists": 110.96,
-    "time_ms": 0.02,
+    "time_ms": 0.01,
     "n_queries": 100,
     "run_id": "GNAT_LA_H15_k20"
   },
@@ -590,7 +590,7 @@
     "radius": 2155.92,
     "k": 100,
     "compdists": 284.32,
-    "time_ms": 0.05,
+    "time_ms": 0.04,
     "n_queries": 100,
     "run_id": "GNAT_LA_H15_k100"
   },
@@ -607,7 +607,7 @@
     "radius": 2069.03,
     "k": null,
     "compdists": 406358,
-    "time_ms": 31.23,
+    "time_ms": 30.14,
     "n_queries": 100,
     "run_id": "GNAT_LA_H15_sel0.32"
   },
@@ -624,7 +624,7 @@
     "radius": 1431.56,
     "k": null,
     "compdists": 299556,
-    "time_ms": 21.79,
+    "time_ms": 25.03,
     "n_queries": 100,
     "run_id": "GNAT_LA_H15_sel0.16"
   },
@@ -641,7 +641,7 @@
     "radius": 957.997,
     "k": null,
     "compdists": 192987,
-    "time_ms": 14.16,
+    "time_ms": 14.57,
     "n_queries": 100,
     "run_id": "GNAT_LA_H15_sel0.08"
   },
@@ -658,7 +658,7 @@
     "radius": 625.361,
     "k": null,
     "compdists": 107161,
-    "time_ms": 7.61,
+    "time_ms": 8.12,
     "n_queries": 100,
     "run_id": "GNAT_LA_H15_sel0.04"
   },
@@ -675,7 +675,7 @@
     "radius": 408.823,
     "k": null,
     "compdists": 54020.5,
-    "time_ms": 3.98,
+    "time_ms": 4.14,
     "n_queries": 100,
     "run_id": "GNAT_LA_H15_sel0.02"
   },
@@ -726,7 +726,7 @@
     "radius": 817.826,
     "k": 20,
     "compdists": 109.81,
-    "time_ms": 0.01,
+    "time_ms": 0.02,
     "n_queries": 100,
     "run_id": "GNAT_LA_H20_k20"
   },
@@ -760,7 +760,7 @@
     "radius": 2155.92,
     "k": 100,
     "compdists": 275.41,
-    "time_ms": 0.04,
+    "time_ms": 0.07,
     "n_queries": 100,
     "run_id": "GNAT_LA_H20_k100"
   },
@@ -777,7 +777,7 @@
     "radius": 2069.03,
     "k": null,
     "compdists": 406365,
-    "time_ms": 29.21,
+    "time_ms": 35.07,
     "n_queries": 100,
     "run_id": "GNAT_LA_H20_sel0.32"
   },
@@ -794,7 +794,7 @@
     "radius": 1431.56,
     "k": null,
     "compdists": 299577,
-    "time_ms": 23.95,
+    "time_ms": 6.03,
     "n_queries": 100,
     "run_id": "GNAT_LA_H20_sel0.16"
   },
@@ -811,7 +811,7 @@
     "radius": 957.997,
     "k": null,
     "compdists": 193007,
-    "time_ms": 14.28,
+    "time_ms": 15.94,
     "n_queries": 100,
     "run_id": "GNAT_LA_H20_sel0.08"
   },
@@ -828,7 +828,7 @@
     "radius": 625.361,
     "k": null,
     "compdists": 107179,
-    "time_ms": 8.16,
+    "time_ms": 8.54,
     "n_queries": 100,
     "run_id": "GNAT_LA_H20_sel0.04"
   },
@@ -845,7 +845,7 @@
     "radius": 408.823,
     "k": null,
     "compdists": 54034.8,
-    "time_ms": 4.24,
+    "time_ms": 4.15,
     "n_queries": 100,
     "run_id": "GNAT_LA_H20_sel0.02"
   }
