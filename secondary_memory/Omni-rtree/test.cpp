@@ -15,6 +15,7 @@ static const vector<int> K_VALUES = {5, 10, 20, 50, 100};
 // Datasets del paper
 static const vector<string> DATASETS = {"LA", "Words", "Color", "Synthetic"};
 
+
 int main() {
     srand(12345);
 
@@ -33,6 +34,7 @@ int main() {
         if (dataset == "LA")              db = make_unique<VectorDB>(dbfile, 2);
         else if (dataset == "Synthetic")  db = make_unique<VectorDB>(dbfile, 0);
         else if (dataset == "Words")      db = make_unique<StringDB>(dbfile);
+        else if (dataset == "Color")  db = make_unique<VectorDB>(dbfile, 1);
         else continue;
 
         cerr << "\n==========================================\n";
@@ -54,8 +56,8 @@ int main() {
         bool firstOutput = true;
 
         // Configuración fija de OmniR-tree (como EGNAT usa config fija)
-        // Usamos 8 pivotes (valor intermedio razonable)
-        int num_pivots = 8;
+        // Usamos 5 pivotes 
+        int num_pivots = 5;
         int rtree_node_cap = 32;
 
         // ---- Crear OmniR-tree ----
