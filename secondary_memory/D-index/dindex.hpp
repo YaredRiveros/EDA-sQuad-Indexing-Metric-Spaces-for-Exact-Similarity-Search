@@ -2,34 +2,43 @@
 // DIndex.hpp - Implementación optimizada del D-Index
 // Con pivotes HFI + compatibilidad con Chen (2022) y Dohnal (2003)
 //
-//  ✔ Usa pivotes HFI si existen
-//  ✔ Fallback a pivotes random como Chen
+//  ✔ Usa pivotes HFI si existen (pivots/<dataset>_pivots_L.json)
+//  ✔ Fallback a pivotes aleatorios si no hay archivo
 //  ✔ Distancias almacenadas en matriz N×L contigua (RAM estable)
 //  ✔ Keys compactas base-3 (L,R,-)
 //  ✔ Buckets ligeros y precomputados
-//  ✔ MRQ y MkNN exactos como Chen
+//  ✔ MRQ y MkNN como en Chen
 //
 //  Requisitos:
-//  - ObjectDB debe implementar distance(id1, id2)
-//  - IDs son valores consecutivos desde 1 .. N
+//  - ObjectDB (de objectdb.hpp) con: int size(), double distance(int,int)
+//  - IDs son índices 0..N-1 (coherente con VectorDB y StringDB)
 // ============================================================================
 
 #pragma once
 #include <bits/stdc++.h>
+#include <filesystem>
 #include "../../objectdb.hpp"
 #include "../../datasets/paths.hpp"
 
 using namespace std;
+namespace fs = std::filesystem;
+
+// ============================================================================
+// --- DataObject mínimo ------------------------------------------------------
+// ============================================================================
+struct DataObject {
+    int id;   // índice 0..N-1 dentro de ObjectDB
+};
 
 // ============================================================================
 // --- Utilidades --------------------------------------------------------------
 // ============================================================================
 
-// Lee pivotes desde archivo HFI (mismo formato que GNAT, EGNAT, Omni)
-inline vector<uint32_t> loadHFIPivots(const string &path) {
-    vector<uint32_t> pivs;
+// Lee pivotes desde archivo HFI (mismo formato que GNAT / Omni / EGNAT)
+inline vector<int> loadHFIPivots(const string &path) {
+    vector<int> pivs;
 
-    if (!filesystem::exists(path)) {
+    if (!fs::exists(path)) {
         cerr << "[HFI] No HFI pivot file: " << path << "\n";
         return pivs;
     }
@@ -54,9 +63,9 @@ inline uint32_t encodeKey(const vector<char>& code) {
     uint32_t k = 0;
     for (char c : code) {
         k *= 3;
-        if (c == 'L') k += 0;
+        if (c == 'L')      k += 0;
         else if (c == 'R') k += 1;
-        else k += 2;   // '-'
+        else               k += 2;  // '-'
     }
     return k;
 }
@@ -73,7 +82,7 @@ inline double lbInterval(double q, const pair<double,double>& I) {
 // ============================================================================
 struct Bucket {
     vector<pair<double,double>> intervals; // Intervalos por nivel
-    vector<uint32_t> ids;                 // IDs de objetos
+    vector<int> ids;                      // IDs de objetos (0..N-1)
 };
 
 // ============================================================================
@@ -82,29 +91,33 @@ struct Bucket {
 class DIndex {
 private:
     ObjectDB* db;
-    size_t N;
-    size_t L;     // Número de pivotes
-    double rho;   // Parámetro ρ-split
+    int N;        // número de objetos (db->size())
+    size_t L;     // número de pivotes
+    double rho;   // parámetro ρ
 
-    vector<uint32_t> pivotIds;
+    vector<int> pivotIds;      // IDs de pivotes (0..N-1)
     vector<double> pivotMedians;
 
-    vector<double> distMatrix;   // Tamaño = N×L  (id-1)*L + lvl
+    // Distancias d(obj, pivot): tamaño N×L; índice: id*L + lvl, con id∈[0,N-1]
+    vector<double> distMatrix;
 
     vector<Bucket> buckets;
-    unordered_map<uint32_t, size_t> bucketIndex;
+    unordered_map<uint32_t, size_t> bucketIndex; // key → índice en buckets
 
     long long compDist = 0;
-    long long pageReads = 0;
+    long long pageReads = 0;   // no usamos RAF pero mantenemos la API
 
 public:
-    DIndex(const string&, ObjectDB* database, size_t numLevels, double rho_)
-        : db(database), L(numLevels), rho(rho_)
-    {
+    DIndex(const string& /*rafFile*/,
+           ObjectDB* database,
+           size_t numLevels,
+           double rho_)
+        : db(database), L(numLevels), rho(rho_) {
+
         N = db->size();
         pivotIds.resize(L);
         pivotMedians.resize(L);
-        distMatrix.resize(N * L);  // RAM estable, sin hashing
+        distMatrix.resize(static_cast<size_t>(N) * L);  // RAM estable
     }
 
     // ========================================================================
@@ -119,7 +132,7 @@ public:
         cerr << "[DIndex] Loading HFI pivots if available...\n";
         selectPivots(objects, seed, pivfile);
 
-        cerr << "[DIndex] Computing distance matrix...\n";
+        cerr << "[DIndex] Computing distance matrix (N x L)...\n";
         computeDistanceMatrix();
 
         cerr << "[DIndex] Computing medians...\n";
@@ -149,14 +162,14 @@ public:
         }
 
         // 2) Fallback → pivotes aleatorios como Chen
-        cerr << "[DIndex] Using random pivots (HFI unavailable).\n";
+        cerr << "[DIndex] Using random pivots (HFI unavailable or insufficient).\n";
 
         mt19937_64 rng(seed);
-        unordered_set<uint32_t> used;
+        unordered_set<int> used;
 
         for (size_t i = 0; i < L; i++) {
             while (true) {
-                uint32_t id = objs[rng() % objs.size()].id;
+                int id = objs[rng() % objs.size()].id; // id 0..N-1
                 if (!used.count(id)) {
                     pivotIds[i] = id;
                     used.insert(id);
@@ -172,10 +185,10 @@ public:
     void computeDistanceMatrix() {
         compDist = 0;
 
-        for (uint32_t id = 1; id <= N; id++) {
+        for (int id = 0; id < N; id++) {
             for (size_t j = 0; j < L; j++) {
-                double d = db->distance(id, pivotIds[j]);
-                distMatrix[(id-1)*L + j] = d;
+                double d = db->distance(id, pivotIds[j]);  // ObjectDB usa int
+                distMatrix[static_cast<size_t>(id) * L + j] = d;
                 compDist++;
             }
         }
@@ -185,13 +198,14 @@ public:
     // Medianas por nivel
     // ========================================================================
     void computeMedians() {
-        vector<double> tmp(N);
+        vector<double> tmp(static_cast<size_t>(N));
 
         for (size_t j = 0; j < L; j++) {
-            for (uint32_t id = 1; id <= N; id++)
-                tmp[id-1] = distMatrix[(id-1)*L + j];
+            for (int id = 0; id < N; id++)
+                tmp[static_cast<size_t>(id)] =
+                    distMatrix[static_cast<size_t>(id) * L + j];
 
-            size_t k = N / 2;
+            size_t k = static_cast<size_t>(N) / 2;
             nth_element(tmp.begin(), tmp.begin() + k, tmp.end());
             pivotMedians[j] = tmp[k];
         }
@@ -203,13 +217,14 @@ public:
     void buildBuckets() {
         vector<char> code(L);
 
-        for (uint32_t id = 1; id <= N; id++) {
-            const double* row = &distMatrix[(id-1)*L];
+        for (int id = 0; id < N; id++) {
+            const double* row =
+                &distMatrix[static_cast<size_t>(id) * L];
 
             bool assigned = false;
 
             for (size_t lvl = 0; lvl < L; lvl++) {
-                double d = row[lvl];
+                double d   = row[lvl];
                 double med = pivotMedians[lvl];
 
                 if (d < med - rho) {
@@ -230,6 +245,7 @@ public:
             }
 
             if (!assigned) {
+                // bucket de exclusión (todos '-')
                 fill(code.begin(), code.end(), '-');
                 addToBucket(id, code);
             }
@@ -239,7 +255,7 @@ public:
     // ========================================================================
     // Añadir a bucket
     // ========================================================================
-    void addToBucket(uint32_t id, const vector<char>& code) {
+    void addToBucket(int id, const vector<char>& code) {
         uint32_t key = encodeKey(code);
 
         if (!bucketIndex.count(key)) {
@@ -261,37 +277,39 @@ public:
         for (size_t lvl = 0; lvl < L; lvl++) {
             double med = pivotMedians[lvl];
 
-            if (code[lvl] == 'L')
+            if (code[lvl] == 'L') {
                 b.intervals[lvl] = {0.0, max(0.0, med - rho)};
-
-            else if (code[lvl] == 'R')
-                b.intervals[lvl] = {med + rho, numeric_limits<double>::infinity()};
-
-            else
+            }
+            else if (code[lvl] == 'R') {
+                b.intervals[lvl] = {med + rho,
+                                    numeric_limits<double>::infinity()};
+            }
+            else {
                 b.intervals[lvl] = {max(0.0, med - rho), med + rho};
+            }
         }
     }
 
     // ========================================================================
     // MRQ (Chen 2022)
     // ========================================================================
-    vector<uint32_t> MRQ(uint32_t qid, double r) {
+    vector<int> MRQ(int qid, double r) {
         vector<double> q(L);
 
+        // Distancias query → pivotes (cuentan en compDist)
         for (size_t i = 0; i < L; i++) {
             q[i] = db->distance(qid, pivotIds[i]);
             compDist++;
         }
 
-        vector<uint32_t> out;
+        vector<int> out;
 
         for (auto &b : buckets) {
-            double LB = 0;
+            double LB = 0.0;
 
             for (size_t lvl = 0; lvl < L; lvl++) {
                 LB = max(LB, lbInterval(q[lvl], b.intervals[lvl]));
-                if (LB > r)
-                    break;
+                if (LB > r) break;
             }
 
             if (LB <= r)
@@ -304,17 +322,17 @@ public:
     // ========================================================================
     // MkNN (Chen 2022)
     // ========================================================================
-    vector<pair<uint32_t,double>> MkNN(uint32_t qid, size_t k) {
+    vector<pair<int,double>> MkNN(int qid, size_t k) {
         double R = rho;
-        vector<pair<uint32_t,double>> final;
+        vector<pair<int,double>> final;
 
         for (int iter = 0; iter < 5; iter++) {
             auto cand = MRQ(qid, R);
 
-            vector<pair<uint32_t,double>> vec;
+            vector<pair<int,double>> vec;
             vec.reserve(cand.size());
 
-            for (uint32_t id : cand) {
+            for (int id : cand) {
                 double d = db->distance(qid, id);
                 compDist++;
                 vec.push_back({id, d});
@@ -356,4 +374,3 @@ public:
         pageReads = 0;
     }
 };
-
