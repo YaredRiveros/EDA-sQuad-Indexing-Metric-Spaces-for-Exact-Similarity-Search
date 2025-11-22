@@ -31,7 +31,8 @@ int main() {
         unique_ptr<ObjectDB> db;
 
         if (dataset == "LA")              db = make_unique<VectorDB>(dbfile, 2);
-        else if (dataset == "Synthetic")  db = make_unique<VectorDB>(dbfile, 0);
+        else if (dataset == "Color")      db = make_unique<VectorDB>(dbfile, 1);
+        else if (dataset == "Synthetic")  db = make_unique<VectorDB>(dbfile, 999999);
         else if (dataset == "Words")      db = make_unique<StringDB>(dbfile);
         else continue;
 
