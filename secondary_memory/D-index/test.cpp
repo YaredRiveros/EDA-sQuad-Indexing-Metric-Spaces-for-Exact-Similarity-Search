@@ -54,11 +54,11 @@ int main() {
         J << "[\n";
         bool firstOutput = true;
 
-        // Configuración fija para D-index (similar a EGNAT y OmniR-tree)
-        int numLevels = 4;    // número de niveles/pivotes
+        // Configuración fija para D-index (según Chen: l = 5 pivotes por defecto)
+        int numLevels = 5;    // número de niveles/pivotes (l = 5)
         double rho = 5.0;     // parámetro rho para ρ-split
 
-        cerr << "[BUILD] Construyendo D-index con " << numLevels 
+        cerr << "[BUILD] Construyendo D-index con " << numLevels
              << " niveles y rho=" << rho << "...\n";
 
         // Crear D-index
@@ -68,11 +68,11 @@ int main() {
         // Build: preparar todos los objetos (solo ids, payload no necesario)
         vector<DataObject> allObjects;
         allObjects.reserve(db->size());
-        
+
         cerr << "[BUILD] Cargando " << db->size() << " objetos...\n";
         for (int i = 1; i <= db->size(); i++) {
             if (i % 10000 == 0) {
-                cerr << "  Cargados " << i << " objetos (" 
+                cerr << "  Cargados " << i << " objetos ("
                      << (100 * i / db->size()) << "%)\n";
             }
             DataObject obj;
@@ -101,22 +101,27 @@ int main() {
             for (int q : queries) {
                 dindex.clear_counters();
                 auto start = chrono::high_resolution_clock::now();
-                
+
                 vector<uint64_t> candidates = dindex.MRQ(q, R);
-                
+
                 auto end = chrono::high_resolution_clock::now();
-                auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start).count();
+                auto elapsed =
+                    chrono::duration_cast<chrono::microseconds>(end - start).count();
 
                 // Verificar candidatos (calcular distancias exactas)
                 vector<int> results;
+                long long verifDists = 0;  // distancias de verificación
+
                 for (uint64_t cid : candidates) {
                     double dist = db->distance(q, cid);
+                    verifDists++;  // contamos esta distancia
                     if (dist <= R) {
-                        results.push_back(cid);
+                        results.push_back((int)cid);
                     }
                 }
 
-                totalD     += dindex.get_compDist();
+                // Distancias totales = índice + verificación
+                totalD     += dindex.get_compDist() + verifDists;
                 totalT     += elapsed;
                 totalPages += dindex.get_pageReads();
             }
@@ -161,12 +166,14 @@ int main() {
             for (int q : queries) {
                 dindex.clear_counters();
                 auto start = chrono::high_resolution_clock::now();
-                
-                vector<pair<uint64_t, double>> knn = dindex.MkNN(q, k);
-                
-                auto end = chrono::high_resolution_clock::now();
-                auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start).count();
 
+                vector<pair<uint64_t, double>> knn = dindex.MkNN(q, k);
+
+                auto end = chrono::high_resolution_clock::now();
+                auto elapsed =
+                    chrono::duration_cast<chrono::microseconds>(end - start).count();
+
+                // En MkNN, get_compDist() ya incluye distancias de verificación
                 totalD     += dindex.get_compDist();
                 totalT     += elapsed;
                 totalPages += dindex.get_pageReads();
