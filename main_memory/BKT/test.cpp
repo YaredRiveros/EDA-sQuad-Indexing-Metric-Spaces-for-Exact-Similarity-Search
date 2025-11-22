@@ -24,6 +24,8 @@ struct BKT_Params {
     double stepMultiplier;
 };
 
+static const vector<int> L_VALUES = {3, 5, 10, 15, 20};
+
 
 static const vector<BKT_Params> PARAMS_LA = {
     {50, 16},
@@ -145,8 +147,13 @@ int main()
         else
             paramSet = &PARAMS_LA;
 
-        for (auto P : *paramSet)
-        {
+       for (int paramIndex = 0; paramIndex < paramSet->size(); paramIndex++)
+{
+            auto P = (*paramSet)[paramIndex];
+
+            // este es L = {3,5,10,15,20}
+            int l_value = L_VALUES[paramIndex];
+
             int bucketSize = P.bucket;
             double avgDist = estimate_avg_dist(db.get());
             double step = useAvgDist ? (avgDist * P.stepMultiplier)
@@ -199,7 +206,7 @@ int main()
                   << "\"index\":\"BKT\","
                   << "\"dataset\":\"" << dataset << "\","
                   << "\"category\":\"FQ\","
-                  << "\"num_pivots\":" << numPivots << ","
+                  << "\"num_pivots\":" << l_value << ","
                   << "\"num_centers_path\":" << realHeight << ","
                   << "\"arity\":null,"
                   << "\"query_type\":\"MRQ\","
@@ -239,7 +246,7 @@ int main()
                   << "\"index\":\"BKT\","
                   << "\"dataset\":\"" << dataset << "\","
                   << "\"category\":\"FQ\","
-                  << "\"num_pivots\":" << numPivots << ","
+                  << "\"num_pivots\":" << l_value << ","
                   << "\"num_centers_path\":" << realHeight << ","
                   << "\"arity\":null,"
                   << "\"query_type\":\"MkNN\","
