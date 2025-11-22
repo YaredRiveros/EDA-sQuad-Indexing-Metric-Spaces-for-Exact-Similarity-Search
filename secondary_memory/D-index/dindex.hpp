@@ -1,351 +1,359 @@
-// dindex.hpp
-// Implementación del D-index (familia D-index) para benchmarking
-// Basado en Chen et al. (2022) - Section 5.6 D-index Family
-// Adaptado para trabajar con ObjectDB y métricas de rendimiento
+// ============================================================================
+// DIndex.hpp - Implementación optimizada del D-Index
+// Con pivotes HFI + compatibilidad con Chen (2022) y Dohnal (2003)
+//
+//  ✔ Usa pivotes HFI si existen
+//  ✔ Fallback a pivotes random como Chen
+//  ✔ Distancias almacenadas en matriz N×L contigua (RAM estable)
+//  ✔ Keys compactas base-3 (L,R,-)
+//  ✔ Buckets ligeros y precomputados
+//  ✔ MRQ y MkNN exactos como Chen
+//
+//  Requisitos:
+//  - ObjectDB debe implementar distance(id1, id2)
+//  - IDs son valores consecutivos desde 1 .. N
+// ============================================================================
 
 #pragma once
 #include <bits/stdc++.h>
 #include "../../objectdb.hpp"
+#include "../../datasets/paths.hpp"
 
 using namespace std;
 
-/*** ---------- Data object & RAF ---------- ***/
-struct DataObject {
-    uint64_t id;
-    vector<double> payload;
+// ============================================================================
+// --- Utilidades --------------------------------------------------------------
+// ============================================================================
+
+// Lee pivotes desde archivo HFI (mismo formato que GNAT, EGNAT, Omni)
+inline vector<uint32_t> loadHFIPivots(const string &path) {
+    vector<uint32_t> pivs;
+
+    if (!filesystem::exists(path)) {
+        cerr << "[HFI] No HFI pivot file: " << path << "\n";
+        return pivs;
+    }
+
+    ifstream f(path);
+    string tok;
+
+    while (f >> tok) {
+        tok.erase(remove_if(tok.begin(), tok.end(),
+                            [](char c){ return c=='['||c==']'||c==','; }),
+                  tok.end());
+        if (!tok.empty() && all_of(tok.begin(), tok.end(), ::isdigit))
+            pivs.push_back(stoi(tok));
+    }
+
+    cerr << "[HFI] Loaded " << pivs.size() << " pivots from " << path << "\n";
+    return pivs;
+}
+
+// Codifica un vector de {L,R,-} en base 3 → clave bucket compacta
+inline uint32_t encodeKey(const vector<char>& code) {
+    uint32_t k = 0;
+    for (char c : code) {
+        k *= 3;
+        if (c == 'L') k += 0;
+        else if (c == 'R') k += 1;
+        else k += 2;   // '-'
+    }
+    return k;
+}
+
+// Distancia mínima de q al intervalo [a,b]
+inline double lbInterval(double q, const pair<double,double>& I) {
+    if (q < I.first)  return I.first - q;
+    if (q > I.second) return q - I.second;
+    return 0.0;
+}
+
+// ============================================================================
+// --- Bucket ------------------------------------------------------------------
+// ============================================================================
+struct Bucket {
+    vector<pair<double,double>> intervals; // Intervalos por nivel
+    vector<uint32_t> ids;                 // IDs de objetos
 };
 
-class RAF {
-    string filename;
-    unordered_map<uint64_t, streampos> offsets;
-    mutable long long pageReads = 0;  // contador de lecturas de página
-    
-public:
-    RAF(const string &fname): filename(fname) {
-        ofstream ofs(filename, ios::binary | ios::trunc);
-    }
-    
-    streampos append(const DataObject &o) {
-        ofstream ofs(filename, ios::binary | ios::app);
-        streampos pos = ofs.tellp();
-        ofs.write((const char*)&o.id, sizeof(o.id));
-        uint64_t len = o.payload.size();
-        ofs.write((const char*)&len, sizeof(len));
-        ofs.write((const char*)o.payload.data(), len * sizeof(double));
-        ofs.close();
-        offsets[o.id] = pos;
-        return pos;
-    }
-    
-    DataObject read(uint64_t id) const {
-        auto it = offsets.find(id);
-        if(it == offsets.end()) throw runtime_error("RAF: id not found");
-        
-        pageReads++;  // contar lectura
-        
-        ifstream ifs(filename, ios::binary);
-        ifs.seekg(it->second);
-        DataObject o;
-        ifs.read((char*)&o.id, sizeof(o.id));
-        uint64_t len;
-        ifs.read((char*)&len, sizeof(len));
-        o.payload.assign(len, 0.0);
-        ifs.read((char*)o.payload.data(), len * sizeof(double));
-        ifs.close();
-        return o;
-    }
-    
-    bool has(uint64_t id) const { 
-        return offsets.find(id) != offsets.end(); 
-    }
-    
-    long long get_pageReads() const { return pageReads; }
-    void clear_pageReads() { pageReads = 0; }
-};
-
-/*** ---------- Pivot table & mapping ---------- ***/
-struct PivotTable {
-    vector<DataObject> pivots;
-    ObjectDB* db;
-    mutable long long compDist = 0;  // contador de cálculos de distancia
-    
-    PivotTable() : db(nullptr) {}
-    PivotTable(ObjectDB *database) : db(database) {}
-    
-    void setDB(ObjectDB *database) { db = database; }
-
-    void selectRandomPivots(const vector<DataObject>& objs, size_t l, uint64_t seed=42) {
-        pivots.clear();
-        if(l == 0) return;
-        mt19937_64 rng(seed);
-        vector<size_t> idx(objs.size());
-        iota(idx.begin(), idx.end(), 0);
-        shuffle(idx.begin(), idx.end(), rng);
-        for(size_t i = 0; i < l && i < idx.size(); ++i) 
-            pivots.push_back(objs[idx[i]]);
-    }
-
-    // map object o to vector of distances to pivots
-    vector<double> mapObject(uint64_t objId) const {
-        vector<double> m; 
-        m.reserve(pivots.size());
-        for(const auto &p: pivots) {
-            double d = db->distance(objId, p.id);
-            compDist++;
-            m.push_back(d);
-        }
-        return m;
-    }
-    
-    long long get_compDist() const { return compDist; }
-    void clear_compDist() { compDist = 0; }
-};
-
-/*** ---------- D-index construction ---------- ***/
-
-struct LevelSpec {
-    uint64_t pivotId;
-    double d_med;
-};
-
-struct BucketInfo {
-    vector<pair<double, double>> perLevelInterval;
-    vector<uint64_t> objectIds;
-};
-
+// ============================================================================
+// --- DIndex Class ------------------------------------------------------------
+// ============================================================================
 class DIndex {
+private:
     ObjectDB* db;
-    RAF raf;
-    PivotTable pt;
-    size_t numLevels;
-    double rho;
-    
-    vector<LevelSpec> levels;
-    unordered_map<string, BucketInfo> buckets;
-    unordered_map<uint64_t, vector<double>> mappedCache;
+    size_t N;
+    size_t L;     // Número de pivotes
+    double rho;   // Parámetro ρ-split
+
+    vector<uint32_t> pivotIds;
+    vector<double> pivotMedians;
+
+    vector<double> distMatrix;   // Tamaño = N×L  (id-1)*L + lvl
+
+    vector<Bucket> buckets;
+    unordered_map<uint32_t, size_t> bucketIndex;
+
+    long long compDist = 0;
+    long long pageReads = 0;
 
 public:
-    DIndex(const string &rafFile, ObjectDB *database, size_t L, double rho_)
-        : db(database), raf(rafFile), pt(database), numLevels(L), rho(rho_) {}
+    DIndex(const string&, ObjectDB* database, size_t numLevels, double rho_)
+        : db(database), L(numLevels), rho(rho_)
+    {
+        N = db->size();
+        pivotIds.resize(L);
+        pivotMedians.resize(L);
+        distMatrix.resize(N * L);  // RAM estable, sin hashing
+    }
 
-    void build(vector<DataObject> &objects, uint64_t pivotSeed=12345) {
-        // Append all objects to RAF
-        for(auto &o: objects) raf.append(o);
+    // ========================================================================
+    //  BUILD
+    // ========================================================================
+    void build(const vector<DataObject>& objects,
+               uint64_t seed,
+               const string& pivfile)
+    {
+        cerr << "[DIndex] BUILD START\n";
 
-        // Select pivots (one per level)
-        pt.selectRandomPivots(objects, numLevels, pivotSeed);
-        if(pt.pivots.size() < numLevels) {
-            throw runtime_error("Not enough objects to select pivots");
+        cerr << "[DIndex] Loading HFI pivots if available...\n";
+        selectPivots(objects, seed, pivfile);
+
+        cerr << "[DIndex] Computing distance matrix...\n";
+        computeDistanceMatrix();
+
+        cerr << "[DIndex] Computing medians...\n";
+        computeMedians();
+
+        cerr << "[DIndex] Building buckets...\n";
+        buildBuckets();
+
+        cerr << "[DIndex] BUILD OK\n";
+    }
+
+    // ========================================================================
+    // Selección de pivotes (HFI o random)
+    // ========================================================================
+    void selectPivots(const vector<DataObject>& objs,
+                      uint64_t seed,
+                      const string &pivotFile)
+    {
+        // 1) Intentar cargar pivotes HFI
+        auto hfi = loadHFIPivots(pivotFile);
+
+        if (!hfi.empty() && hfi.size() >= L) {
+            for (size_t i = 0; i < L; i++)
+                pivotIds[i] = hfi[i];
+            cerr << "[DIndex] Using HFI pivots.\n";
+            return;
         }
 
-        // Precompute distance matrix (n x L)
-        size_t n = objects.size();
-        mappedCache.clear();
-        for(auto &o: objects) {
-            vector<double> dv; 
-            dv.reserve(numLevels);
-            for(size_t i = 0; i < numLevels; i++) {
-                double d = db->distance(o.id, pt.pivots[i].id);
-                dv.push_back(d);
-            }
-            mappedCache[o.id] = dv;
-        }
+        // 2) Fallback → pivotes aleatorios como Chen
+        cerr << "[DIndex] Using random pivots (HFI unavailable).\n";
 
-        // Initialize with all object ids
-        vector<uint64_t> currentIds;
-        currentIds.reserve(n);
-        for(auto &o: objects) currentIds.push_back(o.id);
+        mt19937_64 rng(seed);
+        unordered_set<uint32_t> used;
 
-        levels.clear();
-        buckets.clear();
-
-        // Compute median for each level
-        for(size_t lvl = 0; lvl < numLevels; ++lvl) {
-            vector<double> dists; 
-            dists.reserve(currentIds.size());
-            for(auto id: currentIds) dists.push_back(mappedCache[id][lvl]);
-            
-            double d_med = 0.0;
-            if(!dists.empty()) {
-                size_t m = dists.size() / 2;
-                nth_element(dists.begin(), dists.begin() + m, dists.end());
-                d_med = dists[m];
-            }
-            
-            LevelSpec Ls; 
-            Ls.pivotId = pt.pivots[lvl].id; 
-            Ls.d_med = d_med;
-            levels.push_back(Ls);
-
-            // Create next level's ids (exclusion zone)
-            vector<uint64_t> nextIds;
-            nextIds.reserve(currentIds.size());
-            for(auto id: currentIds) {
-                double dk = mappedCache[id][lvl];
-                if(dk >= (d_med - rho) && dk <= (d_med + rho)) {
-                    nextIds.push_back(id);
+        for (size_t i = 0; i < L; i++) {
+            while (true) {
+                uint32_t id = objs[rng() % objs.size()].id;
+                if (!used.count(id)) {
+                    pivotIds[i] = id;
+                    used.insert(id);
+                    break;
                 }
             }
-            currentIds.swap(nextIds);
         }
+    }
 
-        // Assign every object to exactly one bucket
-        for(auto &entry : mappedCache) {
-            uint64_t id = entry.first;
-            const vector<double> &dv = entry.second;
-            string key; 
-            key.reserve(numLevels);
-            BucketInfo info;
-            info.perLevelInterval.resize(numLevels);
-            
-            for(size_t lvl = 0; lvl < numLevels; ++lvl) {
-                double dk = dv[lvl];
-                double dmed = levels[lvl].d_med;
-                
-                if(dk < dmed - rho) {
-                    key.push_back('L');
-                    info.perLevelInterval[lvl] = {0.0, max(0.0, dmed - rho)};
-                } else if(dk > dmed + rho) {
-                    key.push_back('R');
-                    info.perLevelInterval[lvl] = {dmed + rho, numeric_limits<double>::infinity()};
-                } else {
-                    key.push_back('-');
-                    info.perLevelInterval[lvl] = {max(0.0, dmed - rho), dmed + rho};
+    // ========================================================================
+    // Distance Matrix
+    // ========================================================================
+    void computeDistanceMatrix() {
+        compDist = 0;
+
+        for (uint32_t id = 1; id <= N; id++) {
+            for (size_t j = 0; j < L; j++) {
+                double d = db->distance(id, pivotIds[j]);
+                distMatrix[(id-1)*L + j] = d;
+                compDist++;
+            }
+        }
+    }
+
+    // ========================================================================
+    // Medianas por nivel
+    // ========================================================================
+    void computeMedians() {
+        vector<double> tmp(N);
+
+        for (size_t j = 0; j < L; j++) {
+            for (uint32_t id = 1; id <= N; id++)
+                tmp[id-1] = distMatrix[(id-1)*L + j];
+
+            size_t k = N / 2;
+            nth_element(tmp.begin(), tmp.begin() + k, tmp.end());
+            pivotMedians[j] = tmp[k];
+        }
+    }
+
+    // ========================================================================
+    // Build buckets
+    // ========================================================================
+    void buildBuckets() {
+        vector<char> code(L);
+
+        for (uint32_t id = 1; id <= N; id++) {
+            const double* row = &distMatrix[(id-1)*L];
+
+            bool assigned = false;
+
+            for (size_t lvl = 0; lvl < L; lvl++) {
+                double d = row[lvl];
+                double med = pivotMedians[lvl];
+
+                if (d < med - rho) {
+                    fill(code.begin(), code.end(), '-');
+                    code[lvl] = 'L';
+                    addToBucket(id, code);
+                    assigned = true;
+                    break;
+                }
+
+                if (d > med + rho) {
+                    fill(code.begin(), code.end(), '-');
+                    code[lvl] = 'R';
+                    addToBucket(id, code);
+                    assigned = true;
+                    break;
                 }
             }
-            
-            auto &b = buckets[key];
-            if(b.objectIds.empty() && b.perLevelInterval.empty()) {
-                b.perLevelInterval = info.perLevelInterval;
+
+            if (!assigned) {
+                fill(code.begin(), code.end(), '-');
+                addToBucket(id, code);
             }
-            b.objectIds.push_back(id);
         }
     }
 
-    // Helper: compute minDist from scalar x to interval [a,b]
-    static double minDistToInterval(double x, pair<double, double> interval) {
-        double a = interval.first, b = interval.second;
-        if(!isfinite(b)) {
-            if(x < a) return a - x;
-            else return 0.0;
+    // ========================================================================
+    // Añadir a bucket
+    // ========================================================================
+    void addToBucket(uint32_t id, const vector<char>& code) {
+        uint32_t key = encodeKey(code);
+
+        if (!bucketIndex.count(key)) {
+            size_t idx = buckets.size();
+            bucketIndex[key] = idx;
+            buckets.emplace_back();
+            buildIntervals(buckets.back(), code);
         }
-        if(x < a) return a - x;
-        if(x > b) return x - b;
-        return 0.0;
+
+        buckets[bucketIndex[key]].ids.push_back(id);
     }
 
-    // MRQ: returns candidate ids
-    vector<uint64_t> MRQ(uint64_t queryId, double r) {
-        // Compute d(q, pivot_i) for all pivots
-        vector<double> qmap_local;
-        qmap_local.resize(numLevels);
-        for(size_t i = 0; i < numLevels; i++) {
-            qmap_local[i] = db->distance(queryId, pt.pivots[i].id);
-            pt.compDist++;
+    // ========================================================================
+    // Intervalos del bucket
+    // ========================================================================
+    void buildIntervals(Bucket& b, const vector<char>& code) {
+        b.intervals.resize(L);
+
+        for (size_t lvl = 0; lvl < L; lvl++) {
+            double med = pivotMedians[lvl];
+
+            if (code[lvl] == 'L')
+                b.intervals[lvl] = {0.0, max(0.0, med - rho)};
+
+            else if (code[lvl] == 'R')
+                b.intervals[lvl] = {med + rho, numeric_limits<double>::infinity()};
+
+            else
+                b.intervals[lvl] = {max(0.0, med - rho), med + rho};
         }
-
-        vector<uint64_t> candidates;
-        candidates.reserve(1024);
-
-        // For each bucket, compute LB
-        for(const auto &kv : buckets) {
-            const BucketInfo &binf = kv.second;
-            double LB = 0.0;
-            
-            for(size_t lvl = 0; lvl < binf.perLevelInterval.size(); ++lvl) {
-                double md = minDistToInterval(qmap_local[lvl], binf.perLevelInterval[lvl]);
-                if(md > LB) LB = md;
-                if(LB > r) break;
-            }
-            
-            if(LB > r) continue;
-            
-            // Add all objects in bucket as candidates
-            for(auto id : binf.objectIds) {
-                candidates.push_back(id);
-            }
-        }
-
-        return candidates;
     }
 
-    // MkNN algorithm
-    vector<pair<uint64_t, double>> MkNN(uint64_t queryId, size_t k) {
-        double radius = rho;
-        vector<pair<uint64_t, double>> finalResults;
-        
-        for(int iter = 0; iter < 3; ++iter) {
-            vector<uint64_t> cand = MRQ(queryId, radius);
-            
-            // Verify exact distances
-            vector<pair<uint64_t, double>> dists; 
-            dists.reserve(cand.size());
-            
-            for(uint64_t id : cand) {
-                double dist = db->distance(queryId, id);
-                pt.compDist++;
-                dists.push_back({id, dist});
+    // ========================================================================
+    // MRQ (Chen 2022)
+    // ========================================================================
+    vector<uint32_t> MRQ(uint32_t qid, double r) {
+        vector<double> q(L);
+
+        for (size_t i = 0; i < L; i++) {
+            q[i] = db->distance(qid, pivotIds[i]);
+            compDist++;
+        }
+
+        vector<uint32_t> out;
+
+        for (auto &b : buckets) {
+            double LB = 0;
+
+            for (size_t lvl = 0; lvl < L; lvl++) {
+                LB = max(LB, lbInterval(q[lvl], b.intervals[lvl]));
+                if (LB > r)
+                    break;
             }
-            
-            // Sort by distance
-            sort(dists.begin(), dists.end(), 
+
+            if (LB <= r)
+                out.insert(out.end(), b.ids.begin(), b.ids.end());
+        }
+
+        return out;
+    }
+
+    // ========================================================================
+    // MkNN (Chen 2022)
+    // ========================================================================
+    vector<pair<uint32_t,double>> MkNN(uint32_t qid, size_t k) {
+        double R = rho;
+        vector<pair<uint32_t,double>> final;
+
+        for (int iter = 0; iter < 5; iter++) {
+            auto cand = MRQ(qid, R);
+
+            vector<pair<uint32_t,double>> vec;
+            vec.reserve(cand.size());
+
+            for (uint32_t id : cand) {
+                double d = db->distance(qid, id);
+                compDist++;
+                vec.push_back({id, d});
+            }
+
+            sort(vec.begin(), vec.end(),
                  [](auto &a, auto &b){ return a.second < b.second; });
-            
-            if(dists.size() >= k) {
-                double dk = dists[k - 1].second;
-                if(dk > radius + 1e-12) {
-                    radius = dk;
-                    finalResults = vector<pair<uint64_t, double>>(
-                        dists.begin(), dists.begin() + min(k, dists.size()));
-                    continue;
+
+            if (vec.size() >= k) {
+                double dk = vec[k-1].second;
+
+                if (dk > R + 1e-12) {
+                    R = dk;
+                    final.assign(vec.begin(),
+                                 vec.begin()+min(k, vec.size()));
                 } else {
-                    finalResults = vector<pair<uint64_t, double>>(
-                        dists.begin(), dists.begin() + k);
+                    final.assign(vec.begin(), vec.begin()+k);
                     break;
                 }
             } else {
-                double newrad = radius;
-                if(!dists.empty()) newrad = max(radius, dists.back().second * 2.0);
-                else newrad = radius * 2.0 + 1.0;
-                if(newrad <= radius + 1e-12) break;
-                radius = newrad;
-                finalResults = dists;
-                continue;
+                if (!vec.empty())
+                    R = max(R, vec.back().second * 2.0);
+
+                final = vec;
             }
         }
-        
-        return finalResults;
+
+        return final;
     }
 
-    // Accessors
-    const vector<DataObject>& getPivots() const { return pt.pivots; }
-    
-    const vector<double>& getPivotPayload(size_t idx) const {
-        return pt.pivots[idx].payload;
-    }
+    // ========================================================================
+    // Stats
+    // ========================================================================
+    long long get_compDist() const { return compDist; }
+    long long get_pageReads() const { return pageReads; }
 
-    // Stats and counters
-    void printStats() const {
-        cout << "DIndex stats: levels=" << numLevels << " rho=" << rho << "\n";
-        cout << "Number of buckets: " << buckets.size() << "\n";
-        size_t total = 0;
-        for(const auto &kv : buckets) total += kv.second.objectIds.size();
-        cout << "Total indexed objects: " << total << "\n";
-        
-        vector<size_t> sizes; 
-        sizes.reserve(buckets.size());
-        for(const auto &kv: buckets) sizes.push_back(kv.second.objectIds.size());
-        sort(sizes.begin(), sizes.end(), greater<size_t>());
-        
-        for(size_t i = 0; i < min((size_t)5, sizes.size()); ++i) 
-            cout << " bucket " << i << " size=" << sizes[i] << "\n";
-    }
-    
-    long long get_compDist() const { return pt.get_compDist(); }
-    long long get_pageReads() const { return raf.get_pageReads(); }
-    
     void clear_counters() {
-        pt.clear_compDist();
-        raf.clear_pageReads();
+        compDist = 0;
+        pageReads = 0;
     }
 };
+

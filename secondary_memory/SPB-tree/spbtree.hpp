@@ -6,6 +6,7 @@
 #pragma once
 #include <bits/stdc++.h>
 #include "../../objectdb.hpp"
+#include "../../datasets/paths.hpp"
 
 using namespace std;
 
@@ -82,6 +83,23 @@ struct PivotTable {
         for(size_t i=0;i<l && i<idx.size(); ++i) 
             pivots.push_back(objs[idx[i]]);
     }
+
+    // Cargar pivotes HFI desde una lista de ids (1-based) precomputados.
+    // Los ids deben ser consistentes con ObjectDB y con el vector dataset que se pasa a build().
+    void setPivotsFromIds(const vector<int>& pivotIds,
+                          const vector<DataObject>& objs,
+                          size_t l) {
+        pivots.clear();
+        if (l == 0 || objs.empty()) return;
+        for (size_t i = 0; i < pivotIds.size() && pivots.size() < l; ++i) {
+            int pid = pivotIds[i];
+            if (pid < 1) continue;              // ids 1..N
+            size_t idx = static_cast<size_t>(pid - 1);
+            if (idx < objs.size()) {
+                pivots.push_back(objs[idx]);
+            }
+        }
+    }
     
     vector<double> mapObject(uint64_t objId) const {
         vector<double> v; 
@@ -154,86 +172,108 @@ struct SFCMapper {
     }
 
     uint64_t map(const vector<double>& v) const {
-        auto sc = scalarize(v);
-        return mortonKey(sc);
+        auto q = scalarize(v);
+        return mortonKey(q);
     }
 };
 
 /* -------------------------
-   MBB for pruning
+   Bounding box para lower bounds
    ------------------------- */
 struct MBB {
-    vector<double> low, high;
-    
+    vector<double> minv, maxv;
+
     MBB() {}
-    MBB(size_t d) : low(d, numeric_limits<double>::infinity()), 
-                     high(d, -numeric_limits<double>::infinity()) {}
-    
-    void expandWithPoint(const vector<double>& p) {
-        if(low.empty()){ low=p; high=p; return; }
-        for(size_t i=0;i<p.size();++i){ 
-            low[i]=min(low[i], p[i]); 
-            high[i]=max(high[i], p[i]); 
+    MBB(size_t d) {
+        minv.assign(d, numeric_limits<double>::infinity());
+        maxv.assign(d, -numeric_limits<double>::infinity());
+    }
+
+    void expandWithPoint(const vector<double>& v) {
+        if(minv.empty()) {
+            minv = v;
+            maxv = v;
+            return;
+        }
+        for(size_t i=0;i<v.size();++i) {
+            minv[i] = min(minv[i], v[i]);
+            maxv[i] = max(maxv[i], v[i]);
         }
     }
-    
-    void expandWithMBB(const MBB& m) {
-        if(low.empty()){ low=m.low; high=m.high; return; }
-        for(size_t i=0;i<low.size();++i){ 
-            low[i]=min(low[i], m.low[i]); 
-            high[i]=max(high[i], m.high[i]); 
+
+    void expandWithMBB(const MBB &o) {
+        if(minv.empty()) {
+            minv = o.minv;
+            maxv = o.maxv;
+            return;
+        }
+        for(size_t i=0;i<minv.size();++i) {
+            minv[i] = min(minv[i], o.minv[i]);
+            maxv[i] = max(maxv[i], o.maxv[i]);
         }
     }
-    
-    size_t dim() const { return low.size(); }
-    
+
+    // lower bound L∞ entre query mapeada y este bounding box
     double lowerBoundToQuery(const vector<double>& q) const {
         double lb = 0.0;
         for(size_t i=0;i<q.size();++i){
-            double qi=q[i], a=low[i], b=high[i];
-            double md=0.0;
-            if(qi < a) md = a - qi;
-            else if(qi > b) md = qi - b;
-            if(md > lb) lb = md;
+            double x = q[i];
+            double v = 0.0;
+            if(x < minv[i]) v = minv[i] - x;
+            else if(x > maxv[i]) v = x - maxv[i];
+            else v = 0.0;
+            if(v > lb) lb = v;
         }
         return lb;
     }
 };
 
 /* -------------------------
-   B+ tree structure
+   B+ tree en memoria sobre la SFC
    ------------------------- */
 struct BPlusEntry {
-    uint64_t minKey, maxKey;
-    MBB box;
     bool isLeaf;
-    vector< tuple<uint64_t,uint64_t,vector<double>> > records;
     vector<BPlusEntry*> children;
-    
-    BPlusEntry(bool leaf=false): minKey(0), maxKey(0), isLeaf(leaf) {}
+
+    // En hojas: records = (key, objectId, mappedVector)
+    vector< tuple<uint64_t,uint64_t,vector<double>> > records;
+
+    MBB box;
+    uint64_t minKey, maxKey;
+
+    BPlusEntry(bool leaf=true): isLeaf(leaf), box(), minKey(0), maxKey(0) {}
 };
 
 class BPlusTree {
-public:
     BPlusEntry* root;
     size_t leafCapacity;
     size_t fanout;
-    
-    BPlusTree(size_t leafCap=64, size_t fanout_=64) 
+
+public:
+    BPlusTree(size_t leafCap=128, size_t fanout_=64)
         : root(nullptr), leafCapacity(leafCap), fanout(fanout_) {}
 
-    ~BPlusTree(){ freeNode(root); }
-    
-    void freeNode(BPlusEntry* n) {
-        if(!n) return;
-        for(auto c: n->children) freeNode(c);
-        delete n;
+    ~BPlusTree() { clear(root); }
+
+    void clear(BPlusEntry* node) {
+        if(!node) return;
+        if(!node->isLeaf) {
+            for(auto c: node->children) clear(c);
+        }
+        delete node;
     }
 
-    void bulkLoad(vector< tuple<uint64_t,uint64_t,vector<double>> > &sortedRecs) {
+    void bulkLoad(const vector< tuple<uint64_t,uint64_t,vector<double>> >& recs) {
+        clear(root);
+        if(recs.empty()) { root=nullptr; return; }
+
+        vector< tuple<uint64_t,uint64_t,vector<double>> > sortedRecs = recs;
+        sort(sortedRecs.begin(), sortedRecs.end(),
+             [](auto &a, auto &b){ return get<0>(a) < get<0>(b); });
+
         vector<BPlusEntry*> leaves;
-        size_t i=0, n=sortedRecs.size();
-        
+        size_t n = sortedRecs.size();
+        size_t i = 0;
         while(i<n){
             BPlusEntry* leaf = new BPlusEntry(true);
             size_t end = min(n, i + leafCapacity);
@@ -283,122 +323,108 @@ public:
         root = cur[0];
     }
 
+    // Range query aproximado sobre la SFC, devuelve ids candidatos
     vector<uint64_t> rangeQuery(const vector<double>& qmap, double r) const {
         vector<uint64_t> result;
         if(!root) return result;
-        
-        vector<BPlusEntry*> stack; 
-        stack.push_back(root);
-        
-        while(!stack.empty()) {
-            BPlusEntry* node = stack.back(); 
-            stack.pop_back();
-            
-            double lb = node->box.lowerBoundToQuery(qmap);
-            if(lb > r) continue;
-            
-            bool validated = false;
-            for(size_t i=0;i<qmap.size();++i){
-                double qi = qmap[i];
-                double maxd = node->box.high[i];
-                if(maxd <= r - qi) { validated = true; break; }
+
+        struct NodeItem {
+            BPlusEntry* node;
+            double lb;
+        };
+        struct Cmp {
+            bool operator()(const NodeItem& a, const NodeItem& b) const {
+                return a.lb > b.lb;
             }
-            
-            if(validated) {
-                collectAll(node, result);
-                continue;
-            }
-            
-            if(node->isLeaf) {
-                for(auto &rec : node->records) {
-                    uint64_t id = get<1>(rec);
-                    const vector<double>& mv = get<2>(rec);
+        };
+        priority_queue<NodeItem, vector<NodeItem>, Cmp> pq;
+        pq.push({root, root->box.lowerBoundToQuery(qmap)});
+        while(!pq.empty()) {
+            auto it = pq.top(); pq.pop();
+            if(it.lb > r) break;
+            BPlusEntry* n = it.node;
+            if(n->isLeaf) {
+                for(auto &rec : n->records) {
+                    auto &mv = get<2>(rec);
                     double lbobj = 0.0;
-                    for(size_t i=0;i<qmap.size();++i){
+                    for(size_t i=0;i<mv.size();++i){
                         double md = fabs(qmap[i] - mv[i]);
-                        if(md > lbobj) lbobj = md;
-                        if(lbobj > r) break;
+                        if(md>lbobj) lbobj=md;
                     }
-                    if(lbobj <= r) result.push_back(id);
+                    if(lbobj <= r) {
+                        result.push_back(get<1>(rec));
+                    }
                 }
             } else {
-                for(auto child : node->children) stack.push_back(child);
+                for(auto c: n->children) {
+                    double clb = c->box.lowerBoundToQuery(qmap);
+                    if(clb <= r) pq.push({c, clb});
+                }
             }
         }
         return result;
     }
 
+    // MkNN aprox: devuelve ids candidatos (sin reordenar por distancia real)
     vector<uint64_t> knnCandidates(const vector<double>& qmap, size_t k) const {
         vector<uint64_t> result;
-        if(!root) return result;
-        
-        struct NodeItem { BPlusEntry* node; double lb; };
-        struct CmpN { bool operator()(const NodeItem &a, const NodeItem &b) const { return a.lb > b.lb; } };
-        priority_queue<NodeItem, vector<NodeItem>, CmpN> nodePQ;
+        if(!root || k==0) return result;
+
+        struct NodeItem {
+            BPlusEntry* node;
+            double lb;
+        };
+        struct NodeCmp {
+            bool operator()(const NodeItem& a, const NodeItem& b) const {
+                return a.lb > b.lb;
+            }
+        };
+        priority_queue<NodeItem, vector<NodeItem>, NodeCmp> nodePQ;
+
+        struct RecItem {
+            uint64_t id;
+            double lb;
+            vector<double> mv;
+        };
+        struct RecCmp {
+            bool operator()(const RecItem& a, const RecItem& b) const {
+                return a.lb > b.lb;
+            }
+        };
+        priority_queue<RecItem, vector<RecItem>, RecCmp> recPQ;
+
         nodePQ.push({root, root->box.lowerBoundToQuery(qmap)});
         
-        struct RecItem { uint64_t id; double lb; vector<double> mv; };
-        struct CmpR { bool operator()(const RecItem &a, const RecItem &b) const { return a.lb > b.lb; } };
-        priority_queue<RecItem, vector<RecItem>, CmpR> recPQ;
-        
-        while((!nodePQ.empty() || !recPQ.empty()) && result.size() < k*10) {
-            if(!recPQ.empty()) {
-                double bestRecLB = recPQ.top().lb;
-                if(!nodePQ.empty() && nodePQ.top().lb < bestRecLB) {
-                    auto it = nodePQ.top(); nodePQ.pop();
-                    BPlusEntry* n = it.node;
-                    if(n->isLeaf) {
-                        for(auto &rec : n->records) {
-                            const vector<double>& mv = get<2>(rec);
-                            double lbobj = 0.0;
-                            for(size_t i=0;i<mv.size();++i){
-                                double md = fabs(qmap[i] - mv[i]);
-                                if(md>lbobj) lbobj=md;
-                            }
-                            recPQ.push({ get<1>(rec), lbobj, mv });
-                        }
-                    } else {
-                        for(auto c: n->children) 
-                            nodePQ.push({c, c->box.lowerBoundToQuery(qmap)});
-                    }
-                    continue;
-                }
-            }
-            if(!recPQ.empty()) {
+        while(result.size() < k && (!nodePQ.empty() || !recPQ.empty())) {
+            double nextNodeLB = nodePQ.empty() ? numeric_limits<double>::infinity() : nodePQ.top().lb;
+            double nextRecLB  = recPQ.empty()  ? numeric_limits<double>::infinity() : recPQ.top().lb;
+            
+            if(nextRecLB <= nextNodeLB) {
                 auto ritem = recPQ.top(); recPQ.pop();
                 result.push_back(ritem.id);
                 continue;
             }
-            if(!nodePQ.empty()) {
-                auto it = nodePQ.top(); nodePQ.pop();
-                BPlusEntry* n = it.node;
-                if(n->isLeaf) {
-                    for(auto &rec : n->records) {
-                        const vector<double>& mv = get<2>(rec);
-                        double lbobj = 0.0;
-                        for(size_t i=0;i<mv.size();++i){
-                            double md = fabs(qmap[i] - mv[i]);
-                            if(md>lbobj) lbobj=md;
-                        }
-                        recPQ.push({ get<1>(rec), lbobj, mv });
+            
+            if(nodePQ.empty()) break;
+            
+            auto it = nodePQ.top(); nodePQ.pop();
+            BPlusEntry* n = it.node;
+            if(n->isLeaf) {
+                for(auto &rec : n->records) {
+                    const vector<double>& mv = get<2>(rec);
+                    double lbobj = 0.0;
+                    for(size_t i=0;i<mv.size();++i){
+                        double md = fabs(qmap[i] - mv[i]);
+                        if(md>lbobj) lbobj=md;
                     }
-                } else {
-                    for(auto c: n->children) 
-                        nodePQ.push({c, c->box.lowerBoundToQuery(qmap)});
+                    recPQ.push({ get<1>(rec), lbobj, mv });
                 }
-                continue;
+            } else {
+                for(auto c: n->children) 
+                    nodePQ.push({c, c->box.lowerBoundToQuery(qmap)});
             }
         }
         return result;
-    }
-
-private:
-    void collectAll(BPlusEntry* n, vector<uint64_t>& out) const {
-        if(n->isLeaf) {
-            for(auto &rec : n->records) out.push_back(get<1>(rec));
-        } else {
-            for(auto c: n->children) collectAll(c, out);
-        }
     }
 };
 
@@ -412,18 +438,59 @@ class SPBTree {
     SFCMapper sfc;
     BPlusTree bplus;
     size_t l;
+    string datasetName;
+    bool useHfiPivots;
     vector< tuple<uint64_t,uint64_t,vector<double>> > records;
-    
+
 public:
-    SPBTree(const string &rafFile, ObjectDB* database, size_t l_, 
-            size_t leafCap=128, size_t fanout=64)
-        : db(database), raf(rafFile), pt(database), bplus(leafCap, fanout), l(l_) {}
+    // datasetName_: nombre del dataset ("LA", "Words", etc.) para cargar pivotes HFI.
+    // Si datasetName_ == "" o useHfiPivots_ == false -> se usan pivotes aleatorios como antes.
+    SPBTree(const string &rafFile,
+            ObjectDB* database,
+            size_t l_, 
+            size_t leafCap=128,
+            size_t fanout=64,
+            const string& datasetName_ = "",
+            bool useHfiPivots_ = true)
+        : db(database),
+          raf(rafFile),
+          pt(database),
+          sfc(),
+          bplus(leafCap, fanout),
+          l(l_),
+          datasetName(datasetName_),
+          useHfiPivots(useHfiPivots_) {}
 
     void build(vector<DataObject>& dataset, uint64_t pivotSeed=42) {
-        for(auto &o: dataset) raf.append(o);
-        
-        pt.selectRandomPivots(dataset, l, pivotSeed);
-        
+        // Guardar todos los objetos en el RAF (por si luego quieres usarlo)
+        for (auto &o : dataset) {
+            raf.append(o);
+        }
+
+        bool loadedHfi = false;
+        if (useHfiPivots && !datasetName.empty()) {
+            string pivPath = path_pivots(datasetName, static_cast<int>(l));
+            vector<int> pivotIds = load_queries_file(pivPath);
+            if (!pivotIds.empty()) {
+                pt.setPivotsFromIds(pivotIds, dataset, l);
+                if (!pt.pivots.empty()) {
+                    cerr << "[INFO] SPB-tree: usando " << pt.pivots.size()
+                         << " pivotes HFI desde " << pivPath << "\n";
+                    loadedHfi = true;
+                } else {
+                    cerr << "[WARN] SPB-tree: archivo de pivotes " << pivPath
+                         << " no produjo pivotes válidos; usando pivotes aleatorios.\n";
+                }
+            } else {
+                cerr << "[WARN] SPB-tree: no se pudieron leer pivotes HFI desde "
+                     << pivPath << "; usando pivotes aleatorios.\n";
+            }
+        }
+
+        if (!loadedHfi) {
+            pt.selectRandomPivots(dataset, l, pivotSeed);
+        }
+
         vector<vector<double>> mapped;
         mapped.reserve(dataset.size());
         for(auto &o: dataset) {
