@@ -19,7 +19,8 @@ static const vector<int> K_VALUES = {5, 10, 20, 50, 100};
 static const vector<int> L_VALUES = {5};
 
 // Datasets evaluados
-static const vector<string> DATASETS = {"LA", "Color", "Synthetic", "Words"};
+//static const vector<string> DATASETS = {"LA", "Color", "Synthetic", "Words"};
+static const vector<string> DATASETS = {"Color"};
 
 
 // ============================================================
@@ -86,8 +87,10 @@ int main() {
         else if (dataset == "Words") {
             // Words NO es vectorial → PM-tree no aplica
             cerr << "[WARN] PM-tree no se aplica al dataset 'Words'\n";
-            continue;
+          
+          continue;
         }
+        
         else {
             cerr << "[WARN] Unknown dataset\n";
             continue;
