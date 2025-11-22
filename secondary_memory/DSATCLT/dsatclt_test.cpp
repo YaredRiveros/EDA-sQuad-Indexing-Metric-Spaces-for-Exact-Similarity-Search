@@ -30,7 +30,9 @@ static const vector<int>    K_VALUES      = {5, 10, 20, 50, 100};
 static const vector<int>    ARITY_VALUES  = {3, 5, 10, 15, 20};
 
 // Solo datasets vectoriales
-static const vector<string> DATASETS = {"LA", "Color", "Synthetic"};
+//static const vector<string> DATASETS = {"LA", "Color", "Synthetic", "Words"};
+//static const vector<string> DATASETS = {"Synthetic", "Words"};
+static const vector<string> DATASETS = {"Words"};
 
 // ============================================================
 // Función: leer header DB DSACL
