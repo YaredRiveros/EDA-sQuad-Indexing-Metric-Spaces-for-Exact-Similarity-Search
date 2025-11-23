@@ -17,8 +17,8 @@ using namespace chrono;
 
 static const vector<double> SELECTIVITIES = {0.02, 0.04, 0.08, 0.16, 0.32};
 static const vector<int>    K_VALUES      = {5, 10, 20, 50, 100};
-//static const vector<string> DATASETS      = {"Synthetic", "Words", "LA", "Color"};
-static const vector<string> DATASETS      = {"Synthetic"};
+static const vector<string> DATASETS      = {"Synthetic", "Words", "LA", "Color"};
+//static const vector<string> DATASETS      = {"Synthetic"};
 static const vector<int> L_VALUES = {10, 15, 20, 25, 30}; // Número de pivotes por objeto
 
 // ============================================================
