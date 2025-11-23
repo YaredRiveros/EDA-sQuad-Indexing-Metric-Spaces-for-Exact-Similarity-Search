@@ -25,9 +25,13 @@ struct DataObject {
 };
 
 class RAF {
+    static constexpr size_t PAGE_SIZE = 4096; // 4KB por página, aproximando a Chen
+
     string filename;
     unordered_map<uint64_t, streampos> offsets;
-    mutable long long pageReads = 0;
+
+    // En vez de contar lecturas, contamos páginas únicas tocadas en la query actual
+    mutable unordered_set<uint64_t> pagesVisited;
 
 public:
     RAF(const string &fname) : filename(fname) {
@@ -52,7 +56,11 @@ public:
         if (it == offsets.end())
             throw runtime_error("RAF: id not found");
 
-        pageReads++;
+        // Simular acceso a página de disco:
+        // offset en bytes / PAGE_SIZE = id de página
+        long long off = static_cast<long long>(it->second);
+        uint64_t pageId = static_cast<uint64_t>(off / static_cast<long long>(PAGE_SIZE));
+        pagesVisited.insert(pageId);
 
         ifstream ifs(filename, ios::binary);
         ifs.seekg(it->second);
@@ -67,8 +75,13 @@ public:
         return o;
     }
 
-    long long get_pageReads() const { return pageReads; }
-    void clear_pageReads() { pageReads = 0; }
+    long long get_pageReads() const {
+        return static_cast<long long>(pagesVisited.size());
+    }
+
+    void clear_pageReads() {
+        pagesVisited.clear();
+    }
 };
 
 /* -------------------------

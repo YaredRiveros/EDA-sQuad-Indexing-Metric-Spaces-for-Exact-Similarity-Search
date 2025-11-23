@@ -1,0 +1,12 @@
+[
+{"index":"SAT","dataset":"Color","category":"vectors","num_pivots":95477,"num_centers_path":null,"height":656,"query_type":"MRQ","selectivity":0.020000,"radius":3763.105713,"k":null,"compdists":95477.000000,"time_ms":18.248540,"n_queries":100},
+{"index":"SAT","dataset":"Color","category":"vectors","num_pivots":95477,"num_centers_path":null,"height":656,"query_type":"MRQ","selectivity":0.040000,"radius":4106.096191,"k":null,"compdists":95477.000000,"time_ms":15.590080,"n_queries":100},
+{"index":"SAT","dataset":"Color","category":"vectors","num_pivots":95477,"num_centers_path":null,"height":656,"query_type":"MRQ","selectivity":0.080000,"radius":4484.691406,"k":null,"compdists":95477.000000,"time_ms":13.661360,"n_queries":100},
+{"index":"SAT","dataset":"Color","category":"vectors","num_pivots":95477,"num_centers_path":null,"height":656,"query_type":"MRQ","selectivity":0.160000,"radius":4946.693848,"k":null,"compdists":95477.000000,"time_ms":15.924150,"n_queries":100},
+{"index":"SAT","dataset":"Color","category":"vectors","num_pivots":95477,"num_centers_path":null,"height":656,"query_type":"MRQ","selectivity":0.320000,"radius":5591.930664,"k":null,"compdists":95477.000000,"time_ms":13.536020,"n_queries":100},
+{"index":"SAT","dataset":"Color","category":"vectors","num_pivots":95477,"num_centers_path":null,"height":656,"query_type":"MkNN","selectivity":null,"radius":0.470000,"k":5,"compdists":912.140000,"time_ms":0.272580,"n_queries":100},
+{"index":"SAT","dataset":"Color","category":"vectors","num_pivots":95477,"num_centers_path":null,"height":656,"query_type":"MkNN","selectivity":null,"radius":0.890000,"k":10,"compdists":1713.580000,"time_ms":0.577200,"n_queries":100},
+{"index":"SAT","dataset":"Color","category":"vectors","num_pivots":95477,"num_centers_path":null,"height":656,"query_type":"MkNN","selectivity":null,"radius":1.410000,"k":20,"compdists":2850.270000,"time_ms":0.936770,"n_queries":100},
+{"index":"SAT","dataset":"Color","category":"vectors","num_pivots":95477,"num_centers_path":null,"height":656,"query_type":"MkNN","selectivity":null,"radius":2.020000,"k":50,"compdists":5457.480000,"time_ms":1.583640,"n_queries":100},
+{"index":"SAT","dataset":"Color","category":"vectors","num_pivots":95477,"num_centers_path":null,"height":656,"query_type":"MkNN","selectivity":null,"radius":2.710000,"k":100,"compdists":9561.130000,"time_ms":3.015400,"n_queries":100}
+]

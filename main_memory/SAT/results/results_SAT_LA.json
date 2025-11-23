@@ -1,0 +1,12 @@
+[
+{"index":"SAT","dataset":"LA","category":"vectors","num_pivots":1073727,"num_centers_path":null,"height":1374,"query_type":"MRQ","selectivity":0.020000,"radius":408.823460,"k":null,"compdists":122827.600000,"time_ms":20.460280,"n_queries":100},
+{"index":"SAT","dataset":"LA","category":"vectors","num_pivots":1073727,"num_centers_path":null,"height":1374,"query_type":"MRQ","selectivity":0.040000,"radius":625.360535,"k":null,"compdists":178771.560000,"time_ms":25.199860,"n_queries":100},
+{"index":"SAT","dataset":"LA","category":"vectors","num_pivots":1073727,"num_centers_path":null,"height":1374,"query_type":"MRQ","selectivity":0.080000,"radius":957.997139,"k":null,"compdists":260958.240000,"time_ms":29.952520,"n_queries":100},
+{"index":"SAT","dataset":"LA","category":"vectors","num_pivots":1073727,"num_centers_path":null,"height":1374,"query_type":"MRQ","selectivity":0.160000,"radius":1431.564921,"k":null,"compdists":359553.510000,"time_ms":30.944350,"n_queries":100},
+{"index":"SAT","dataset":"LA","category":"vectors","num_pivots":1073727,"num_centers_path":null,"height":1374,"query_type":"MRQ","selectivity":0.320000,"radius":2069.025721,"k":null,"compdists":463644.990000,"time_ms":38.070090,"n_queries":100},
+{"index":"SAT","dataset":"LA","category":"vectors","num_pivots":1073727,"num_centers_path":null,"height":1374,"query_type":"MkNN","selectivity":null,"radius":3.441699,"k":5,"compdists":20311.180000,"time_ms":4.845200,"n_queries":100},
+{"index":"SAT","dataset":"LA","category":"vectors","num_pivots":1073727,"num_centers_path":null,"height":1374,"query_type":"MkNN","selectivity":null,"radius":5.423450,"k":10,"compdists":23337.950000,"time_ms":5.592170,"n_queries":100},
+{"index":"SAT","dataset":"LA","category":"vectors","num_pivots":1073727,"num_centers_path":null,"height":1374,"query_type":"MkNN","selectivity":null,"radius":8.178255,"k":20,"compdists":25980.220000,"time_ms":6.302680,"n_queries":100},
+{"index":"SAT","dataset":"LA","category":"vectors","num_pivots":1073727,"num_centers_path":null,"height":1374,"query_type":"MkNN","selectivity":null,"radius":14.568281,"k":50,"compdists":29243.990000,"time_ms":7.212760,"n_queries":100},
+{"index":"SAT","dataset":"LA","category":"vectors","num_pivots":1073727,"num_centers_path":null,"height":1374,"query_type":"MkNN","selectivity":null,"radius":21.559168,"k":100,"compdists":32537.570000,"time_ms":8.075790,"n_queries":100}
+]
