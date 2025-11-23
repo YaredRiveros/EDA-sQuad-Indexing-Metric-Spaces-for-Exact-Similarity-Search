@@ -164,15 +164,22 @@ void run_mrq_experiment(const string &datasetName) {
         double avgPages = double(totalPages) / queries.size();
 
         J << "  {"
-          << "\"dataset\":\"" << datasetName << "\","
-          << "\"query_type\":\"MRQ\","
-          << "\"selectivity\":" << sel << ","
-          << "\"radius\":" << R << ","
-          << "\"compdists\":" << avgComp << ","
-          << "\"time_ms\":" << avgTime << ","
-          << "\"pages\":" << avgPages << ","
-          << "\"n_queries\":" << queries.size()
-          << "}";
+            << "\"index\":\"SPB\","
+            << "\"dataset\":\"" << datasetName << "\","
+            << "\"category\":\"DM\","
+            << "\"num_pivots\":" << NUM_PIVOTS << ","
+            << "\"num_centers_path\":null,"
+            << "\"arity\":null,"
+            << "\"query_type\":\"MRQ\","
+            << "\"selectivity\":" << sel << ","
+            << "\"radius\":" << R << ","
+            << "\"k\":null,"
+            << "\"compdists\":" << avgComp << ","
+            << "\"time_ms\":" << avgTime << ","
+            << "\"pages\":" << avgPages << ","
+            << "\"n_queries\":" << queries.size() << ","
+            << "\"run_id\":1"
+            << "}";
     }
 
     J << "\n]\n";
@@ -266,14 +273,23 @@ void run_mknn_experiment(const string &datasetName) {
         double avgPages = double(totalPages) / queries.size();
 
         J << "  {"
-          << "\"dataset\":\"" << datasetName << "\","
-          << "\"query_type\":\"MkNN\","
-          << "\"k\":" << k << ","
-          << "\"compdists\":" << avgComp << ","
-          << "\"time_ms\":" << avgTime << ","
-          << "\"pages\":" << avgPages << ","
-          << "\"n_queries\":" << queries.size()
-          << "}";
+            << "\"index\":\"SPB\","
+            << "\"dataset\":\"" << datasetName << "\","
+            << "\"category\":\"DM\","
+            << "\"num_pivots\":" << NUM_PIVOTS << ","
+            << "\"num_centers_path\":null,"
+            << "\"arity\":null,"
+            << "\"query_type\":\"MkNN\","
+            << "\"selectivity\":null,"
+            << "\"radius\":null,"
+            << "\"k\":" << k << ","
+            << "\"compdists\":" << avgComp << ","
+            << "\"time_ms\":" << avgTime << ","
+            << "\"pages\":" << avgPages << ","
+            << "\"n_queries\":" << queries.size() << ","
+            << "\"run_id\":1"
+            << "}";
+
     }
 
     J << "\n]\n";

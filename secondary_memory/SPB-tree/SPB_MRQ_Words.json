@@ -1,7 +1,0 @@
-[
-  {"dataset":"Words","query_type":"MRQ","selectivity":0.02,"radius":7.37,"compdists":4,"time_ms":6.79106,"pages":0,"n_queries":100},
-  {"dataset":"Words","query_type":"MRQ","selectivity":0.04,"radius":7.76,"compdists":4,"time_ms":7.39292,"pages":0,"n_queries":100},
-  {"dataset":"Words","query_type":"MRQ","selectivity":0.08,"radius":8.23,"compdists":4,"time_ms":8.00402,"pages":0,"n_queries":100},
-  {"dataset":"Words","query_type":"MRQ","selectivity":0.16,"radius":8.74,"compdists":4,"time_ms":8.30662,"pages":0,"n_queries":100},
-  {"dataset":"Words","query_type":"MRQ","selectivity":0.32,"radius":9.46,"compdists":4,"time_ms":7.28781,"pages":0,"n_queries":100}
-]

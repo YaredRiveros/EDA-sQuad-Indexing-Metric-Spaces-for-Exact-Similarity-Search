@@ -1,7 +1,0 @@
-[
-  {"dataset":"Color","query_type":"MkNN","k":5,"compdists":9,"time_ms":2.7036,"pages":0,"n_queries":100},
-  {"dataset":"Color","query_type":"MkNN","k":10,"compdists":14,"time_ms":3.45664,"pages":0,"n_queries":100},
-  {"dataset":"Color","query_type":"MkNN","k":20,"compdists":24,"time_ms":4.46126,"pages":0,"n_queries":100},
-  {"dataset":"Color","query_type":"MkNN","k":50,"compdists":54,"time_ms":5.54963,"pages":0,"n_queries":100},
-  {"dataset":"Color","query_type":"MkNN","k":100,"compdists":104,"time_ms":5.63577,"pages":0,"n_queries":100}
-]
