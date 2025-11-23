@@ -6,21 +6,36 @@
 using namespace std;
 
 // ============================================================
-// Experimentos según Chen 2022
+// Parámetros de experimento (Chen 2022)
 // ============================================================
 
-static const vector<double> SELECTIVITIES = {0.02, 0.04, 0.08, 0.16, 0.32};
-static const vector<int>    K_VALUES      = {5, 10, 20, 50, 100};
-static const vector<string> DATASETS      = {"LA", "Words", "Color", "Synthetic"};
+// Selectividades del paper (2%, 4%, 8%, 16%, 32%)
+static const vector<double> SELECTIVITIES = {
+    0.02, 0.04, 0.08, 0.16, 0.32
+};
 
+// Valores de k usados en el paper
+static const vector<int> K_VALUES = {
+    5, 10, 20, 50, 100
+};
+
+// Datasets del entorno experimental
+static const vector<string> DATASETS = {
+    "LA", "Words", "Color", "Synthetic"
+};
+
+// Número de pivotes (Chen: l = 5)
 static const int NUM_PIVOTS = 5;
+
+// Parámetros del B+ tree (puedes ajustarlos si quieres)
 static const size_t LEAF_CAPACITY = 128;
 static const size_t FANOUT        = 64;
 
 // ============================================================
-// DETECTOR AUTOMÁTICO: 0-based vs 1-based
+// Helpers
 // ============================================================
 
+// Autodetección 0-based / 1-based para IDs de queries/pivotes
 vector<int> auto_fix_ids(const vector<int> &ids, int nObjects) {
     if (ids.empty()) return ids;
 
@@ -37,7 +52,7 @@ vector<int> auto_fix_ids(const vector<int> &ids, int nObjects) {
         return ids;
     }
 
-    // Caso B: parecen 1-based → convertir
+    // Caso B: parecen 1-based → convertir completo
     if (!hasZero) {
         vector<int> fixed;
         fixed.reserve(ids.size());
@@ -45,258 +60,241 @@ vector<int> auto_fix_ids(const vector<int> &ids, int nObjects) {
         return fixed;
     }
 
-    // Caso C: mezcla rara → corregir dentro de rango
+    // Caso C: mezcla rara → corregir sólo lo que esté en 1..N
     vector<int> fixed;
     fixed.reserve(ids.size());
     for (int v : ids) {
         if (v > 0 && v <= nObjects) fixed.push_back(v - 1);
-        else fixed.push_back(v); // ya está 0-based
+        else fixed.push_back(v);
     }
     return fixed;
 }
 
-// ============================================================
-// Construir dataset para SPB-tree
-// ============================================================
-
+// Construir vector<DataObject> para SPB-tree (IDs 0..N-1)
 vector<DataObject> build_dataset_for_spb(size_t nObjects) {
     vector<DataObject> dataset;
     dataset.reserve(nObjects);
 
     for (size_t i = 0; i < nObjects; ++i) {
         DataObject o;
-        o.id = static_cast<uint64_t>(i);   // <-- 0-BASED
+        o.id = static_cast<uint64_t>(i);   // 0-based, coherente con ObjectDB
         dataset.push_back(std::move(o));
     }
     return dataset;
 }
 
-// ============================================================
-// MRQ experiment
-// ============================================================
-
-void run_mrq_experiment(const string &datasetName) {
-    cerr << "\n==========================================\n";
-    cerr << "[MRQ] Dataset: " << datasetName << "\n";
-
-    string dsPath = path_dataset(datasetName);
-    string qPath  = path_queries(datasetName);
-    string rPath  = path_radii(datasetName);
-
-    if (dsPath.empty()) {
-        cerr << "[ERROR] No se encontró dataset para " << datasetName << "\n";
-        return;
-    }
-
-    vector<int> queries = load_queries_file(qPath);
-    auto radii          = load_radii_file(rPath);
-
-    if (queries.empty() || radii.empty()) {
-        cerr << "[WARN] Sin datos preparados (queries o radii faltan). Se omite MRQ.\n";
-        return;
-    }
-
-    // Crear DB
-    ObjectDB *db;
-    if (datasetName == "Words") db = new StringDB(dsPath);
-    else                        db = new VectorDB(dsPath);
-
-    size_t nObjects = db->size();
-
-    // Detección automática 0/1-based
-    queries = auto_fix_ids(queries, nObjects);
-
-    // Dataset para SPB
-    vector<DataObject> dataset = build_dataset_for_spb(nObjects);
-
-    string rafFile = "spb_" + datasetName + "_mrq.raf";
-
-    SPBTree spb(
-        rafFile,
-        db,
-        NUM_PIVOTS,
-        LEAF_CAPACITY,
-        FANOUT,
-        datasetName,
-        true
-    );
-
-    cerr << "[MRQ] Construyendo SPB-tree...\n";
-    spb.build(dataset);
-    spb.stats();
-
-    // Archivo JSON salida
-    string jsonOut = "SPB_MRQ_" + datasetName + ".json";
-    ofstream J(jsonOut);
-    J << "[\n";
-    bool first = true;
-
-    for (double sel : SELECTIVITIES) {
-        if (!radii.count(sel)) continue;
-
-        double R = radii[sel];
-        cerr << "  [sel=" << sel << ", R=" << R << "]\n";
-
-        long long totalComp = 0;
-        long long totalTime = 0;
-        long long totalPages = 0;
-
-        for (int q : queries) {
-            spb.clear_counters();
-
-            auto t0 = chrono::high_resolution_clock::now();
-            auto cands = spb.MRQ(q, R);
-            auto t1 = chrono::high_resolution_clock::now();
-
-            long long us =
-                chrono::duration_cast<chrono::microseconds>(t1 - t0).count();
-
-            totalComp  += spb.get_compDist();
-            totalTime  += us;
-            totalPages += spb.get_pageReads();
-        }
-
-        if (!first) J << ",\n";
-        first = false;
-
-        double avgComp  = double(totalComp)  / queries.size();
-        double avgTime  = double(totalTime)  / queries.size() / 1000.0;
-        double avgPages = double(totalPages) / queries.size();
-
-        J << "  {"
-          << "\"dataset\":\"" << datasetName << "\","
-          << "\"query_type\":\"MRQ\","
-          << "\"selectivity\":" << sel << ","
-          << "\"radius\":" << R << ","
-          << "\"compdists\":" << avgComp << ","
-          << "\"time_ms\":" << avgTime << ","
-          << "\"pages\":" << avgPages << ","
-          << "\"n_queries\":" << queries.size()
-          << "}";
-    }
-
-    J << "\n]\n";
-    cerr << "[MRQ] Archivo generado: " << jsonOut << "\n";
-
-    delete db;
-}
-
-// ============================================================
-// MkNN experiment
-// ============================================================
-
-void run_mknn_experiment(const string &datasetName) {
-    cerr << "\n==========================================\n";
-    cerr << "[MkNN] Dataset: " << datasetName << "\n";
-
-    string dsPath = path_dataset(datasetName);
-    string qPath  = path_queries(datasetName);
-
-    if (dsPath.empty()) {
-        cerr << "[ERROR] No dataset para " << datasetName << "\n";
-        return;
-    }
-
-    vector<int> queries = load_queries_file(qPath);
-
-    if (queries.empty()) {
-        cerr << "[WARN] Sin queries, omitiendo MkNN.\n";
-        return;
-    }
-
-    ObjectDB *db;
-    if (datasetName == "Words") db = new StringDB(dsPath);
-    else                        db = new VectorDB(dsPath);
-
-    size_t nObjects = db->size();
-
-    // Autodetección 0/1 based
-    queries = auto_fix_ids(queries, nObjects);
-
-    vector<DataObject> dataset = build_dataset_for_spb(nObjects);
-
-    string rafFile = "spb_" + datasetName + "_mknn.raf";
-
-    SPBTree spb(
-        rafFile,
-        db,
-        NUM_PIVOTS,
-        LEAF_CAPACITY,
-        FANOUT,
-        datasetName,
-        true
-    );
-
-    cerr << "[MkNN] Construyendo SPB-tree...\n";
-    spb.build(dataset);
-    spb.stats();
-
-    string jsonOut = "SPB_MkNN_" + datasetName + ".json";
-    ofstream J(jsonOut);
-    J << "[\n";
-    bool first = true;
-
-    for (int k : K_VALUES) {
-        cerr << " k=" << k << "\n";
-
-        long long totalComp = 0;
-        long long totalTime = 0;
-        long long totalPages = 0;
-
-        for (int q : queries) {
-            spb.clear_counters();
-
-            auto t0 = chrono::high_resolution_clock::now();
-            auto results = spb.MkNN(q, k);
-            auto t1 = chrono::high_resolution_clock::now();
-
-            long long us =
-                chrono::duration_cast<chrono::microseconds>(t1 - t0).count();
-
-            totalComp  += spb.get_compDist();
-            totalTime  += us;
-            totalPages += spb.get_pageReads();
-        }
-
-        if (!first) J << ",\n";
-        first = false;
-
-        double avgComp  = double(totalComp)  / queries.size();
-        double avgTime  = double(totalTime)  / queries.size() / 1000.0;
-        double avgPages = double(totalPages) / queries.size();
-
-        J << "  {"
-          << "\"dataset\":\"" << datasetName << "\","
-          << "\"query_type\":\"MkNN\","
-          << "\"k\":" << k << ","
-          << "\"compdists\":" << avgComp << ","
-          << "\"time_ms\":" << avgTime << ","
-          << "\"pages\":" << avgPages << ","
-          << "\"n_queries\":" << queries.size()
-          << "}";
-    }
-
-    J << "\n]\n";
-    cerr << "[MkNN] Archivo generado: " << jsonOut << "\n";
-
-    delete db;
-}
-
-// ============================================================
-// main
-// ============================================================
-
 int main() {
-    ios::sync_with_stdio(false);
-    cin.tie(nullptr);
+    srand(12345);
 
-    cerr << "===== Experimentos SPB-tree (Chen 2022) =====\n";
+    // Crear carpetas de salida
+    std::filesystem::create_directories("results");
+    std::filesystem::create_directories("spb_indexes");
 
-    for (auto &ds : DATASETS) {
-        run_mrq_experiment(ds);
-        run_mknn_experiment(ds);
+    for (const string &dataset : DATASETS) {
+
+        // --------------------------------------------------------------------
+        // Cargar dataset
+        // --------------------------------------------------------------------
+        string dbfile = path_dataset(dataset);
+        if (dbfile == "") {
+            cerr << "[WARN] Dataset no encontrado: " << dataset << "\n";
+            continue;
+        }
+
+        unique_ptr<ObjectDB> db;
+
+        if (dataset == "LA")
+            db = make_unique<VectorDB>(dbfile, 2);        // L2
+        else if (dataset == "Color")
+            db = make_unique<VectorDB>(dbfile, 1);        // L1
+        else if (dataset == "Synthetic")
+            db = make_unique<VectorDB>(dbfile, 999999);   // L∞
+        else if (dataset == "Words")
+            db = make_unique<StringDB>(dbfile);           // Levenshtein
+        else
+            continue;
+
+        cerr << "\n==========================================\n";
+        cerr << "[SPB] Dataset: " << dataset
+             << "   N=" << db->size() << "\n";
+        cerr << "==========================================\n";
+
+        // Queries y radios precomputados
+        vector<int> queries = load_queries_file(path_queries(dataset));
+        auto radii          = load_radii_file(path_radii(dataset));
+
+        if (queries.empty()) {
+            cerr << "[WARN] No queries for " << dataset << "\n";
+            continue;
+        }
+
+        // Normalizar IDs de queries a 0-based
+        queries = auto_fix_ids(queries, db->size());
+
+        // Pivotes HFI precomputados (para l = NUM_PIVOTS)
+        string pivPath = path_pivots(dataset, NUM_PIVOTS);
+        vector<int> hfiPivots = load_queries_file(pivPath);
+        if (hfiPivots.empty()) {
+            cerr << "[WARN] No HFI pivots for " << dataset
+                 << " (path=" << pivPath << "), usaré pivotes aleatorios.\n";
+        } else {
+            hfiPivots = auto_fix_ids(hfiPivots, db->size());
+        }
+
+        // --------------------------------------------------------------------
+        // Archivo JSON de salida
+        // --------------------------------------------------------------------
+        string jsonOut = "results/results_SPB_" + dataset + ".json";
+        ofstream J(jsonOut);
+        J << "[\n";
+        bool firstOutput = true;
+
+        // --------------------------------------------------------------------
+        // Construcción del SPB-tree como en Chen:
+        //   - l = 5 pivotes (HFI, mismos para todos los índices)
+        //   - RAF simulado (para contar pageReads)
+        // --------------------------------------------------------------------
+        cerr << "[BUILD] Construyendo SPB-tree (l=" << NUM_PIVOTS << ")...\n";
+
+        string rafFile = "spb_indexes/" + dataset + "_raf.bin";
+
+        SPBTree spb(
+            rafFile,
+            db.get(),
+            NUM_PIVOTS,
+            LEAF_CAPACITY,
+            FANOUT,
+            dataset,
+            true   // useHfiPivots (si hay IDs)
+        );
+
+        // Construir todos los objetos
+        vector<DataObject> allObjects = build_dataset_for_spb(db->size());
+
+        // build() con pivotes HFI (si existen)
+        spb.build(allObjects, hfiPivots);
+        cerr << "[BUILD] OK.\n";
+
+        // ====================================================================
+        // MRQ (Range Queries) – RQA (Algorithm 3)
+        // ====================================================================
+        cerr << "\n[MRQ] Ejecutando selectividades...\n";
+
+        for (double sel : SELECTIVITIES) {
+            if (!radii.count(sel)) continue;
+
+            double R = radii[sel];
+            cerr << "  [MRQ] sel=" << sel << "  R=" << R << "\n";
+
+            long long totalD = 0;   // distancias totales (pivot + verificación)
+            long long totalT = 0;   // tiempo (µs)
+            long long totalP = 0;   // page reads en RAF
+
+            for (int q : queries) {
+                spb.clear_counters();
+
+                auto start = chrono::high_resolution_clock::now();
+                vector<uint64_t> results = spb.MRQ(q, R);
+                auto end   = chrono::high_resolution_clock::now();
+
+                long long elapsed =
+                    chrono::duration_cast<chrono::microseconds>(end - start).count();
+
+                // En esta implementación, SPBTree::MRQ ya:
+                //  - cuenta distancias a pivotes (φ(q), φ(o))
+                //  - cuenta distancias reales d(q,o) en VerifyRQ
+                totalD += spb.get_compDist();
+                totalT += elapsed;
+                totalP += spb.get_pageReads();
+
+                (void)results; // si no quieres usar el resultado aquí
+            }
+
+            double avgD   = double(totalD) / queries.size();
+            double avgTms = double(totalT) / (1000.0 * queries.size()); // µs → ms
+            double avgPg  = double(totalP) / queries.size();
+
+            if (!firstOutput) J << ",\n";
+            firstOutput = false;
+
+            J << std::fixed << std::setprecision(6)
+              << "{"
+              << "\"index\":\"SPBTree\","
+              << "\"dataset\":\"" << dataset << "\","
+              << "\"category\":\"SPB\","
+              << "\"num_pivots\":" << NUM_PIVOTS << ","
+              << "\"query_type\":\"MRQ\","
+              << "\"selectivity\":" << sel << ","
+              << "\"radius\":" << R << ","
+              << "\"k\":null,"
+              << "\"compdists\":" << avgD << ","
+              << "\"time_ms\":" << avgTms << ","
+              << "\"pages\":" << avgPg << ","
+              << "\"n_queries\":" << queries.size() << ","
+              << "\"run_id\":1"
+              << "}";
+        }
+
+        // ====================================================================
+        // MkNN – NNA (Algorithm 4)
+        // ====================================================================
+        cerr << "\n[MkNN] Ejecutando valores de k...\n";
+
+        for (int k : K_VALUES) {
+            cerr << "  [MkNN] k=" << k << "\n";
+
+            long long totalD = 0;
+            long long totalT = 0;
+            long long totalP = 0;
+
+            for (int q : queries) {
+                spb.clear_counters();
+
+                auto start = chrono::high_resolution_clock::now();
+                auto knn   = spb.MkNN(q, k);
+                auto end   = chrono::high_resolution_clock::now();
+
+                long long elapsed =
+                    chrono::duration_cast<chrono::microseconds>(end - start).count();
+
+                // SPBTree::MkNN ya suma:
+                //  - distancias a pivotes (φ(q), φ(o))
+                //  - distancias reales d(q,o) de los candidatos
+                totalD += spb.get_compDist();
+                totalT += elapsed;
+                totalP += spb.get_pageReads();
+
+                (void)knn; // no necesitamos el contenido para el benchmark global
+            }
+
+            double avgD   = double(totalD) / queries.size();
+            double avgTms = double(totalT) / (1000.0 * queries.size());
+            double avgPg  = double(totalP) / queries.size();
+
+            if (!firstOutput) J << ",\n";
+            firstOutput = false;
+
+            J << std::fixed << std::setprecision(6)
+              << "{"
+              << "\"index\":\"SPBTree\","
+              << "\"dataset\":\"" << dataset << "\","
+              << "\"category\":\"SPB\","
+              << "\"num_pivots\":" << NUM_PIVOTS << ","
+              << "\"query_type\":\"MkNN\","
+              << "\"selectivity\":null,"
+              << "\"radius\":null,"
+              << "\"k\":" << k << ","
+              << "\"compdists\":" << avgD << ","
+              << "\"time_ms\":" << avgTms << ","
+              << "\"pages\":" << avgPg << ","
+              << "\"n_queries\":" << queries.size() << ","
+              << "\"run_id\":1"
+              << "}";
+        }
+
+        J << "\n]\n";
+        cerr << "[DONE] Output generado: " << jsonOut << "\n";
     }
 
-    cerr << "===== FIN =====\n";
     return 0;
 }
