@@ -29,8 +29,9 @@ extern DSACLfile indexFile;
 
 // ============ Métricas agregadas ============
 struct MetricResult {
-    double avg_time_ms = 0.0;     // tiempo promedio por query
-    double avg_compdists = 0.0;   // distancias computadas promedio por query
+    double avg_time_ms   = 0.0;  // tiempo promedio por query
+    double avg_compdists = 0.0;  // distancias computadas promedio por query
+    double avg_pages     = 0.0;  // páginas leídas promedio por query (IOread)
 };
 
 // ============ Controlador DSACLT ============
@@ -45,11 +46,13 @@ public:
           idxName_(idxFile),
           queryPath_(queryFile),
           blockSize_(block_size),
-          qcount_(qcount) 
+          qcount_(qcount)
     {
         // Leer encabezado del DB para conocer dimensión y función de distancia
         // (buildSecondaryMemory también lo hace, pero aquí lo usamos para cargar queries)
-        int hdr_dim = 0, hdr_num = 0, hdr_func = 0;
+        int hdr_dim  = 0;
+        int hdr_num  = 0;
+        int hdr_func = 0;
         parseDBHeader_(dbName_, hdr_dim, hdr_num, hdr_func);
         fileDim_ = hdr_dim;
 
@@ -104,7 +107,7 @@ public:
             for (int i = 0; i < (int)queries_.size(); ++i) {
                 // buildSecondaryMemory ya fijó 'dimension'; ahora cada Objvector usa ese 'dimension'
                 Objvector q(queries_[i]);
-                (void)knnSearch(q, k); // retorna radio; aquí nos importan tiempo y distancias
+                (void)knnSearch(q, k); // retorna radio; aquí nos importan tiempo, distancias, I/O
             }
             auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -112,6 +115,7 @@ public:
             double total_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
             mr.avg_time_ms   = total_ms / queries_.size();
             mr.avg_compdists = numDistances / queries_.size();
+            mr.avg_pages     = IOread      / queries_.size();
             out.push_back(mr);
         }
         return out;
@@ -130,7 +134,7 @@ public:
             auto t0 = std::chrono::high_resolution_clock::now();
             for (int i = 0; i < (int)queries_.size(); ++i) {
                 Objvector q(queries_[i]);
-                (void)rangeSearch(q, r); // retorna #resultados; medimos tiempo y distancias
+                (void)rangeSearch(q, r); // retorna #resultados; medimos tiempo, distancias, I/O
             }
             auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -138,6 +142,7 @@ public:
             double total_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
             mr.avg_time_ms   = total_ms / queries_.size();
             mr.avg_compdists = numDistances / queries_.size();
+            mr.avg_pages     = IOread      / queries_.size();
             out.push_back(mr);
         }
         return out;
