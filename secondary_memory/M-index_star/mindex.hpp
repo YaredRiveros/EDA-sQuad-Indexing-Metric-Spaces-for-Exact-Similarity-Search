@@ -19,11 +19,16 @@
 #include <map>
 
 /*
-  M-Index* MEJORADO con:
+  M-Index* mejorado con:
   - B+-tree simulado mediante std::map para indexar mapped keys
   - Lemma 4.5 para validación directa de objetos
   - Range search optimizado con búsqueda por intervalos de keys
   - Best-first traversal para k-NN
+
+  *** CORREGIDO ***
+  - Soporta pivotes HFI externos mediante overridePivots(...)
+  - Si overridePivots se llama antes de build(), se usan esos pivotes
+    y NO se seleccionan pivotes aleatorios.
 */
 
 class MIndex_Improved {
@@ -31,7 +36,7 @@ public:
     struct RAFEntry {
         int32_t id;
         std::vector<double> dists; // distancias a P pivotes
-        double key;                 // mapped key
+        double key;                // mapped key
     };
 
     struct ClusterNode {
@@ -42,46 +47,98 @@ public:
         std::vector<int32_t> children;
         int64_t rafOffset;
         int32_t count;
-        ClusterNode(): isLeaf(false), minkey(0), maxkey(0), rafOffset(-1), count(0) {}
+        ClusterNode()
+            : isLeaf(false), minkey(0.0), maxkey(0.0),
+              rafOffset(-1), count(0) {}
     };
 
 private:
     const ObjectDB* db;
     int n;
-    int P; // number of pivots
-    std::vector<int32_t> pivots;
-    double dplus; // maximum distance observed
+    int P;                         // number of pivots
+    std::vector<int32_t> pivots;   // pivot ids
+    bool pivotsFixed = false;      // true si vienen de HFI/override
+    double dplus;                  // maximum distance observed
 
     std::vector<ClusterNode> nodes;
-    
-    // B+-tree simulation: map from key -> RAF entry
+
+    // B+-tree simulation: map from key -> RAF entry list
     std::map<double, std::vector<RAFEntry>> btreeIndex;
-    
+
     std::string rafPath;
     mutable FILE* rafFp = nullptr;
 
     // Metrics
-    mutable long long compDist = 0;
-    mutable long long pageReads = 0;
+    mutable long long compDist   = 0;
+    mutable long long pageReads  = 0;
     mutable long long pageWrites = 0;
-    mutable long long queryTime = 0;
+    mutable long long queryTime  = 0;
 
-    inline double distObj(int a, int b) const { compDist++; return db->distance(a,b); }
+    inline double distObj(int a, int b) const {
+        compDist++;
+        return db->distance(a,b);
+    }
 
 public:
-    MIndex_Improved(const ObjectDB* db_, int numPivots=5): db(db_), P(numPivots), dplus(0) {
-        if (!db) throw std::runtime_error("DB null");
+    MIndex_Improved(const ObjectDB* db_, int numPivots = 5)
+        : db(db_), n(0), P(numPivots), dplus(0.0)
+    {
+        if (!db) throw std::runtime_error("MIndex_Improved: DB null");
         n = db->size();
-    }
-    ~MIndex_Improved() {
-        if (rafFp) fclose(rafFp);
+        if (P <= 0) throw std::runtime_error("MIndex_Improved: numPivots must be > 0");
+        if (P > n)  P = n;
     }
 
-    void clear_counters() const { compDist = pageReads = pageWrites = queryTime = 0; }
-    long long get_compDist() const { return compDist; }
-    long long get_pageReads() const { return pageReads; }
+    ~MIndex_Improved() {
+        if (rafFp) std::fclose(rafFp);
+    }
+
+    // --------------------------------------------------
+    // API de métricas
+    // --------------------------------------------------
+    void clear_counters() const {
+        compDist   = 0;
+        pageReads  = 0;
+        pageWrites = 0;
+        queryTime  = 0;
+    }
+    long long get_compDist()   const { return compDist;   }
+    long long get_pageReads()  const { return pageReads;  }
     long long get_pageWrites() const { return pageWrites; }
-    long long get_queryTime() const { return queryTime; }
+    long long get_queryTime()  const { return queryTime;  }
+
+    int get_num_pivots() const { return P; }
+
+    // --------------------------------------------------
+    // overridePivots: usar pivotes HFI externos
+    //
+    // Debes cargar los pivotes desde tu JSON (HFI) y
+    // luego llamar a:
+    //
+    //   mindex.overridePivots(pivotsHFI);
+    //   mindex.build("index_base");
+    //
+    // Si NO llamas a overridePivots, build() seleccionará
+    // pivotes aleatorios como antes.
+    // --------------------------------------------------
+    void overridePivots(const std::vector<int>& external) {
+        if (!db) throw std::runtime_error("overridePivots: DB null");
+        if ((int)external.size() != P) {
+            throw std::runtime_error(
+                "overridePivots: size mismatch (expected " +
+                std::to_string(P) + ", got " +
+                std::to_string(external.size()) + ")");
+        }
+        for (int id : external) {
+            if (id < 0 || id >= n) {
+                throw std::runtime_error(
+                    "overridePivots: pivot id out of range: " +
+                    std::to_string(id));
+            }
+        }
+        pivots.assign(external.begin(), external.end());
+        pivotsFixed = true;
+    }
 
     // ------------------------------
     // Build: M-index* con B+-tree
@@ -90,87 +147,114 @@ public:
         using clock = std::chrono::high_resolution_clock;
         auto t0 = clock::now();
 
-        // Select P pivots randomly
-        pivots.clear();
-        pivots.reserve(P);
-        std::vector<int> perm(n);
-        for (int i=0;i<n;i++) perm[i]=i;
-        std::shuffle(perm.begin(), perm.end(), std::mt19937{std::random_device{}()});
-        for (int i=0;i<P;i++) pivots.push_back(perm[i]);
+        // Reset estado
+        nodes.clear();
+        btreeIndex.clear();
+        if (rafFp) { std::fclose(rafFp); rafFp = nullptr; }
+        compDist   = 0;
+        pageReads  = 0;
+        pageWrites = 0;
+        queryTime  = 0;
 
-        // Compute d+ (maximum distance)
+        // 1) Selección de pivotes
+        //    - Si overridePivots() fue llamado, usamos esos pivotes.
+        //    - Si no, seleccionamos P pivotes aleatorios (comportamiento antiguo).
+        if (!pivotsFixed) {
+            pivots.clear();
+            pivots.reserve(P);
+            std::vector<int> perm(n);
+            for (int i = 0; i < n; ++i) perm[i] = i;
+            std::shuffle(perm.begin(), perm.end(),
+                         std::mt19937{std::random_device{}()});
+            for (int i = 0; i < P; ++i) {
+                pivots.push_back(perm[i]);
+            }
+        }
+        // (Si pivotsFixed==true, ya tenemos pivots válidos en 'pivots')
+
+        // 2) Calcular d+ (máxima distancia observada a cualquier pivot)
         dplus = 0.0;
         int sampleSize = std::min(n, 1000);
-        for (int i=0; i<sampleSize; ++i) {
-            for (int j=0; j<P; ++j) {
+        for (int i = 0; i < sampleSize; ++i) {
+            for (int j = 0; j < P; ++j) {
                 double d = distObj(i, pivots[j]);
                 if (d > dplus) dplus = d;
             }
         }
-        if (dplus <= 0) dplus = 1.0;
+        if (dplus <= 0.0) dplus = 1.0;
 
-        // Compute mapped keys and distances for all objects
+        // 3) Calcular mapped keys y distancias para todos los objetos
         std::vector<RAFEntry> entries;
         entries.reserve(n);
-        
-        for (int id=0; id<n; ++id) {
+
+        for (int id = 0; id < n; ++id) {
             RAFEntry entry;
             entry.id = id;
             entry.dists.resize(P);
-            
+
             double minDist = std::numeric_limits<double>::infinity();
             int nearestPivot = 0;
-            
-            for (int j=0; j<P; j++) {
+
+            for (int j = 0; j < P; ++j) {
                 entry.dists[j] = distObj(id, pivots[j]);
                 if (entry.dists[j] < minDist) {
                     minDist = entry.dists[j];
                     nearestPivot = j;
                 }
             }
-            
-            // M-index* key mapping: key(o) = d(pi, o) + (i-1) * d+
+
+            // M-index* key mapping: key(o) = d(pi, o) + i * d+
+            // (en el paper usan (i-1)*d+, pero el offset es equivalente
+            //  mientras se use consistentemente; aquí mantenemos i*dplus
+            //  o (i-1)*dplus según prefieras. Dejamos (i)*dplus para evitar
+            //  keys negativas; ajusta si quieres exactamente (i-1)*dplus.)
             entry.key = entry.dists[nearestPivot] + nearestPivot * dplus;
-            entries.push_back(entry);
+            entries.push_back(std::move(entry));
         }
 
-        // Sort by key for B+-tree
-        std::sort(entries.begin(), entries.end(), 
-                  [](const RAFEntry& a, const RAFEntry& b) { return a.key < b.key; });
+        // 4) Ordenar por key para B+-tree
+        std::sort(entries.begin(), entries.end(),
+                  [](const RAFEntry& a, const RAFEntry& b) {
+                      return a.key < b.key;
+                  });
 
-        // Build B+-tree index (simulated with map)
+        // 5) Construir B+-tree simulado
         btreeIndex.clear();
         for (const auto& entry : entries) {
             btreeIndex[entry.key].push_back(entry);
         }
 
-        // Build cluster tree with MBB
+        // 6) Construir cluster "tree" (en esta versión: un nodo hoja por pivot)
         buildClusterTree(entries);
 
-        // Write RAF file
+        // 7) Escribir RAF
         rafPath = base + ".midx_raf";
         writeRAF(entries);
 
         rafFp = std::fopen(rafPath.c_str(), "rb");
-        if (!rafFp) throw std::runtime_error("cannot reopen RAF");
+        if (!rafFp) throw std::runtime_error("MIndex_Improved: cannot reopen RAF");
 
         auto t1 = clock::now();
-        queryTime += std::chrono::duration_cast<std::chrono::microseconds>(t1-t0).count();
+        queryTime +=
+            std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
     }
 
 private:
+    // --------------------------------------------------
+    // Construir "cluster tree" (aquí: un nodo por pivote)
+    // --------------------------------------------------
     void buildClusterTree(const std::vector<RAFEntry>& entries) {
         nodes.clear();
-        
-        // Create one cluster per pivot
-        for (int pIdx = 0; pIdx < P; pIdx++) {
+
+        // Crear un cluster por pivot
+        for (int pIdx = 0; pIdx < P; ++pIdx) {
             std::vector<const RAFEntry*> clusterEntries;
-            
+
             for (const auto& entry : entries) {
-                // Find nearest pivot for this entry
+                // Encontrar pivot más cercano de este entry
                 double minD = std::numeric_limits<double>::infinity();
                 int nearest = 0;
-                for (int j = 0; j < P; j++) {
+                for (int j = 0; j < P; ++j) {
                     if (entry.dists[j] < minD) {
                         minD = entry.dists[j];
                         nearest = j;
@@ -180,42 +264,47 @@ private:
                     clusterEntries.push_back(&entry);
                 }
             }
-            
+
             if (clusterEntries.empty()) continue;
-            
+
             ClusterNode node;
             node.isLeaf = true;
             node.minDist.assign(P, std::numeric_limits<double>::infinity());
             node.maxDist.assign(P, -std::numeric_limits<double>::infinity());
             node.minkey = clusterEntries.front()->key;
             node.maxkey = clusterEntries.back()->key;
-            node.count = clusterEntries.size();
-            
-            // Compute MBB
+            node.count  = (int32_t)clusterEntries.size();
+
+            // Calcular MBB
             for (const auto* e : clusterEntries) {
-                for (int j = 0; j < P; j++) {
+                for (int j = 0; j < P; ++j) {
                     node.minDist[j] = std::min(node.minDist[j], e->dists[j]);
                     node.maxDist[j] = std::max(node.maxDist[j], e->dists[j]);
                 }
             }
-            
-            nodes.push_back(node);
+
+            nodes.push_back(std::move(node));
         }
     }
 
+    // --------------------------------------------------
+    // Escribir RAF con id, distancias a pivotes y key
+    // --------------------------------------------------
     void writeRAF(const std::vector<RAFEntry>& entries) {
         std::ofstream outf(rafPath, std::ios::binary | std::ios::trunc);
-        if (!outf) throw std::runtime_error("cannot write RAF");
-        
+        if (!outf) throw std::runtime_error("MIndex_Improved: cannot write RAF");
+
         for (const auto& entry : entries) {
             outf.write((char*)&entry.id, sizeof(int32_t));
-            for (int j = 0; j < P; j++) {
+            for (int j = 0; j < P; ++j) {
                 outf.write((char*)&entry.dists[j], sizeof(double));
             }
             outf.write((char*)&entry.key, sizeof(double));
         }
         outf.close();
-        pageWrites += (entries.size() / 100) + 1; // approximate
+
+        // Aproximación grosera de páginas escritas
+        pageWrites += (long long)(entries.size() / 100) + 1;
     }
 
 public:
@@ -227,61 +316,60 @@ public:
         auto t0 = clock::now();
         out.clear();
 
+        if (!db || n == 0 || P == 0 || pivots.empty()) {
+            auto t1 = clock::now();
+            queryTime += std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
+            return;
+        }
+
         // Precompute distances from q to pivots
         std::vector<double> dq(P);
-        for (int j=0; j<P; j++) {
+        for (int j = 0; j < P; ++j) {
             dq[j] = distObj(qId, pivots[j]);
         }
 
         // For each cluster, check MBB pruning (Lemma 4.1)
         for (const auto& node : nodes) {
-            // Lemma 4.1: Prune cluster if for any pivot j:
-            // dq[j] + R < minDist[j] OR dq[j] - R > maxDist[j]
+            // Lemma 4.1 (forma conservadora): si para algún pivot j
+            // no puede haber intersección de la bola B(q,R) con el intervalo
+            // [minDist[j], maxDist[j]], se podría podar. Aquí usamos una
+            // versión sencilla:
             bool pruned = false;
-            for (int j = 0; j < P && !pruned; j++) {
+            for (int j = 0; j < P && !pruned; ++j) {
                 if (dq[j] + R < node.minDist[j] || dq[j] - R > node.maxDist[j]) {
                     pruned = true;
                 }
             }
             if (pruned) continue;
 
-            // Cluster not pruned, search in B+-tree for key range
-            // Use key bounds to limit search
-            double minKeySearch = node.minkey;
-            double maxKeySearch = node.maxkey;
-            
-            pageReads++; // cluster access
-            
-            // Search in B+-tree index within key range
-            auto itLow = btreeIndex.lower_bound(minKeySearch);
-            auto itHigh = btreeIndex.upper_bound(maxKeySearch);
-            
+            pageReads++; // acceso lógico al cluster
+
+            // Cluster no podado: buscar en B+-tree por rango de keys
+            auto itLow  = btreeIndex.lower_bound(node.minkey);
+            auto itHigh = btreeIndex.upper_bound(node.maxkey);
+
             for (auto it = itLow; it != itHigh; ++it) {
                 for (const auto& entry : it->second) {
-                    // Lemma 4.5: Validate directly if exists pivot satisfying
-                    // d(o, pi) <= r - d(q, pi)
+                    // Lemma 4.5: validación directa
                     bool validated = false;
-                    for (int j = 0; j < P && !validated; j++) {
+                    for (int j = 0; j < P && !validated; ++j) {
                         if (entry.dists[j] <= R - dq[j]) {
                             validated = true;
                             out.push_back(entry.id);
                         }
                     }
-                    
                     if (validated) continue;
-                    
-                    // Lemma 4.3: Prune object if for any pivot j:
-                    // |d(o, pj) - d(q, pj)| > R
+
+                    // Lemma 4.3: pruning
                     bool objectPruned = false;
-                    for (int j = 0; j < P && !objectPruned; j++) {
+                    for (int j = 0; j < P && !objectPruned; ++j) {
                         if (std::fabs(entry.dists[j] - dq[j]) > R) {
                             objectPruned = true;
                         }
                     }
-                    
                     if (objectPruned) continue;
-                    
-                    // Cannot prune or validate, compute actual distance
+
+                    // Caso ambiguo: calcular distancia real
                     double d = distObj(qId, entry.id);
                     if (d <= R) {
                         out.push_back(entry.id);
@@ -291,88 +379,98 @@ public:
         }
 
         auto t1 = clock::now();
-        queryTime += std::chrono::duration_cast<std::chrono::microseconds>(t1-t0).count();
+        queryTime += std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
     }
 
     // ------------------------------
     // k-NN Search con Best-First Traversal
     // ------------------------------
-    void knnSearch(int qId, int k, std::vector<std::pair<double,int>>& out) const {
+    void knnSearch(int qId, int k,
+                   std::vector<std::pair<double,int>>& out) const {
         using clock = std::chrono::high_resolution_clock;
         auto t0 = clock::now();
         out.clear();
 
+        if (!db || n == 0 || P == 0 || pivots.empty() || k <= 0) {
+            auto t1 = clock::now();
+            queryTime += std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
+            return;
+        }
+
         // Precompute distances from q to pivots
         std::vector<double> dq(P);
-        for (int j=0; j<P; j++) {
+        for (int j = 0; j < P; ++j) {
             dq[j] = distObj(qId, pivots[j]);
         }
 
         // Best-first traversal: priority queue of clusters by lower bound
         struct ClusterCandidate {
-            int nodeIdx;
+            int    nodeIdx;
             double lowerBound;
             bool operator>(const ClusterCandidate& o) const {
                 return lowerBound > o.lowerBound;
             }
         };
-        
-        std::priority_queue<ClusterCandidate, std::vector<ClusterCandidate>, 
-                            std::greater<ClusterCandidate>> pq;
+
+        std::priority_queue<
+            ClusterCandidate,
+            std::vector<ClusterCandidate>,
+            std::greater<ClusterCandidate>
+        > pq;
 
         // Compute lower bound for each cluster and add to queue
-        for (size_t i = 0; i < nodes.size(); i++) {
+        for (size_t i = 0; i < nodes.size(); ++i) {
             const auto& node = nodes[i];
-            
-            // Lower bound: max over all pivots of max(0, minDist[j] - dq[j], dq[j] - maxDist[j])
+
+            // Lower bound: max_j max(0, minDist[j] - dq[j], dq[j] - maxDist[j])
             double lb = 0.0;
-            for (int j = 0; j < P; j++) {
+            for (int j = 0; j < P; ++j) {
                 double delta = 0.0;
                 if (dq[j] < node.minDist[j]) {
                     delta = node.minDist[j] - dq[j];
                 } else if (dq[j] > node.maxDist[j]) {
                     delta = dq[j] - node.maxDist[j];
                 }
-                lb = std::max(lb, delta);
+                if (delta > lb) lb = delta;
             }
-            
+
             pq.push({(int)i, lb});
         }
 
-        // k-NN heap (max-heap of k nearest)
+        // k-NN heap (max-heap de k mejores)
         std::priority_queue<std::pair<double,int>> knnHeap;
         double radiusK = std::numeric_limits<double>::infinity();
 
         while (!pq.empty()) {
-            auto candidate = pq.top();
+            auto cand = pq.top();
             pq.pop();
-            
-            // Pruning: if lower bound >= current k-th distance, stop
-            if ((int)knnHeap.size() == k && candidate.lowerBound >= radiusK) {
+
+            // Pruning: si el LB del cluster >= radio actual, terminamos
+            if ((int)knnHeap.size() == k && cand.lowerBound >= radiusK) {
                 break;
             }
 
-            const auto& node = nodes[candidate.nodeIdx];
+            const auto& node = nodes[cand.nodeIdx];
             pageReads++;
-            
-            // Search in B+-tree for this cluster's key range
-            auto itLow = btreeIndex.lower_bound(node.minkey);
+
+            auto itLow  = btreeIndex.lower_bound(node.minkey);
             auto itHigh = btreeIndex.upper_bound(node.maxkey);
-            
+
             for (auto it = itLow; it != itHigh; ++it) {
                 for (const auto& entry : it->second) {
-                    // Prune by current k-th distance using Lemma 4.3
-                    bool pruned = false;
-                    for (int j = 0; j < P && !pruned; j++) {
-                        if (std::fabs(entry.dists[j] - dq[j]) > radiusK) {
-                            pruned = true;
+                    // Pruning rápido usando Lemma 4.3 con radioK
+                    if (std::isfinite(radiusK)) {
+                        bool pruned = false;
+                        for (int j = 0; j < P && !pruned; ++j) {
+                            if (std::fabs(entry.dists[j] - dq[j]) > radiusK) {
+                                pruned = true;
+                            }
                         }
+                        if (pruned) continue;
                     }
-                    if (pruned) continue;
-                    
-                    // Compute actual distance
+
                     double d = distObj(qId, entry.id);
-                    
+
                     if ((int)knnHeap.size() < k) {
                         knnHeap.push({d, entry.id});
                         if ((int)knnHeap.size() == k) {
@@ -387,7 +485,7 @@ public:
             }
         }
 
-        // Extract results
+        // Extraer resultados ordenados por distancia ascendente
         while (!knnHeap.empty()) {
             out.push_back(knnHeap.top());
             knnHeap.pop();
@@ -395,7 +493,7 @@ public:
         std::reverse(out.begin(), out.end());
 
         auto t1 = clock::now();
-        queryTime += std::chrono::duration_cast<std::chrono::microseconds>(t1-t0).count();
+        queryTime += std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
     }
 };
 
