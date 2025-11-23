@@ -11,7 +11,44 @@ static const vector<int>    K_VALUES      = {5, 10, 20, 50, 100};
 static const vector<int>    PIVOT_VALUES  = {3, 5, 10, 15, 20};
 
 // ------------------------------------------------------------
-// Cargar pivotes HFI desde JSON (igual que en otros tests)
+// Autodetección 0-based / 1-based para IDs (igual que en otros tests)
+// ------------------------------------------------------------
+vector<int> auto_fix_ids(const vector<int> &ids, int nObjects) {
+    if (ids.empty()) return ids;
+
+    bool hasZero       = false;
+    bool hasOutOfRange = false;
+
+    for (int v : ids) {
+        if (v == 0)          hasZero = true;
+        if (v >= nObjects)   hasOutOfRange = true;
+    }
+
+    // Caso A: ya son 0-based (0..N-1)
+    if (hasZero && !hasOutOfRange) {
+        return ids;
+    }
+
+    // Caso B: parecen 1-based → convertir todo a 0-based
+    if (!hasZero) {
+        vector<int> fixed;
+        fixed.reserve(ids.size());
+        for (int v : ids) fixed.push_back(v - 1);
+        return fixed;
+    }
+
+    // Caso C: mezcla rara → corregir solo los que estén en 1..N
+    vector<int> fixed;
+    fixed.reserve(ids.size());
+    for (int v : ids) {
+        if (v > 0 && v <= nObjects) fixed.push_back(v - 1);
+        else                        fixed.push_back(v);
+    }
+    return fixed;
+}
+
+// ------------------------------------------------------------
+// Cargar pivotes HFI desde JSON (mismo parser que en otros tests)
 // ------------------------------------------------------------
 vector<int> load_pivots_json(const string& path) {
     vector<int> piv;
@@ -36,6 +73,9 @@ vector<int> load_pivots_json(const string& path) {
     return piv;
 }
 
+// ------------------------------------------------------------
+// Test para un dataset
+// ------------------------------------------------------------
 void test_dataset(const string& dataset) {
     cout << "\n\n";
     cout << "##########################################\n";
@@ -47,13 +87,13 @@ void test_dataset(const string& dataset) {
 
     unique_ptr<ObjectDB> db;
     if (dataset == "LA") {
-        db = make_unique<VectorDB>(dbfile, 2);
+        db = make_unique<VectorDB>(dbfile, 2);          // L2
     } else if (dataset == "Color") {
-        db = make_unique<VectorDB>(dbfile, 1);
+        db = make_unique<VectorDB>(dbfile, 1);          // L1
     } else if (dataset == "Synthetic") {
-        db = make_unique<VectorDB>(dbfile, 999999); // L∞ como en otros tests
+        db = make_unique<VectorDB>(dbfile, 999999);     // L∞
     } else if (dataset == "Words") {
-        db = make_unique<StringDB>(dbfile);
+        db = make_unique<StringDB>(dbfile);            // Levenshtein
     } else {
         cout << "[ERROR] Dataset desconocido: " << dataset << "\n";
         return;
@@ -73,6 +113,9 @@ void test_dataset(const string& dataset) {
         return;
     }
 
+    // Normalizar queries a 0-based (igual que en otros índices)
+    queries = auto_fix_ids(queries, db->size());
+
     cout << "\n[QUERIES] Cargadas " << queries.size() << " queries\n";
     cout << "[QUERIES] Radii para " << radii.size() << " selectividades\n";
 
@@ -88,7 +131,7 @@ void test_dataset(const string& dataset) {
     // Valores por defecto (para EXP 2 y EXP 3)
     const int    DEFAULT_PIVOTS      = 5;
     const double DEFAULT_SELECTIVITY = 0.08;
-    const int    DEFAULT_K           = 20;
+    const int    DEFAULT_K           = 20;   // (se usa solo como referencia)
 
     auto t0 = chrono::high_resolution_clock::now();
     auto t1 = chrono::high_resolution_clock::now();
@@ -109,14 +152,18 @@ void test_dataset(const string& dataset) {
         for (int numPivots : PIVOT_VALUES) {
             cout << "\n[BUILD] Construyendo con " << numPivots << " pivotes...\n";
 
-            // Cargar pivotes HFI
+            // Cargar pivotes HFI (y convertir a 0-based)
             string pivPath = path_pivots(dataset, numPivots);
             vector<int> pivots = load_pivots_json(pivPath);
-            if ((int)pivots.size() != numPivots) {
+            pivots = auto_fix_ids(pivots, db->size());
+
+            if ((int)pivots.size() < numPivots) {
                 cout << "[WARN] Pivotes HFI para P=" << numPivots
                      << " no disponibles o incompletos. SKIP.\n";
                 continue;
             }
+            // Nos quedamos con los primeros numPivots (por si el JSON trae más)
+            pivots.resize(numPivots);
 
             MIndex_Improved midx(db.get(), numPivots);
             midx.overridePivots(pivots);   // usar HFI
@@ -158,7 +205,7 @@ void test_dataset(const string& dataset) {
 
             J << fixed << setprecision(6)
               << "{"
-              << "\"index\":\"MIndex*\","
+              << "\"index\":\"MIndex*\","        // nombre como en las figuras
               << "\"dataset\":\"" << dataset << "\","
               << "\"category\":\"DM\","
               << "\"num_pivots\":" << numPivots << ","
@@ -189,13 +236,17 @@ void test_dataset(const string& dataset) {
     {
         cout << "\n[BUILD] Construyendo con " << DEFAULT_PIVOTS << " pivotes...\n";
 
-        // Cargar pivotes HFI P=5
+        // Cargar pivotes HFI P=5 (0-based)
         string pivPath = path_pivots(dataset, DEFAULT_PIVOTS);
         vector<int> pivots = load_pivots_json(pivPath);
-        if ((int)pivots.size() != DEFAULT_PIVOTS) {
+        pivots = auto_fix_ids(pivots, db->size());
+
+        if ((int)pivots.size() < DEFAULT_PIVOTS) {
             cout << "[WARN] Pivotes HFI para P=" << DEFAULT_PIVOTS
                  << " no disponibles o incompletos. SKIP EXP 2.\n";
         } else {
+            pivots.resize(DEFAULT_PIVOTS);
+
             MIndex_Improved midx(db.get(), DEFAULT_PIVOTS);
             midx.overridePivots(pivots);
             string base = "midx_indexes/" + dataset + "_p" + to_string(DEFAULT_PIVOTS);
@@ -242,7 +293,7 @@ void test_dataset(const string& dataset) {
 
                 J << fixed << setprecision(6)
                   << "{"
-                  << "\"index\":\"MIndex*\","
+                  << "\"index\":\"MIndex*\"," 
                   << "\"dataset\":\"" << dataset << "\","
                   << "\"category\":\"DM\","
                   << "\"num_pivots\":" << DEFAULT_PIVOTS << ","
@@ -276,10 +327,14 @@ void test_dataset(const string& dataset) {
 
         string pivPath = path_pivots(dataset, DEFAULT_PIVOTS);
         vector<int> pivots = load_pivots_json(pivPath);
-        if ((int)pivots.size() != DEFAULT_PIVOTS) {
+        pivots = auto_fix_ids(pivots, db->size());
+
+        if ((int)pivots.size() < DEFAULT_PIVOTS) {
             cout << "[WARN] Pivotes HFI para P=" << DEFAULT_PIVOTS
                  << " no disponibles o incompletos. SKIP EXP 3.\n";
         } else {
+            pivots.resize(DEFAULT_PIVOTS);
+
             MIndex_Improved midx(db.get(), DEFAULT_PIVOTS);
             midx.overridePivots(pivots);
             string base = "midx_indexes/" + dataset + "_p" + to_string(DEFAULT_PIVOTS);
@@ -314,7 +369,7 @@ void test_dataset(const string& dataset) {
 
                 J << fixed << setprecision(6)
                   << "{"
-                  << "\"index\":\"MIndex*\","
+                  << "\"index\":\"MIndex*\"," 
                   << "\"dataset\":\"" << dataset << "\","
                   << "\"category\":\"DM\","
                   << "\"num_pivots\":" << DEFAULT_PIVOTS << ","

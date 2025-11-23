@@ -25,16 +25,21 @@ struct DataObject {
 };
 
 class RAF {
-    static constexpr size_t PAGE_SIZE = 4096; // 4KB por página, aproximando a Chen
+    static constexpr size_t PAGE_SIZE = 4096; // 4KB físicos
 
     string filename;
     unordered_map<uint64_t, streampos> offsets;
 
-    // En vez de contar lecturas, contamos páginas únicas tocadas en la query actual
+    // Páginas físicas únicas tocadas en la query actual
     mutable unordered_set<uint64_t> pagesVisited;
 
+    // Factor lógico de páginas (Chen: 40KB = 10×4KB para Color/Synthetic)
+    size_t logicalPageFactor;
+
 public:
-    RAF(const string &fname) : filename(fname) {
+    RAF(const string &fname, size_t logicalFactor = 1)
+        : filename(fname), logicalPageFactor(logicalFactor)
+    {
         ofstream ofs(filename, ios::binary | ios::trunc);
     }
 
@@ -56,8 +61,7 @@ public:
         if (it == offsets.end())
             throw runtime_error("RAF: id not found");
 
-        // Simular acceso a página de disco:
-        // offset en bytes / PAGE_SIZE = id de página
+        // Simular acceso a página física de 4KB
         long long off = static_cast<long long>(it->second);
         uint64_t pageId = static_cast<uint64_t>(off / static_cast<long long>(PAGE_SIZE));
         pagesVisited.insert(pageId);
@@ -75,8 +79,10 @@ public:
         return o;
     }
 
+    // Páginas lógicas según Chen (ej. 10× para Color/Synthetic)
     long long get_pageReads() const {
-        return static_cast<long long>(pagesVisited.size());
+        return static_cast<long long>(pagesVisited.size()) *
+               static_cast<long long>(logicalPageFactor);
     }
 
     void clear_pageReads() {
@@ -96,7 +102,9 @@ struct PivotTable {
     PivotTable(ObjectDB *database) : db(database) {}
 
     // Pivotes aleatorios (fallback cuando no hay HFI precomputado)
-    void selectRandomPivots(const vector<DataObject> &objs, size_t l, uint64_t seed = 42) {
+    void selectRandomPivots(const vector<DataObject> &objs,
+                            size_t l, uint64_t seed = 42)
+    {
         pivots.clear();
         if (l == 0 || objs.empty())
             return;
@@ -111,7 +119,8 @@ struct PivotTable {
     // Cargar pivotes desde ids precomputados (HFI), ids 0-based.
     void setPivotsFromIds(const vector<int> &pivotIds,
                           const vector<DataObject> &objs,
-                          size_t l) {
+                          size_t l)
+    {
         pivots.clear();
         if (l == 0 || objs.empty())
             return;
@@ -181,11 +190,11 @@ struct SFCMapper {
                 continue;
             }
             double t = (x - lo) / (hi - lo);
-            if (t < 0)
-                t = 0;
-            if (t > 1)
-                t = 1;
-            uint64_t maxq = (bits_per_dim == 64 ? (uint64_t)-1 : ((1ULL << bits_per_dim) - 1ULL));
+            if (t < 0) t = 0;
+            if (t > 1) t = 1;
+            uint64_t maxq = (bits_per_dim == 64
+                             ? (uint64_t)-1
+                             : ((1ULL << bits_per_dim) - 1ULL));
             uint64_t q = (uint64_t)floor(t * (double)maxq + 0.5);
             res[i] = q;
         }
@@ -252,14 +261,10 @@ struct MBB {
         for (size_t i = 0; i < q.size(); ++i) {
             double x = q[i];
             double v = 0.0;
-            if (x < minv[i])
-                v = minv[i] - x;
-            else if (x > maxv[i])
-                v = x - maxv[i];
-            else
-                v = 0.0;
-            if (v > lb)
-                lb = v;
+            if (x < minv[i])      v = minv[i] - x;
+            else if (x > maxv[i]) v = x - maxv[i];
+            else                  v = 0.0;
+            if (v > lb) lb = v;
         }
         return lb;
     }
@@ -436,11 +441,12 @@ class SPBTree {
                   const vector<double> &qmap,
                   double r,
                   const RangeRegion &rr,
-                  vector<uint64_t> &out) {
+                  vector<uint64_t> &out)
+    {
         uint64_t objId = get<1>(rec);
         const vector<double> &mv = get<2>(rec);
 
-        // flag + Lemma 1: si φ(o) no está en RR(r), descartar sin distancia
+        // Lemma 1: si φ(o) no está en RR(r), descartar sin distancia real
         if (!rr.containsPoint(mv))
             return;
 
@@ -459,7 +465,7 @@ class SPBTree {
         }
 
         // Verificación final con distancia real d(q,o)
-        raf.read(objId); // simula acceso a página en RAF
+        raf.read(objId); // acceso a RAF (cuenta páginas)
         double dist = db->distance((int)queryId, (int)objId);
         pt.compDist++;
         if (dist <= r)
@@ -473,9 +479,10 @@ public:
             size_t leafCap = 128,
             size_t fanout = 64,
             const string &datasetName_ = "",
-            bool useHfiPivots_ = true)
+            bool useHfiPivots_ = true,
+            size_t logicalPageFactor = 1)
         : db(database),
-          raf(rafFile),
+          raf(rafFile, logicalPageFactor),
           pt(database),
           sfc(),
           bplus(leafCap, fanout),
@@ -485,7 +492,8 @@ public:
 
     void build(vector<DataObject> &dataset,
                const vector<int> &hfiPivotIds = {},
-               uint64_t pivotSeed = 42) {
+               uint64_t pivotSeed = 42)
+    {
         // Escribir todos los objetos al RAF
         for (auto &o : dataset) {
             raf.append(o);
@@ -575,7 +583,7 @@ public:
                     }
                 }
             } else {
-                // Nodo hoja: verificamos cada entrada con VerifyRQ (Lemma 1 + Lemma 2)
+                // Nodo hoja: verificamos cada entrada con VerifyRQ
                 for (auto &rec : N->records) {
                     verifyRQ(rec, queryId, qmap, r, rr, result);
                 }
@@ -610,7 +618,7 @@ public:
 
         priority_queue<HeapItem, vector<HeapItem>, HCmp> H;
 
-        // Inicializar con la raíz (entrada de nivel raíz)
+        // Inicializar con la raíz
         H.push({false, root, 0, root->box.lowerBoundToQuery(qmap)});
         double curNDk = numeric_limits<double>::infinity();
 
@@ -662,7 +670,7 @@ public:
                 const auto &rec = node->records[it.recIdx];
                 uint64_t objId = get<1>(rec);
 
-                raf.read(objId); // simula acceso a RAF
+                raf.read(objId); // acceso a RAF
                 double dist = db->distance((int)queryId, (int)objId);
                 pt.compDist++;
 

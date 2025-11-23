@@ -311,76 +311,84 @@ public:
     // ------------------------------
     // Range Search con B+-tree y Lemmas 4.1, 4.3, 4.5
     // ------------------------------
-    void rangeSearch(int qId, double R, std::vector<int>& out) const {
-        using clock = std::chrono::high_resolution_clock;
-        auto t0 = clock::now();
-        out.clear();
 
-        if (!db || n == 0 || P == 0 || pivots.empty()) {
-            auto t1 = clock::now();
-            queryTime += std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
-            return;
-        }
+    // ------------------------------
+// Range Search con B+-tree y Lemmas 4.1, 4.3, 4.5 (CORREGIDO)
+// ------------------------------
+void rangeSearch(int qId, double R, std::vector<int>& out) const {
+    using clock = std::chrono::high_resolution_clock;
+    auto t0 = clock::now();
+    out.clear();
 
-        // Precompute distances from q to pivots
-        std::vector<double> dq(P);
+    if (!db || n == 0 || P == 0 || pivots.empty()) {
+        auto t1 = clock::now();
+        queryTime += std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
+        return;
+    }
+
+    // Distancias q → pivotes (cuentan en compDist)
+    std::vector<double> dq(P);
+    for (int j = 0; j < P; ++j) {
+        dq[j] = distObj(qId, pivots[j]);
+    }
+
+    // Recorremos clusters
+    for (const auto& node : nodes) {
+        // --- PODA DE CLUSTER (LB conservador tipo Lemma 4.1) ---
+        double clusterLB = 0.0;
         for (int j = 0; j < P; ++j) {
-            dq[j] = distObj(qId, pivots[j]);
+            // distancia mínima entre dq[j] y el intervalo [minDist,maxDist]
+            if (dq[j] < node.minDist[j]) {
+                clusterLB = std::max(clusterLB, node.minDist[j] - dq[j]);
+            } else if (dq[j] > node.maxDist[j]) {
+                clusterLB = std::max(clusterLB, dq[j] - node.maxDist[j]);
+            }
+        }
+        if (clusterLB > R) {
+            // bola B(q,R) no puede intersectar ningún objeto del cluster
+            continue;
         }
 
-        // For each cluster, check MBB pruning (Lemma 4.1)
-        for (const auto& node : nodes) {
-            // Lemma 4.1 (forma conservadora): si para algún pivot j
-            // no puede haber intersección de la bola B(q,R) con el intervalo
-            // [minDist[j], maxDist[j]], se podría podar. Aquí usamos una
-            // versión sencilla:
-            bool pruned = false;
-            for (int j = 0; j < P && !pruned; ++j) {
-                if (dq[j] + R < node.minDist[j] || dq[j] - R > node.maxDist[j]) {
-                    pruned = true;
-                }
-            }
-            if (pruned) continue;
+        // Cluster no podado → cuenta como una página lógica
+        pageReads++;
 
-            pageReads++; // acceso lógico al cluster
+        // Buscamos entradas en el rango de keys del cluster
+        auto itLow  = btreeIndex.lower_bound(node.minkey);
+        auto itHigh = btreeIndex.upper_bound(node.maxkey);
 
-            // Cluster no podado: buscar en B+-tree por rango de keys
-            auto itLow  = btreeIndex.lower_bound(node.minkey);
-            auto itHigh = btreeIndex.upper_bound(node.maxkey);
-
-            for (auto it = itLow; it != itHigh; ++it) {
-                for (const auto& entry : it->second) {
-                    // Lemma 4.5: validación directa
-                    bool validated = false;
-                    for (int j = 0; j < P && !validated; ++j) {
-                        if (entry.dists[j] <= R - dq[j]) {
-                            validated = true;
-                            out.push_back(entry.id);
-                        }
-                    }
-                    if (validated) continue;
-
-                    // Lemma 4.3: pruning
-                    bool objectPruned = false;
-                    for (int j = 0; j < P && !objectPruned; ++j) {
-                        if (std::fabs(entry.dists[j] - dq[j]) > R) {
-                            objectPruned = true;
-                        }
-                    }
-                    if (objectPruned) continue;
-
-                    // Caso ambiguo: calcular distancia real
-                    double d = distObj(qId, entry.id);
-                    if (d <= R) {
+        for (auto it = itLow; it != itHigh; ++it) {
+            for (const auto& entry : it->second) {
+                // Lemma 4.5: validación directa
+                bool validated = false;
+                for (int j = 0; j < P && !validated; ++j) {
+                    if (entry.dists[j] <= R - dq[j]) {
+                        validated = true;
                         out.push_back(entry.id);
                     }
                 }
+                if (validated) continue;
+
+                // Lemma 4.3: pruning
+                bool objectPruned = false;
+                for (int j = 0; j < P && !objectPruned; ++j) {
+                    if (std::fabs(entry.dists[j] - dq[j]) > R) {
+                        objectPruned = true;
+                    }
+                }
+                if (objectPruned) continue;
+
+                // Caso ambiguo: distancia real d(q,o)
+                double d = distObj(qId, entry.id);
+                if (d <= R) {
+                    out.push_back(entry.id);
+                }
             }
         }
-
-        auto t1 = clock::now();
-        queryTime += std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
     }
+
+    auto t1 = clock::now();
+    queryTime += std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
+}
 
     // ------------------------------
     // k-NN Search con Best-First Traversal
