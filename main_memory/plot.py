@@ -63,7 +63,7 @@ def compute_linthresh(values, factor=0.1, default=1.0):
     return max(default, np.median(pos) * factor)
 
 # ============================================================
-# Función para graficar individualmente
+# Graficar individualmente (menos ancho)
 # ============================================================
 def plot_metric(group, group_name, metric, ylabel):
     indexes = sorted(set([d["index"] for d in group]))
@@ -74,7 +74,7 @@ def plot_metric(group, group_name, metric, ylabel):
     pivot_positions = np.arange(len(pivot_ticks))
 
     for ds in datasets:
-        plt.figure(figsize=(7, 5))
+        plt.figure(figsize=(6, 5))  # <-- reducir ancho (antes 7,5)
         subset = [d for d in group if d["dataset"] == ds]
         if not subset: continue
 
@@ -133,8 +133,9 @@ def plot_metric(group, group_name, metric, ylabel):
         plt.close()
         print(f"Guardado: {filename}")
 
+
 # ============================================================
-# Función para graficar todo combinado en una gran figura
+# Graficar combinadas (menos ancho)
 # ============================================================
 def plot_combined(group, group_name):
     indexes = sorted(set([d["index"] for d in group]))
@@ -148,7 +149,7 @@ def plot_combined(group, group_name):
     colors = plt.cm.tab20.colors
     markers = ['o','s','^','v','D','P','*','X','H']
 
-    fig, axes = plt.subplots(len(datasets), len(metrics), figsize=(16, 12), sharex=False)
+    fig, axes = plt.subplots(len(datasets), len(metrics), figsize=(10, 12), sharex=False)  # <-- reducir ancho (antes 16,12)
 
     for row_idx, ds in enumerate(datasets):
         subset = [d for d in group if d["dataset"] == ds]
