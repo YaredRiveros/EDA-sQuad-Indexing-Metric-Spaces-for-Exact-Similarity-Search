@@ -18,13 +18,20 @@ knn = [d for d in data if d["query_type"] in ("KNN", "MkNN")]
 # ============================================================
 # Definir L efectivo para cada elemento (num_centers_path o num_pivots)
 # ============================================================
+
+# Prioridad: num_pivots en rango [3, 20], si no, num_centers_path
 for d in data:
-    if d.get("num_centers_path") not in (None, 0):
-        d["L"] = d["num_centers_path"]
-    elif d.get("num_pivots") not in (None, 0):
-        d["L"] = d["num_pivots"]
+    num_pivots = d.get("num_pivots")
+    num_centers = d.get("num_centers_path")
+    if num_pivots is not None and 3 <= num_pivots <= 20:
+        d["L"] = num_pivots
+        d["L_label"] = "num_pivots"
+    elif num_centers not in (None, 0):
+        d["L"] = num_centers
+        d["L_label"] = "num_centers_path"
     else:
-        d["L"] = 1  # Valor mínimo para índices que no usan L
+        d["L"] = 1
+        d["L_label"] = "default"
 
 # Actualizar las listas para usar L
 mrq = [d for d in mrq if d["L"] > 0]
@@ -33,8 +40,8 @@ knn = [d for d in knn if d["L"] > 0]
 # ============================================================
 # Función genérica para graficar métricas vs L
 # ============================================================
-def plot_metric(group, group_name, metric, ylabel):
 
+def plot_metric(group, group_name, metric, ylabel):
     indexes = sorted(set([d["index"] for d in group]))
     datasets = sorted(set([d["dataset"] for d in group]))
 
@@ -43,7 +50,6 @@ def plot_metric(group, group_name, metric, ylabel):
 
     for ds in datasets:
         plt.figure(figsize=(7, 5))
-
         subset = [d for d in group if d["dataset"] == ds]
         if not subset:
             continue
@@ -55,13 +61,15 @@ def plot_metric(group, group_name, metric, ylabel):
 
             # Ordenar por L ascendente
             points = sorted(points, key=lambda x: x["L"])
-
             xs = [p["L"] for p in points]
             ys = [p[metric] for p in points]
 
+            # Etiqueta del eje x según prioridad
+            x_label = "num_pivots (3-20)" if any((p["L_label"] == "num_pivots") for p in points) else "num_centers_path"
+
             plt.plot(xs, ys, marker="o", linewidth=2, markersize=6, label=idx)
 
-        plt.xlabel("L (num_centers_path o num_pivots)")
+        plt.xlabel(f"L ({x_label})")
         plt.ylabel(ylabel)
         plt.title(f"{ylabel} vs L — {ds} ({group_name})")
         plt.grid(True, ls="--", alpha=0.5)

@@ -18,8 +18,8 @@ static const vector<int> K_VALUES = {5, 10, 20, 50, 100};
 // Datasets evaluados
 static const vector<string> DATASETS = {"LA", "Words", "Color", "Synthetic"};
 
-// Valores de "número de pivotes" m para el eje X (Chen)
-static const vector<int> PIVOT_VALUES = {3, 5, 10, 15, 20};
+// Valores "equivalentes" de número de pivotes m = {3,5,10,15,20}
+static const vector<int> L_VALUES = {3, 5, 10, 15, 20};
 
 // ============================================================
 // MAIN — EXPERIMENTACIÓN COMPLETA PARA SAT
@@ -62,18 +62,19 @@ int main()
         int nObjects = db->size();
 
         cerr << "\n==========================================\n";
-        cerr << "[INFO] Dataset: " << dataset << "   N=" << nObjects << "\n";
+        cerr << "[INFO] Dataset: " << dataset
+             << "   N=" << nObjects << "\n";
         cerr << "==========================================\n";
 
         // ------------------------------------------------------------
-        // 3. Cargar queries y radios
+        // 3. Cargar queries + radios
         // ------------------------------------------------------------
         vector<int> queries = load_queries_file(path_queries(dataset));
         auto radii = load_radii_file(path_radii(dataset));
 
         if (queries.empty())
         {
-            cerr << "[WARN] Queries ausentes, omitiendo dataset: " << dataset << "\n";
+            cerr << "[WARN] No hay queries para " << dataset << "\n";
             continue;
         }
 
@@ -105,11 +106,11 @@ int main()
 
         long long buildTime = chrono::duration_cast<chrono::milliseconds>(tEnd - tStart).count();
         int height = sat.get_height();
-        int numPivotsSAT = sat.get_num_pivots(); // número de centros (nodos) del SAT
+        int numCenters = sat.get_num_pivots(); // número de nodos/centros del SAT
 
         cerr << "[INFO] SAT construido: altura=" << height
-             << ", nodos=" << numPivotsSAT
-             << ", tiempo=" << buildTime << " ms\n";
+             << "   nodos=" << numCenters
+             << "   tiempo=" << buildTime << " ms\n";
 
         // ========================================================
         //  MRQ (range queries)
@@ -123,27 +124,29 @@ int main()
                 continue;
 
             double R = radii[sel];
-            long long totalD = 0;
-            long long totalT = 0;
 
-            // Ejecutar TODAS las queries (una vez) para este radio
-            for (int q : queries)
+            // Para cada valor "equivalente" de número de pivotes m
+            for (int li = 0; li < (int)L_VALUES.size(); ++li)
             {
-                vector<int> out;
-                sat.clear_counters();
-                sat.rangeSearch(q, R, out);
+                int l_value = L_VALUES[li];
 
-                totalD += sat.get_compDist();
-                totalT += sat.get_queryTime();
-            }
+                long long totalD = 0;
+                long long totalT = 0;
 
-            // Promedios por query
-            double avgD = static_cast<double>(totalD) / static_cast<double>(queries.size());
-            double avgT = static_cast<double>(totalT) / static_cast<double>(queries.size()) / 1000.0; // μs → ms
+                // Ejecutar TODAS las queries para este radio
+                for (int q : queries)
+                {
+                    vector<int> out;
+                    sat.clear_counters();
+                    sat.rangeSearch(q, R, out);
 
-            // Replicar resultado para cada m en PIVOT_VALUES (Chen-style)
-            for (int piv : PIVOT_VALUES)
-            {
+                    totalD += sat.get_compDist();
+                    totalT += sat.get_queryTime(); // μs acumulados
+                }
+
+                double avgD = static_cast<double>(totalD) / static_cast<double>(queries.size());
+                double avgT = static_cast<double>(totalT) / static_cast<double>(queries.size()); // μs/query
+
                 if (!firstOutput)
                     J << ",\n";
                 firstOutput = false;
@@ -152,17 +155,21 @@ int main()
                 J << "{"
                   << "\"index\":\"SAT\","
                   << "\"dataset\":\"" << dataset << "\","
-                  << "\"category\":\"" << (dataset == "Words" ? "strings" : "vectors") << "\","
-                  << "\"num_pivots\":" << piv << ","            // eje X = número de pivotes m
-                  << "\"num_centers_path\":null,"               // opcional: podrías poner aquí altura media si la calculas
-                  << "\"height\":" << height << ","             // altura del SAT (número de centros en un camino)
+                  // categoría: compact-partitioning
+                  << "\"category\":\"CP\","
+                  // num_pivots = L (3,5,10,15,20) para graficar en el eje X como Chen
+                  << "\"num_pivots\":" << l_value << ","
+                  // num_centers_path: usamos la altura del SAT como #centros en un camino
+                  << "\"num_centers_path\":" << height << ","
+                  << "\"arity\":null,"
                   << "\"query_type\":\"MRQ\","
                   << "\"selectivity\":" << sel << ","
                   << "\"radius\":" << R << ","
                   << "\"k\":null,"
-                  << "\"compdists\":" << avgD << ","            // promedio de distancias computadas
-                  << "\"time_ms\":" << avgT << ","              // tiempo promedio (ms)
-                  << "\"n_queries\":" << queries.size()
+                  << "\"compdists\":" << avgD << ","
+                  << "\"time_ms\":" << (avgT / 1000.0) << ","  // μs → ms
+                  << "\"n_queries\":" << queries.size() << ","
+                  << "\"run_id\":1"
                   << "}";
             }
         }
@@ -174,30 +181,32 @@ int main()
 
         for (int k : K_VALUES)
         {
-            long long totalD = 0;
-            long long totalT = 0;
-            double sumRadius = 0.0;
-
-            // Ejecutar TODAS las queries (una vez) para este k
-            for (int q : queries)
+            // Para cada valor "equivalente" de número de pivotes m
+            for (int li = 0; li < (int)L_VALUES.size(); ++li)
             {
-                sat.clear_counters();
-                auto res = sat.knnQuery(q, k);
+                int l_value = L_VALUES[li];
 
-                totalD += sat.get_compDist();
-                totalT += sat.get_queryTime();
+                long long totalD = 0;
+                long long totalT = 0;
+                double sumRadius = 0.0;
 
-                if (!res.empty())
-                    sumRadius += res.back().first; // distancia del k-ésimo vecino (radio efectivo)
-            }
+                // Ejecutar TODAS las queries para este k
+                for (int q : queries)
+                {
+                    sat.clear_counters();
+                    auto res = sat.knnQuery(q, k);
 
-            double avgD = static_cast<double>(totalD) / static_cast<double>(queries.size());
-            double avgT = static_cast<double>(totalT) / static_cast<double>(queries.size()) / 1000.0; // μs → ms
-            double avgRadius = sumRadius / static_cast<double>(queries.size());
+                    totalD += sat.get_compDist();
+                    totalT += sat.get_queryTime(); // μs acumulados
 
-            // Replicar resultado para cada m en PIVOT_VALUES (Chen-style)
-            for (int piv : PIVOT_VALUES)
-            {
+                    if (!res.empty())
+                        sumRadius += res.back().first; // distancia al k-ésimo vecino
+                }
+
+                double avgD = static_cast<double>(totalD) / static_cast<double>(queries.size());
+                double avgT = static_cast<double>(totalT) / static_cast<double>(queries.size()); // μs/query
+                double avgRadius = sumRadius / static_cast<double>(queries.size());
+
                 if (!firstOutput)
                     J << ",\n";
                 firstOutput = false;
@@ -206,17 +215,18 @@ int main()
                 J << "{"
                   << "\"index\":\"SAT\","
                   << "\"dataset\":\"" << dataset << "\","
-                  << "\"category\":\"" << (dataset == "Words" ? "strings" : "vectors") << "\","
-                  << "\"num_pivots\":" << piv << ","            // eje X = número de pivotes m
-                  << "\"num_centers_path\":null,"
-                  << "\"height\":" << height << ","
+                  << "\"category\":\"CP\","
+                  << "\"num_pivots\":" << l_value << ","
+                  << "\"num_centers_path\":" << height << ","
+                  << "\"arity\":null,"
                   << "\"query_type\":\"MkNN\","
                   << "\"selectivity\":null,"
-                  << "\"radius\":" << avgRadius << ","          // radio efectivo promedio (distancia al k-ésimo vecino)
+                  << "\"radius\":" << avgRadius << ","   // radio efectivo medio (distancia al k-ésimo)
                   << "\"k\":" << k << ","
                   << "\"compdists\":" << avgD << ","
-                  << "\"time_ms\":" << avgT << ","
-                  << "\"n_queries\":" << queries.size()
+                  << "\"time_ms\":" << (avgT / 1000.0) << ","
+                  << "\"n_queries\":" << queries.size() << ","
+                  << "\"run_id\":1"
                   << "}";
             }
         }

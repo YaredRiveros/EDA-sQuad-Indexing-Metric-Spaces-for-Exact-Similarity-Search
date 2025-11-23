@@ -1,7 +1,7 @@
 // dsaclt_test.cpp - Benchmark de DSACL-tree (memoria principal, estilo Chen)
 
 #include <bits/stdc++.h>
-#include "DSATCLT.hpp"
+#include "dsatclt.hpp"
 #include "../../datasets/paths.hpp"
 #include <filesystem>
 
