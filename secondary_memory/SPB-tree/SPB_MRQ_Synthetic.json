@@ -1,0 +1,7 @@
+[
+  {"dataset":"Synthetic","query_type":"MRQ","selectivity":0.02,"radius":2740.21,"compdists":4,"time_ms":11.6235,"pages":0,"n_queries":100},
+  {"dataset":"Synthetic","query_type":"MRQ","selectivity":0.04,"radius":3243.58,"compdists":4,"time_ms":11.9171,"pages":0,"n_queries":100},
+  {"dataset":"Synthetic","query_type":"MRQ","selectivity":0.08,"radius":3863.88,"compdists":4,"time_ms":11.7366,"pages":0,"n_queries":100},
+  {"dataset":"Synthetic","query_type":"MRQ","selectivity":0.16,"radius":4638.71,"compdists":4,"time_ms":11.6974,"pages":0,"n_queries":100},
+  {"dataset":"Synthetic","query_type":"MRQ","selectivity":0.32,"radius":5640.4,"compdists":4,"time_ms":11.2134,"pages":0,"n_queries":100}
+]

@@ -1,0 +1,7 @@
+[
+  {"dataset":"LA","query_type":"MkNN","k":5,"compdists":9,"time_ms":118.176,"pages":0,"n_queries":100},
+  {"dataset":"LA","query_type":"MkNN","k":10,"compdists":14,"time_ms":116.059,"pages":0,"n_queries":100},
+  {"dataset":"LA","query_type":"MkNN","k":20,"compdists":24,"time_ms":116.524,"pages":0,"n_queries":100},
+  {"dataset":"LA","query_type":"MkNN","k":50,"compdists":54,"time_ms":116.916,"pages":0,"n_queries":100},
+  {"dataset":"LA","query_type":"MkNN","k":100,"compdists":104,"time_ms":117.822,"pages":0,"n_queries":100}
+]

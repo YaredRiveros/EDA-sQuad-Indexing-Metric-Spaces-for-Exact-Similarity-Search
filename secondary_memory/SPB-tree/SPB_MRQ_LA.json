@@ -1,0 +1,7 @@
+[
+  {"dataset":"LA","query_type":"MRQ","selectivity":0.02,"radius":408.823,"compdists":4,"time_ms":10.912,"pages":0,"n_queries":100},
+  {"dataset":"LA","query_type":"MRQ","selectivity":0.04,"radius":625.361,"compdists":4,"time_ms":12.02,"pages":0,"n_queries":100},
+  {"dataset":"LA","query_type":"MRQ","selectivity":0.08,"radius":957.997,"compdists":4,"time_ms":10.3663,"pages":0,"n_queries":100},
+  {"dataset":"LA","query_type":"MRQ","selectivity":0.16,"radius":1431.56,"compdists":4,"time_ms":11.3987,"pages":0,"n_queries":100},
+  {"dataset":"LA","query_type":"MRQ","selectivity":0.32,"radius":2069.03,"compdists":4,"time_ms":12.1989,"pages":0,"n_queries":100}
+]
