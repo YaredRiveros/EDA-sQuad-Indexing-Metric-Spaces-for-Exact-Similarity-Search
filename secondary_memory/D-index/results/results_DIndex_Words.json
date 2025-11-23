@@ -1,0 +1,12 @@
+[
+{"index":"DIndex","dataset":"Words","category":"D","num_levels":5,"rho":5.000000,"query_type":"MRQ","selectivity":0.020000,"radius":7.370000,"k":null,"compdists":590606.090000,"time_ms":168.926500,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Words","category":"D","num_levels":5,"rho":5.000000,"query_type":"MRQ","selectivity":0.040000,"radius":7.760000,"k":null,"compdists":590606.090000,"time_ms":168.336330,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Words","category":"D","num_levels":5,"rho":5.000000,"query_type":"MRQ","selectivity":0.080000,"radius":8.230000,"k":null,"compdists":594029.710000,"time_ms":170.180900,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Words","category":"D","num_levels":5,"rho":5.000000,"query_type":"MRQ","selectivity":0.160000,"radius":8.740000,"k":null,"compdists":594029.710000,"time_ms":172.151140,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Words","category":"D","num_levels":5,"rho":5.000000,"query_type":"MRQ","selectivity":0.320000,"radius":9.460000,"k":null,"compdists":595025.620000,"time_ms":170.090770,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Words","category":"D","num_levels":5,"rho":5.000000,"query_type":"MkNN","selectivity":null,"radius":null,"k":5,"compdists":677764.290000,"time_ms":206.051840,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Words","category":"D","num_levels":5,"rho":5.000000,"query_type":"MkNN","selectivity":null,"radius":null,"k":10,"compdists":701492.230000,"time_ms":213.046120,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Words","category":"D","num_levels":5,"rho":5.000000,"query_type":"MkNN","selectivity":null,"radius":null,"k":20,"compdists":737164.160000,"time_ms":229.362910,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Words","category":"D","num_levels":5,"rho":5.000000,"query_type":"MkNN","selectivity":null,"radius":null,"k":50,"compdists":790912.070000,"time_ms":253.019010,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Words","category":"D","num_levels":5,"rho":5.000000,"query_type":"MkNN","selectivity":null,"radius":null,"k":100,"compdists":832716.000000,"time_ms":271.143710,"pages":0.000000,"n_queries":100,"run_id":1}
+]
