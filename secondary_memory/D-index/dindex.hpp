@@ -1,19 +1,3 @@
-// ============================================================================
-// DIndex.hpp - Implementación optimizada del D-Index
-// Con pivotes HFI + compatibilidad con Chen (2022) y Dohnal (2003)
-//
-//  ✔ Usa pivotes HFI si existen (pivots/<dataset>_pivots_L.json)
-//  ✔ Fallback a pivotes aleatorios si no hay archivo
-//  ✔ Distancias almacenadas en matriz N×L contigua (RAM estable)
-//  ✔ Keys compactas base-3 (L,R,-)
-//  ✔ Buckets ligeros y precomputados
-//  ✔ MRQ y MkNN como en Chen
-//
-//  Requisitos:
-//  - ObjectDB (de objectdb.hpp) con: int size(), double distance(int,int)
-//  - IDs son índices 0..N-1 (coherente con VectorDB y StringDB)
-// ============================================================================
-
 #pragma once
 #include <bits/stdc++.h>
 #include <filesystem>
@@ -34,7 +18,6 @@ struct DataObject {
 // --- Utilidades --------------------------------------------------------------
 // ============================================================================
 
-// Lee pivotes desde archivo HFI (mismo formato que GNAT / Omni / EGNAT)
 inline vector<int> loadHFIPivots(const string &path) {
     vector<int> pivs;
 
@@ -58,7 +41,6 @@ inline vector<int> loadHFIPivots(const string &path) {
     return pivs;
 }
 
-// Codifica un vector de {L,R,-} en base 3 → clave bucket compacta
 inline uint32_t encodeKey(const vector<char>& code) {
     uint32_t k = 0;
     for (char c : code) {
@@ -70,7 +52,6 @@ inline uint32_t encodeKey(const vector<char>& code) {
     return k;
 }
 
-// Distancia mínima de q al intervalo [a,b]
 inline double lbInterval(double q, const pair<double,double>& I) {
     if (q < I.first)  return I.first - q;
     if (q > I.second) return q - I.second;
@@ -91,18 +72,17 @@ struct Bucket {
 class DIndex {
 private:
     ObjectDB* db;
-    int N;        // número de objetos (db->size())
-    size_t L;     // número de pivotes
-    double rho;   // parámetro ρ
+    int N;
+    size_t L;
+    double rho;
 
-    vector<int> pivotIds;      // IDs de pivotes (0..N-1)
+    vector<int> pivotIds;
     vector<double> pivotMedians;
 
-    // Distancias d(obj, pivot): tamaño N×L; índice: id*L + lvl, con id∈[0,N-1]
-    vector<double> distMatrix;
+    vector<double> distMatrix;  // N x L
 
     vector<Bucket> buckets;
-    unordered_map<uint32_t, size_t> bucketIndex; // key → índice en buckets
+    unordered_map<uint32_t, size_t> bucketIndex;
 
     long long compDist = 0;
     long long pageReads = 0;   // no usamos RAF pero mantenemos la API
@@ -117,7 +97,7 @@ public:
         N = db->size();
         pivotIds.resize(L);
         pivotMedians.resize(L);
-        distMatrix.resize(static_cast<size_t>(N) * L);  // RAM estable
+        distMatrix.resize(static_cast<size_t>(N) * L);
     }
 
     // ========================================================================
@@ -144,14 +124,10 @@ public:
         cerr << "[DIndex] BUILD OK\n";
     }
 
-    // ========================================================================
-    // Selección de pivotes (HFI o random)
-    // ========================================================================
     void selectPivots(const vector<DataObject>& objs,
                       uint64_t seed,
                       const string &pivotFile)
     {
-        // 1) Intentar cargar pivotes HFI
         auto hfi = loadHFIPivots(pivotFile);
 
         if (!hfi.empty() && hfi.size() >= L) {
@@ -161,7 +137,6 @@ public:
             return;
         }
 
-        // 2) Fallback → pivotes aleatorios como Chen
         cerr << "[DIndex] Using random pivots (HFI unavailable or insufficient).\n";
 
         mt19937_64 rng(seed);
@@ -169,7 +144,7 @@ public:
 
         for (size_t i = 0; i < L; i++) {
             while (true) {
-                int id = objs[rng() % objs.size()].id; // id 0..N-1
+                int id = objs[rng() % objs.size()].id;
                 if (!used.count(id)) {
                     pivotIds[i] = id;
                     used.insert(id);
@@ -179,24 +154,18 @@ public:
         }
     }
 
-    // ========================================================================
-    // Distance Matrix
-    // ========================================================================
     void computeDistanceMatrix() {
         compDist = 0;
 
         for (int id = 0; id < N; id++) {
             for (size_t j = 0; j < L; j++) {
-                double d = db->distance(id, pivotIds[j]);  // ObjectDB usa int
+                double d = db->distance(id, pivotIds[j]);
                 distMatrix[static_cast<size_t>(id) * L + j] = d;
                 compDist++;
             }
         }
     }
 
-    // ========================================================================
-    // Medianas por nivel
-    // ========================================================================
     void computeMedians() {
         vector<double> tmp(static_cast<size_t>(N));
 
@@ -211,9 +180,6 @@ public:
         }
     }
 
-    // ========================================================================
-    // Build buckets
-    // ========================================================================
     void buildBuckets() {
         vector<char> code(L);
 
@@ -245,16 +211,12 @@ public:
             }
 
             if (!assigned) {
-                // bucket de exclusión (todos '-')
                 fill(code.begin(), code.end(), '-');
                 addToBucket(id, code);
             }
         }
     }
 
-    // ========================================================================
-    // Añadir a bucket
-    // ========================================================================
     void addToBucket(int id, const vector<char>& code) {
         uint32_t key = encodeKey(code);
 
@@ -268,9 +230,6 @@ public:
         buckets[bucketIndex[key]].ids.push_back(id);
     }
 
-    // ========================================================================
-    // Intervalos del bucket
-    // ========================================================================
     void buildIntervals(Bucket& b, const vector<char>& code) {
         b.intervals.resize(L);
 
@@ -291,18 +250,19 @@ public:
     }
 
     // ========================================================================
-    // MRQ (Chen 2022)
+    // MRQ interno con distancias (Chen 2022)  // ***
     // ========================================================================
-    vector<int> MRQ(int qid, double r) {
+private:
+    vector<pair<int,double>> MRQ_withDists(int qid, double r) {
         vector<double> q(L);
 
-        // Distancias query → pivotes (cuentan en compDist)
+        // Distancias query → pivotes
         for (size_t i = 0; i < L; i++) {
             q[i] = db->distance(qid, pivotIds[i]);
             compDist++;
         }
 
-        vector<int> out;
+        vector<pair<int,double>> out;
 
         for (auto &b : buckets) {
             double LB = 0.0;
@@ -312,31 +272,41 @@ public:
                 if (LB > r) break;
             }
 
-            if (LB <= r)
-                out.insert(out.end(), b.ids.begin(), b.ids.end());
+            if (LB > r) continue;
+
+            // Buckets candidatos → verificar objetos
+            for (int id : b.ids) {
+                double d = db->distance(qid, id);
+                compDist++;
+                if (d <= r)
+                    out.push_back({id, d});
+            }
         }
 
         return out;
     }
 
+public:
     // ========================================================================
-    // MkNN (Chen 2022)
+    // MRQ público (solo IDs, pero ya verificados)  // ***
+    // ========================================================================
+    vector<int> MRQ(int qid, double r) {
+        auto vec = MRQ_withDists(qid, r);
+        vector<int> out;
+        out.reserve(vec.size());
+        for (auto &p : vec) out.push_back(p.first);
+        return out;
+    }
+
+    // ========================================================================
+    // MkNN (Chen 2022): usa MRQ_withDists para no recalcular distancias  // ***
     // ========================================================================
     vector<pair<int,double>> MkNN(int qid, size_t k) {
         double R = rho;
         vector<pair<int,double>> final;
 
         for (int iter = 0; iter < 5; iter++) {
-            auto cand = MRQ(qid, R);
-
-            vector<pair<int,double>> vec;
-            vec.reserve(cand.size());
-
-            for (int id : cand) {
-                double d = db->distance(qid, id);
-                compDist++;
-                vec.push_back({id, d});
-            }
+            auto vec = MRQ_withDists(qid, R);  // ya trae distancias y compDist
 
             sort(vec.begin(), vec.end(),
                  [](auto &a, auto &b){ return a.second < b.second; });

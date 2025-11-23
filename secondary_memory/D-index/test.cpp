@@ -5,17 +5,14 @@
 
 using namespace std;
 
-// Selectividades del paper (Chen 2022)
 static const vector<double> SELECTIVITIES = {
     0.02, 0.04, 0.08, 0.16, 0.32
 };
 
-// Valores de k usados en el paper
 static const vector<int> K_VALUES = {
     5, 10, 20, 50, 100
 };
 
-// Datasets del entorno experimental
 static const vector<string> DATASETS = {
     "LA", "Words", "Color", "Synthetic"
 };
@@ -23,15 +20,11 @@ static const vector<string> DATASETS = {
 int main() {
     srand(12345);
 
-    // Crear carpetas de salida
     std::filesystem::create_directories("results");
     std::filesystem::create_directories("dindex_indexes");
 
     for (const string &dataset : DATASETS) {
 
-        // --------------------------------------------------------------------
-        // Cargar dataset
-        // --------------------------------------------------------------------
         string dbfile = path_dataset(dataset);
         if (dbfile == "") {
             cerr << "[WARN] Dataset no encontrado: " << dataset << "\n";
@@ -56,7 +49,6 @@ int main() {
              << "   N=" << db->size() << "\n";
         cerr << "==========================================\n";
 
-        // Queries y radios precomputados
         vector<int> queries = load_queries_file(path_queries(dataset));
         auto radii          = load_radii_file(path_radii(dataset));
 
@@ -65,54 +57,37 @@ int main() {
             continue;
         }
 
-        // --------------------------------------------------------------------
-        // Archivo JSON de salida
-        // --------------------------------------------------------------------
         string jsonOut = "results/results_DIndex_" + dataset + ".json";
         ofstream J(jsonOut);
         J << "[\n";
         bool firstOutput = true;
 
-        // --------------------------------------------------------------------
-        // Configuración de D-Index como en Chen:
-        //   - l = 5 pivotes
-        //   - rho = 5.0 (puedes ajustar luego por dataset)
-        // --------------------------------------------------------------------
         const int    numLevels = 5;
         const double rho       = 5.0;
 
         cerr << "[BUILD] Construyendo D-index (l=" << numLevels
              << ", rho=" << rho << ") con pivotes HFI...\n";
 
-        // Nombre “RAF” solo para mantener la firma, no usamos disco aquí
         string rafFile = "dindex_indexes/" + dataset + "_raf.bin";
         string hfiFile = path_pivots(dataset, numLevels);
 
         DIndex dindex(rafFile, db.get(), numLevels, rho);
 
-        // --------------------------------------------------------------------
-        // Construir vector de objetos (IDs 0..N-1)
-        // --------------------------------------------------------------------
         vector<DataObject> allObjects;
         allObjects.reserve(db->size());
 
         cerr << "[BUILD] Cargando " << db->size() << " objetos...\n";
         for (int i = 0; i < db->size(); i++) {
             DataObject obj;
-            obj.id = i;       // índice 0-based, coherente con ObjectDB
+            obj.id = i;       // 0-based
             allObjects.push_back(obj);
-
-            if ((i + 1) % 200000 == 0)
-                cerr << "  " << (i + 1) << " objetos cargados\n";
         }
 
         cerr << "[BUILD] Iniciando construcción de D-index...\n";
         dindex.build(allObjects, 42, hfiFile);
         cerr << "[BUILD] OK.\n";
 
-        // ====================================================================
-        // MRQ (igual que en Chen)
-        // ====================================================================
+        // ============================ MRQ ===================================
         cerr << "\n[MRQ] Ejecutando selectividades...\n";
 
         for (double sel : SELECTIVITIES) {
@@ -121,34 +96,29 @@ int main() {
             double R = radii[sel];
             cerr << "  [MRQ] sel=" << sel << "  R=" << R << "\n";
 
-            long long totalD = 0;   // distancias totales (índice + verificación)
-            long long totalT = 0;   // tiempo (µs)
-            long long totalP = 0;   // page reads (aquí quedará en 0)
+            long long totalD = 0;
+            long long totalT = 0;
+            long long totalP = 0;
 
             for (int q : queries) {
                 dindex.clear_counters();
 
                 auto start = chrono::high_resolution_clock::now();
-                vector<int> candidates = dindex.MRQ(q, R);
+                auto results = dindex.MRQ(q, R);   // ya verificado dentro
                 auto end   = chrono::high_resolution_clock::now();
 
                 long long elapsed =
                     chrono::duration_cast<chrono::microseconds>(end - start).count();
 
-                // Verificación EXACTA: estas distancias también cuentan en compdists
-                long long verifDists = 0;
-                for (int cid : candidates) {
-                    (void)db->distance(q, cid);  // no filtramos aquí, sólo contamos
-                    verifDists++;
-                }
+                (void)results; // no hace falta usarlos aquí
 
-                totalD += dindex.get_compDist() + verifDists;
+                totalD += dindex.get_compDist();
                 totalT += elapsed;
-                totalP += dindex.get_pageReads(); // será 0, pero mantenemos la API
+                totalP += dindex.get_pageReads(); // seguirá en 0 mientras no modelemos páginas
             }
 
             double avgD   = double(totalD) / queries.size();
-            double avgTms = double(totalT) / (1000.0 * queries.size()); // µs → ms
+            double avgTms = double(totalT) / (1000.0 * queries.size());
             double avgPg  = double(totalP) / queries.size();
 
             if (!firstOutput) J << ",\n";
@@ -173,9 +143,7 @@ int main() {
               << "}";
         }
 
-        // ====================================================================
-        // MkNN (igual que en Chen)
-        // ====================================================================
+        // ============================ MkNN ==================================
         cerr << "\n[MkNN] Ejecutando valores de k...\n";
 
         for (int k : K_VALUES) {
@@ -195,7 +163,8 @@ int main() {
                 long long elapsed =
                     chrono::duration_cast<chrono::microseconds>(end - start).count();
 
-                // En MkNN, DIndex::MkNN ya suma las distancias de verificación
+                (void)knn;
+
                 totalD += dindex.get_compDist();
                 totalT += elapsed;
                 totalP += dindex.get_pageReads();
