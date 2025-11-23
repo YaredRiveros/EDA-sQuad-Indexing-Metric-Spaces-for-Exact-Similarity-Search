@@ -19,9 +19,9 @@ class DSACLT {
     struct Node {
         int center;                   // id del centro (objeto de ObjectDB)
         double R;                     // covering radius del subárbol
-        vector<int> neighbors;        // índices de vecinos N(a) (en 'nodes'), en orden creciente de timestamp
+        vector<int> neighbors;        // índices de vecinos N(a) (en 'nodes')
         vector<int> cluster;          // ids de objetos en cluster(a)
-        vector<double> clusterDist;   // d'(xi) = d(center(a), xi), mismo orden que 'cluster'
+        vector<double> clusterDist;   // d'(xi) = d(center(a), xi)
         int time;                     // time(a): momento de creación del nodo
 
         Node(int c = -1)
@@ -30,16 +30,13 @@ class DSACLT {
 
     ObjectDB* db;
     vector<Node> nodes;        // pool de nodos
-    int rootIdx;               // índice del nodo raíz en 'nodes'
-    int maxArity;              // MaxArity (cota superior del grado)
+    int rootIdx;               // índice del nodo raíz
+    int maxArity;              // MaxArity
     int kCluster;              // k = tamaño máximo de cluster
-    int currentTime;           // CurrentTime global (timestamps)
-    long long compDist;        // contador de evaluaciones de distancia
-    long long pageReads;       // contador aproximado de accesos a página (nodos visitados)
-
-    // Timestamps por objeto (no estrictamente necesarios para Algorithm 4,
-    // pero útiles si luego quieres extender podas tipo DSA-tree).
-    vector<int> objTimestamp;
+    int currentTime;           // CurrentTime global
+    long long compDist;        // contador de distancias
+    long long pageReads;       // contador aproximado de accesos de página
+    vector<int> objTimestamp;  // timestamp de objetos (si luego lo necesitas)
 
     // ------------------------
     //  Utilidades internas
@@ -53,34 +50,30 @@ class DSACLT {
     int newNode(int centerId) {
         Node n(centerId);
         n.R = 0.0;
+        n.time = ++currentTime;
         n.neighbors.clear();
         n.cluster.clear();
         n.clusterDist.clear();
-        n.time = ++currentTime;           // tiempo de creación del nodo
         int idx = (int)nodes.size();
         nodes.push_back(n);
         return idx;
     }
 
-    // rc(a) = radio de cluster(a) = distancia al elemento más lejano del cluster
     double rc(const Node& a) const {
         if (a.clusterDist.empty())
             return 0.0;
         return a.clusterDist.back();
     }
 
-    // Inserta (x, d_ax) en el cluster(aIdx) manteniendo orden creciente por distancia
     void insertIntoClusterSorted(int aIdx, int xId, double d_ax) {
         Node& a = nodes[aIdx];
         auto it = lower_bound(a.clusterDist.begin(), a.clusterDist.end(), d_ax);
         size_t pos = (size_t)distance(a.clusterDist.begin(), it);
         a.clusterDist.insert(a.clusterDist.begin() + (long long)pos, d_ax);
         a.cluster.insert(a.cluster.begin() + (long long)pos, xId);
-        objTimestamp[xId] = ++currentTime;    // momento de inserción en el cluster
+        objTimestamp[xId] = ++currentTime;
     }
 
-    // Devuelve índice del vecino c ∈ N(a) tal que d(center(c), x) es mínima.
-    // Se asume que N(a) no está vacío.
     int argminNeighborCenterDist(int aIdx, int xId) {
         Node& a = nodes[aIdx];
         double best = numeric_limits<double>::infinity();
@@ -95,76 +88,70 @@ class DSACLT {
         return bestIdx;
     }
 
-    // ------------------------
-    //  InsertCl (Algorithm 3)
-    // ------------------------
-    void insertCl(int aIdx, int xId) {
-        Node& a = nodes[aIdx];
+    // ----------------------------------------------------
+    // InsertCl (Algorithm 3) versión ITERATIVA
+    // ----------------------------------------------------
+    void insertCl(int startIdx, int xId) {
+        int aIdx = startIdx;
+        int obj  = xId;
 
-        // 1. R(a) ← max(R(a), d(center(a), x))
-        double d_ax = dist_obj(a.center, xId);
-        if (d_ax > a.R) a.R = d_ax;
+        while (true) {
+            Node& a = nodes[aIdx];
 
-        double rc_a = rc(a);
+            double d_ax = dist_obj(a.center, obj);
+            if (d_ax > a.R) a.R = d_ax;
 
-        // 2. If ((|cluster(a)| < k) ∨ (d(center(a), x) < rc(a))) Then ...
-        if ((int)a.cluster.size() < kCluster || d_ax < rc_a) {
-            // 3. cluster(a) ← cluster(a) ∪ {x}
-            // 4. d'(x) ← d(center(a), x)
-            // 5. timestamp(x) ← CurrentTime
-            insertIntoClusterSorted(aIdx, xId, d_ax);
+            double rc_a = rc(a);
 
-            // 6. If (|cluster(a)| = k + 1) Then
-            if ((int)a.cluster.size() == kCluster + 1) {
-                // 7. y ← argmax_z∈cluster(a) d'(z) -> último en la lista ordenada
-                int yId = a.cluster.back();
+            // Caso 1: entra al cluster(a)
+            if ((int)a.cluster.size() < kCluster || d_ax < rc_a) {
+                insertIntoClusterSorted(aIdx, obj, d_ax);
 
-                // 8. cluster(a) ← cluster(a) − {y}
-                a.cluster.pop_back();
-                a.clusterDist.pop_back();
+                if ((int)a.cluster.size() == kCluster + 1) {
+                    // y = objeto más lejano del cluster(a)
+                    int yId = a.cluster.back();
+                    a.cluster.pop_back();
+                    a.clusterDist.pop_back();
 
-                // 9. InsertCl(a, y)
-                insertCl(aIdx, yId);
-            }
-        } else {
-            // 10. Else
-            // 11. c ← argmin_{b∈N(a)} d(center(b), x)
-
-            // Caso especial: N(a) vacío -> creamos vecino nuevo si es posible
-            if (a.neighbors.empty()) {
-                if ((int)a.neighbors.size() < maxArity) {
-                    int bIdx = newNode(xId);
-                    a.neighbors.push_back(bIdx);   // más nuevo al final
+                    // repetir el proceso con y en el mismo nodo a
+                    obj = yId;
+                    continue;  // volvemos al while con mismo aIdx, obj=y
                 }
-                // Si maxArity = 0, simplemente no insertamos más vecinos
-                return;
+                // no hay overflow de cluster -> terminamos inserción
+                break;
             }
 
-            int cIdx = argminNeighborCenterDist(aIdx, xId);
-            double d_cx = dist_obj(nodes[cIdx].center, xId);
+            // Caso 2: no entra al cluster -> ir a vecinos
+            if (a.neighbors.empty()) {
+                if (maxArity > 0 && (int)a.neighbors.size() < maxArity) {
+                    int bIdx = newNode(obj);
+                    // recuperar referencia por si nodes realoca (aunque hemos reservado)
+                    nodes[aIdx].neighbors.push_back(bIdx);
+                }
+                // si maxArity==0 o lleno, no insertamos más (quedaría fuera del índice)
+                break;
+            }
 
-            // 12. If d(center(a), x) < d(center(c), x) ∧ |N(a)| < MaxArity Then ...
-            if (d_ax < d_cx && (int)a.neighbors.size() < maxArity) {
-                // 13-16. Crear nuevo nodo b con center(b) = x y vecinos vacíos
-                int bIdx = newNode(xId);
+            int cIdx = argminNeighborCenterDist(aIdx, obj);
+            double d_cx = dist_obj(nodes[cIdx].center, obj);
 
-                // 13. N(a) ← N(a) ∪ {b}
-                a.neighbors.push_back(bIdx);
-
-                // 15. N(b) ← ∅, 16. cluster(b) ← ∅ ya se hicieron en newNode
-                // 17. timestamp(x) ← CurrentTime (ya se asignó en newNode)
-                // 18. time(b) ← CurrentTime (ya se asignó en newNode)
+            if (d_ax < d_cx && (int)nodes[aIdx].neighbors.size() < maxArity) {
+                // Creamos nuevo nodo b con center=obj
+                int bIdx = newNode(obj);
+                nodes[aIdx].neighbors.push_back(bIdx);
+                break;
             } else {
-                // 19-20. Else InsertCl(c, x)
-                insertCl(cIdx, xId);
+                // Continuar bajando por el vecino c (tail recursion -> loop)
+                aIdx = cIdx;
+                // obj se mantiene
+                continue;
             }
         }
     }
 
-    // ------------------------
-    //  RangeSearchCl (Algorithm 4)
-    //  Se llama con t = CurrentTime inicial.
-    // ------------------------
+    // ----------------------------------------------------
+    // RangeSearchCl (Algorithm 4)
+    // ----------------------------------------------------
     void rangeSearchCl(
         int aIdx,
         int qId,
@@ -174,52 +161,42 @@ class DSACLT {
         vector<double>& centerDistCache
     ) {
         Node& a = nodes[aIdx];
-        pageReads++;  // una visita a nodo ~ acceso de página
+        pageReads++;
 
-        // Cache d(center(a), q) para no evaluarla más de una vez por nodo
         if (centerDistCache[aIdx] < 0.0) {
             centerDistCache[aIdx] = dist_obj(a.center, qId);
         }
         double d_aq = centerDistCache[aIdx];
 
-        // 1. If time(a) < t ∧ d(center(a), q) ≤ R(a) + r Then
-        if (!(a.time < t && d_aq <= a.R + r)) return;
+        if (!(a.time < t && d_aq <= a.R + r))
+            return;
 
-        // 2. If d(center(a), q) ≤ r Then Report a
         if (d_aq <= r) {
             out.push_back(a.center);
         }
 
         double rc_a = rc(a);
 
-        // 3. If (d(center(a), q) − r ≤ rc(a)) ∨ (d(center(a), q) + r ≤ rc(a)) Then
         if ((d_aq - r <= rc_a) || (d_aq + r <= rc_a)) {
-            // 4. For ci ∈ cluster(a) Do
             for (size_t i = 0; i < a.cluster.size(); ++i) {
                 int ci = a.cluster[i];
-                double dprime = a.clusterDist[i]; // d'(ci)
+                double dprime = a.clusterDist[i];
 
-                // 5. If |d(center(a), q) − d'(ci)| ≤ r Then
                 if (fabs(d_aq - dprime) <= r) {
-                    // 6. If d(ci, q) ≤ r Then Report ci
                     double d_ciq = dist_obj(ci, qId);
                     if (d_ciq <= r) {
                         out.push_back(ci);
                     }
                 }
             }
-            // 7. If d(center(a), q) + r < rc(a) Then Return
             if (d_aq + r < rc_a) return;
         }
 
-        // 8. dmin ← ∞
         double dmin = numeric_limits<double>::infinity();
 
-        // 9. For bi ∈ N(a) in increasing order of timestamp Do
         size_t nb = a.neighbors.size();
         if (nb == 0) return;
 
-        // Cache de distancias d(center(bi), q) para todos los vecinos una sola vez
         vector<double> d_nb(nb, -1.0);
         for (size_t i = 0; i < nb; ++i) {
             int biIdx = a.neighbors[i];
@@ -233,11 +210,7 @@ class DSACLT {
             int biIdx = a.neighbors[i];
             double d_bi_q = d_nb[i];
 
-            // 10. If d(center(bi), q) ≤ dmin + 2r Then
             if (d_bi_q <= dmin + 2.0 * r) {
-                // 11. k ← min { j > i, d(center(bi), q) > d(center(bj), q) + 2r }
-                // Adaptación de Algorithm 2 de DSA-tree:
-                // t' = min{t} ∪ { time(bj), j>i ∧ d(bi,q) > d(bj,q) + 2r }
                 int tNext = t;
                 for (size_t j = i + 1; j < nb; ++j) {
                     double d_bj_q = d_nb[j];
@@ -247,21 +220,17 @@ class DSACLT {
                     }
                 }
 
-                // 12. RangeSearchCl (bi, q, r, time(bk))  -> usamos tNext
                 rangeSearchCl(biIdx, qId, r, tNext, out, centerDistCache);
 
-                // 13. dmin ← min{dmin, d(center(bi), q)}
                 if (d_bi_q < dmin) dmin = d_bi_q;
             }
         }
     }
 
 public:
-    DSACLT(
-        ObjectDB* database,
-        int maxArity_ = 32,
-        int kCluster_ = 10
-    )
+    DSACLT(ObjectDB* database,
+           int maxArity_ = 32,
+           int kCluster_ = 10)
         : db(database),
           rootIdx(-1),
           maxArity(maxArity_),
@@ -274,21 +243,19 @@ public:
         objTimestamp.assign(n, 0);
     }
 
-    // Construye el árbol incrementalmente insertando todos los objetos 0..n-1
+    // Construcción incremental insertando 0..N-1
     void build() {
         nodes.clear();
+        int n = db->size();
+        nodes.reserve(n);          // ⚠️ IMPORTANTE: evita realocaciones
         rootIdx = -1;
         currentTime = 0;
         compDist = 0;
         pageReads = 0;
-
-        int n = db->size();
         objTimestamp.assign(n, 0);
 
         for (int x = 0; x < n; ++x) {
             if (rootIdx == -1) {
-                // Primer elemento crea el nodo raíz:
-                // center(a) = x, rc(a) = 0, cluster(a)=∅, N(a)=∅, R(a)=0
                 rootIdx = newNode(x);
             } else {
                 insertCl(rootIdx, x);
@@ -296,27 +263,21 @@ public:
         }
     }
 
-    // ------------------------
-    //  MRQ: Range Query (Algorithm 4)
-    // ------------------------
+    // MRQ
     vector<int> MRQ(int qId, double r) {
         vector<int> result;
         if (rootIdx == -1) return result;
         vector<double> centerDistCache(nodes.size(), -1.0);
-        int t0 = numeric_limits<int>::max(); // CurrentTime "infinito"
+        int t0 = numeric_limits<int>::max();
         rangeSearchCl(rootIdx, qId, r, t0, result, centerDistCache);
         return result;
     }
 
-    // ------------------------
-    //  MkNN: búsqueda k-NN
-    //  (Extensión best-first sobre DSACL-tree usando R(a) como cota)
-    // ------------------------
+    // MkNN (extensión best-first)
     vector<DSACLTResultElem> MkNN(int qId, int k) {
         vector<DSACLTResultElem> ans;
         if (k <= 0 || rootIdx == -1) return ans;
 
-        // Distancias memoizadas a centros y a objetos
         vector<double> centerDistCache(nodes.size(), -1.0);
         int nObjs = db->size();
         vector<double> objDistCache(nObjs, -1.0);
@@ -335,70 +296,63 @@ public:
             return objDistCache[objId];
         };
 
-        // Best-first con elementos tipo (lb, tipo, nodeIdx, objId)
         struct Item {
             double lb;
             int nodeIdx;
-            int objId;   // -1 si es nodo, >=0 si es objeto concreto
+            int objId;   // -1 -> nodo; >=0 -> objeto
         };
         struct Cmp {
             bool operator()(const Item& a, const Item& b) const {
-                return a.lb > b.lb;  // min-heap
+                return a.lb > b.lb;
             }
         };
 
         priority_queue<Item, vector<Item>, Cmp> H;
 
-        // Inserta nodo con cota lb usando covering radius
         auto pushNode = [&](int nodeIdx) {
             double d_cq = getCenterDist(nodeIdx);
             double lb = max(0.0, d_cq - nodes[nodeIdx].R);
             H.push({lb, nodeIdx, -1});
         };
 
-        // inicializamos con raíz
         pushNode(rootIdx);
-
-        double tau = numeric_limits<double>::infinity();  // radio actual (distancia del peor vecino entre los k mejores)
+        double tau = numeric_limits<double>::infinity();
 
         while (!H.empty()) {
             Item it = H.top(); H.pop();
-            if (it.lb > tau) break;  // nada mejor puede encontrarse
+            if (it.lb > tau) break;
 
             if (it.objId >= 0) {
-                // objeto concreto
                 double d = getObjDist(it.objId);
                 if (d > tau) continue;
                 ans.push_back({it.objId, d});
                 if ((int)ans.size() > k) {
-                    // mantenemos solo los k mejores
                     nth_element(ans.begin(), ans.begin() + k, ans.end(),
-                                [](const DSACLTResultElem& a, const DSACLTResultElem& b) {
+                                [](const DSACLTResultElem& a,
+                                   const DSACLTResultElem& b) {
                                     return a.dist < b.dist;
                                 });
                     ans.resize(k);
                 }
                 if ((int)ans.size() == k) {
-                    // actualizamos tau
                     double worst = 0.0;
                     for (auto& e : ans) worst = max(worst, e.dist);
                     tau = worst;
                 }
             } else {
-                // nodo
                 int aIdx = it.nodeIdx;
                 Node& a = nodes[aIdx];
-                pageReads++;  // visita de nodo
+                pageReads++;
 
                 double d_aq = getCenterDist(aIdx);
 
-                // Centro como candidato
                 double d_center = d_aq;
                 if (d_center <= tau) {
                     ans.push_back({a.center, d_center});
                     if ((int)ans.size() > k) {
                         nth_element(ans.begin(), ans.begin() + k, ans.end(),
-                                    [](const DSACLTResultElem& x, const DSACLTResultElem& y) {
+                                    [](const DSACLTResultElem& x,
+                                       const DSACLTResultElem& y) {
                                         return x.dist < y.dist;
                                     });
                         ans.resize(k);
@@ -410,23 +364,21 @@ public:
                     }
                 }
 
-                // Cluster(a): usamos d'(xi) y d_aq para podar con desigualdad triangular
                 double rc_a = rc(a);
                 if (!a.cluster.empty()) {
-                    // si el cluster está completamente más allá de tau alrededor del centro, podemos podar
-                    // pero como tau puede ser grande o infinito, hacemos poda por elemento
                     for (size_t i = 0; i < a.cluster.size(); ++i) {
                         int xi = a.cluster[i];
-                        double dprime = a.clusterDist[i]; // d(center(a), xi)
-                        // lower bound |d(center(a),q) - d(center(a),xi)|
+                        double dprime = a.clusterDist[i];
                         double lb_obj = fabs(d_aq - dprime);
-                        if (lb_obj > tau) continue;  // seguro peor que tau
+                        if (lb_obj > tau) continue;
                         double dxi = getObjDist(xi);
                         if (dxi <= tau) {
                             ans.push_back({xi, dxi});
                             if ((int)ans.size() > k) {
-                                nth_element(ans.begin(), ans.begin() + k, ans.end(),
-                                            [](const DSACLTResultElem& u, const DSACLTResultElem& v) {
+                                nth_element(ans.begin(), ans.begin() + k,
+                                            ans.end(),
+                                            [](const DSACLTResultElem& u,
+                                               const DSACLTResultElem& v) {
                                                 return u.dist < v.dist;
                                             });
                                 ans.resize(k);
@@ -440,7 +392,6 @@ public:
                     }
                 }
 
-                // Vecinos: encolamos sus subárboles con cota basada en covering radius
                 for (int nbIdx : a.neighbors) {
                     double d_nbq = getCenterDist(nbIdx);
                     double lb_nb = max(0.0, d_nbq - nodes[nbIdx].R);
@@ -459,9 +410,7 @@ public:
         return ans;
     }
 
-    // ------------------------
-    //  Estadísticas
-    // ------------------------
+    // Estadísticas
     long long get_compDist() const { return compDist; }
     long long get_pageReads() const { return pageReads; }
 
