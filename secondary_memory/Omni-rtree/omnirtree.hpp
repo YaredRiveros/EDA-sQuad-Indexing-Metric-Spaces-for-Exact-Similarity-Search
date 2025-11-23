@@ -10,53 +10,62 @@
 using namespace std;
 
 /*** -----------------------------
+    Parámetros de simulación de disco
+    ----------------------------- ***/
+static const size_t OMNI_PAGE_SIZE = 4096; // bytes por página lógica
+
+/*** -----------------------------
     RAF (Random Access File) simulator
     ----------------------------- ***/
 class RAF {
     string filename;
     unordered_map<int, streampos> offsets;
-    
+
 public:
     RAF(const string& fname) : filename(fname) {}
-    
+
     void clear() {
         offsets.clear();
         ofstream ofs(filename, ios::binary | ios::trunc);
         ofs.close();
     }
-    
+
+    // Escribe un registro para objId y retorna la posición en el archivo
     streampos append(int objId, const vector<double>& data) {
         ofstream ofs(filename, ios::binary | ios::app);
         streampos pos = ofs.tellp();
-        
-        // Write: objId (4 bytes), size (8 bytes), data (size * 8 bytes)
-        ofs.write((const char*)&objId, sizeof(objId));
+
+        int id = objId;
         uint64_t sz = data.size();
+
+        ofs.write((const char*)&id, sizeof(id));
         ofs.write((const char*)&sz, sizeof(sz));
         ofs.write((const char*)data.data(), sz * sizeof(double));
-        
+
         ofs.close();
         offsets[objId] = pos;
         return pos;
     }
-    
+
+    // Lectura completa del registro (no la usamos realmente para Omni,
+    // pero queda disponible por si la necesitas)
     vector<double> read(int objId) {
         if (offsets.find(objId) == offsets.end()) {
             throw runtime_error("RAF: object not found");
         }
-        
+
         ifstream ifs(filename, ios::binary);
         ifs.seekg(offsets[objId]);
-        
+
         int id;
         uint64_t sz;
         ifs.read((char*)&id, sizeof(id));
         ifs.read((char*)&sz, sizeof(sz));
-        
+
         vector<double> data(sz);
         ifs.read((char*)data.data(), sz * sizeof(double));
         ifs.close();
-        
+
         return data;
     }
 };
@@ -67,14 +76,14 @@ public:
 struct MBB {
     vector<double> low;
     vector<double> high;
-    
+
     MBB() {}
-    
+
     MBB(size_t dim) {
         low.assign(dim, numeric_limits<double>::infinity());
         high.assign(dim, -numeric_limits<double>::infinity());
     }
-    
+
     void expandWithPoint(const vector<double>& p) {
         if (low.empty()) {
             low = p;
@@ -86,7 +95,7 @@ struct MBB {
             high[i] = max(high[i], p[i]);
         }
     }
-    
+
     void expandWithMBB(const MBB& m) {
         if (low.empty()) {
             low = m.low;
@@ -98,9 +107,9 @@ struct MBB {
             high[i] = max(high[i], m.high[i]);
         }
     }
-    
+
     size_t dim() const { return low.size(); }
-    
+
     // Intersección con hiper-rectángulo de búsqueda: [q_i - r, q_i + r]
     bool intersectsHyperRect(const vector<double>& qMap, double r) const {
         for (size_t i = 0; i < qMap.size(); i++) {
@@ -110,8 +119,8 @@ struct MBB {
         }
         return true;
     }
-    
-    // Lower bound usando triangular inequality en espacio pivotado
+
+    // Lower bound al hiper-rectángulo centrado en qMap (∞-norm)
     double lowerBoundToQuery(const vector<double>& qMap) const {
         double lb = 0.0;
         for (size_t i = 0; i < qMap.size(); i++) {
@@ -119,15 +128,15 @@ struct MBB {
             double lo = low[i];
             double hi = high[i];
             double md = 0.0;
-            
+
             if (qv < lo) md = lo - qv;
             else if (qv > hi) md = qv - hi;
-            
+
             lb = max(lb, md);
         }
         return lb;
     }
-    
+
     double volume() const {
         double vol = 1.0;
         for (size_t i = 0; i < low.size(); i++) {
@@ -140,24 +149,26 @@ struct MBB {
 /*** -----------------------------
     R-tree Node & Entry
     ----------------------------- ***/
+struct RTreeNode;
+
 struct RTreeEntry {
     MBB box;
     bool isLeafEntry;
-    
+
     // Leaf entry
     int objectId;
     vector<double> mappedPoint;
-    
+
     // Internal entry
-    struct RTreeNode* child;
-    
+    RTreeNode* child;
+
     RTreeEntry() : isLeafEntry(true), objectId(-1), child(nullptr) {}
 };
 
 struct RTreeNode {
     bool isLeaf;
     vector<RTreeEntry> entries;
-    
+
     RTreeNode(bool leaf = false) : isLeaf(leaf) {}
 };
 
@@ -168,7 +179,7 @@ class RTree {
     size_t maxEntries;
     size_t minEntries;
     RTreeNode* root;
-    
+
     void freeNode(RTreeNode* n) {
         if (!n) return;
         if (!n->isLeaf) {
@@ -176,7 +187,7 @@ class RTree {
         }
         delete n;
     }
-    
+
     MBB computeNodeMBB(RTreeNode* node) {
         if (node->entries.empty()) return MBB();
         MBB m(node->entries[0].box.dim());
@@ -185,7 +196,7 @@ class RTree {
         }
         return m;
     }
-    
+
     vector<double> center(const MBB& m) {
         vector<double> c(m.dim());
         for (size_t i = 0; i < m.dim(); i++) {
@@ -193,14 +204,14 @@ class RTree {
         }
         return c;
     }
-    
+
     pair<RTreeNode*, RTreeNode*> splitNode(RTreeNode* node) {
         RTreeNode* n1 = new RTreeNode(node->isLeaf);
         RTreeNode* n2 = new RTreeNode(node->isLeaf);
-        
+
         size_t n = node->entries.size();
         if (n == 0) return {n1, n2};
-        
+
         // Linear split: pick two seeds with max separation
         double bestDist = -1;
         size_t s1 = 0, s2 = 0;
@@ -220,32 +231,32 @@ class RTree {
                 }
             }
         }
-        
+
         n1->entries.push_back(node->entries[s1]);
         n2->entries.push_back(node->entries[s2]);
-        
+
         // Assign rest by minimal enlargement
         for (size_t i = 0; i < n; i++) {
             if (i == s1 || i == s2) continue;
-            
+
             RTreeEntry& e = node->entries[i];
             MBB mb1 = computeNodeMBB(n1);
             MBB mb2 = computeNodeMBB(n2);
-            
+
             MBB m1 = mb1; m1.expandWithMBB(e.box);
             MBB m2 = mb2; m2.expandWithMBB(e.box);
-            
+
             double area1 = m1.volume() - mb1.volume();
             double area2 = m2.volume() - mb2.volume();
-            
+
             if (area1 < area2) n1->entries.push_back(e);
             else n2->entries.push_back(e);
         }
-        
+
         delete node;
         return {n1, n2};
     }
-    
+
     void insertRec(RTreeNode* node, const RTreeEntry& e) {
         if (node->isLeaf) {
             node->entries.push_back(e);
@@ -253,53 +264,53 @@ class RTree {
             // Choose child minimizing area enlargement
             double bestInc = numeric_limits<double>::infinity();
             size_t bestIdx = 0;
-            
+
             for (size_t i = 0; i < node->entries.size(); i++) {
                 MBB oldBox = node->entries[i].box;
                 MBB merged = oldBox;
                 merged.expandWithMBB(e.box);
-                
+
                 double oldArea = oldBox.volume();
                 double newArea = merged.volume();
                 double inc = newArea - oldArea;
-                
+
                 if (inc < bestInc) {
                     bestInc = inc;
                     bestIdx = i;
                 }
             }
-            
+
             insertRec(node->entries[bestIdx].child, e);
             node->entries[bestIdx].box.expandWithMBB(e.box);
-            
+
             // Split if needed
             if (node->entries[bestIdx].child->entries.size() > maxEntries) {
                 auto [n1, n2] = splitNode(node->entries[bestIdx].child);
-                
+
                 RTreeEntry e1, e2;
                 e1.isLeafEntry = false;
                 e1.child = n1;
                 e1.box = computeNodeMBB(n1);
-                
+
                 e2.isLeafEntry = false;
                 e2.child = n2;
                 e2.box = computeNodeMBB(n2);
-                
+
                 node->entries.erase(node->entries.begin() + bestIdx);
                 node->entries.insert(node->entries.begin() + bestIdx, e2);
                 node->entries.insert(node->entries.begin() + bestIdx, e1);
             }
         }
     }
-    
+
 public:
     RTree(size_t maxE = 16) : maxEntries(maxE) {
         minEntries = maxEntries / 2;
         root = new RTreeNode(true);
     }
-    
+
     ~RTree() { freeNode(root); }
-    
+
     void insert(const vector<double>& mappedPoint, int objectId) {
         RTreeEntry e;
         e.isLeafEntry = true;
@@ -307,34 +318,34 @@ public:
         e.mappedPoint = mappedPoint;
         e.box = MBB(mappedPoint.size());
         e.box.expandWithPoint(mappedPoint);
-        
+
         insertRec(root, e);
-        
+
         if (root->entries.size() > maxEntries) {
             auto [n1, n2] = splitNode(root);
             RTreeNode* newRoot = new RTreeNode(false);
-            
+
             RTreeEntry e1, e2;
             e1.isLeafEntry = false;
             e1.child = n1;
             e1.box = computeNodeMBB(n1);
-            
+
             e2.isLeafEntry = false;
             e2.child = n2;
             e2.box = computeNodeMBB(n2);
-            
+
             newRoot->entries.push_back(e1);
             newRoot->entries.push_back(e2);
             root = newRoot;
         }
     }
-    
+
     void rangeRec(RTreeNode* node, const vector<double>& qMap, double r, vector<int>& res) {
         for (auto& e : node->entries) {
             if (!e.box.intersectsHyperRect(qMap, r)) {
-                continue; // Prune by Lemma 4.1
+                continue; // Prune por Lemma 4.1
             }
-            
+
             if (node->isLeaf) {
                 res.push_back(e.objectId);
             } else {
@@ -342,33 +353,37 @@ public:
             }
         }
     }
-    
+
     vector<int> rangeQuery(const vector<double>& qMap, double r) {
         vector<int> result;
         rangeRec(root, qMap, r, result);
         return result;
     }
-    
+
     struct NodePQ {
         RTreeNode* node;
         double lb;
         bool operator<(const NodePQ& o) const { return lb > o.lb; }
     };
-    
+
     struct EntryPQ {
         int oid;
         double lb;
         bool operator<(const EntryPQ& o) const { return lb > o.lb; }
     };
-    
+
     vector<pair<double, int>> knnQuery(const vector<double>& qMap, size_t k,
-                                        function<double(int)> verifyDistFunc) {
+                                       function<double(int)> verifyDistFunc) {
         priority_queue<NodePQ> nodePQ;
         priority_queue<EntryPQ> leafPQ;
         vector<pair<double, int>> result;
-        
-        nodePQ.push({root, root->entries.empty() ? 0.0 : computeNodeMBB(root).lowerBoundToQuery(qMap)});
-        
+
+        if (!root->entries.empty()) {
+            nodePQ.push({root, computeNodeMBB(root).lowerBoundToQuery(qMap)});
+        } else {
+            nodePQ.push({root, 0.0});
+        }
+
         while ((!nodePQ.empty() || !leafPQ.empty()) && result.size() < k) {
             if (!leafPQ.empty()) {
                 double bestLeafLB = leafPQ.top().lb;
@@ -376,7 +391,7 @@ public:
                     auto nitem = nodePQ.top();
                     nodePQ.pop();
                     RTreeNode* node = nitem.node;
-                    
+
                     if (node->isLeaf) {
                         for (auto& e : node->entries) {
                             double lb = e.box.lowerBoundToQuery(qMap);
@@ -391,7 +406,7 @@ public:
                     continue;
                 }
             }
-            
+
             if (!leafPQ.empty()) {
                 auto ent = leafPQ.top();
                 leafPQ.pop();
@@ -400,12 +415,12 @@ public:
                 if (result.size() == k) break;
                 continue;
             }
-            
+
             if (!nodePQ.empty()) {
                 auto nitem = nodePQ.top();
                 nodePQ.pop();
                 RTreeNode* node = nitem.node;
-                
+
                 if (node->isLeaf) {
                     for (auto& e : node->entries) {
                         double lb = e.box.lowerBoundToQuery(qMap);
@@ -419,7 +434,7 @@ public:
                 }
             }
         }
-        
+
         sort(result.begin(), result.end());
         if (result.size() > k) result.resize(k);
         return result;
@@ -435,114 +450,198 @@ class OmniRTree {
     vector<int> pivots;
     RTree rtree;
     RAF raf;
-    
+
     // Counters
     long long compDist;
     long long pageReads;
-    
-    // Cache de vectores mapeados
+
+    // Cache de vectores mapeados (opcional)
     unordered_map<int, vector<double>> mappedCache;
-    
+
+    // Mapeo objeto -> página lógica en RAF
+    unordered_map<int, int> objPage;
+
+    // Páginas tocadas en la consulta actual (para contar páginas distintas)
+    unordered_set<int> pagesAccessed;
+
+    // Inicia contadores para una nueva consulta
+    void startQuery() {
+        compDist = 0;
+        pageReads = 0;
+        pagesAccessed.clear();
+    }
+
+    // Registra acceso a página de un objeto (data-page)
+    void registerPageAccess(int objId) {
+        auto it = objPage.find(objId);
+        if (it == objPage.end()) return; // por si acaso
+        int pg = it->second;
+        if (pagesAccessed.insert(pg).second) {
+            // Primera vez que vemos esta página en la consulta
+            pageReads++;
+        }
+    }
+
 public:
-    OmniRTree(ObjectDB* database, int l_pivots, size_t rtreeNodeCap = 32)
-        : db(database), num_pivots(l_pivots), rtree(rtreeNodeCap),
-          raf("omni_raf.bin"), compDist(0), pageReads(0) {}
-    
-    void build(const string& indexFile) {
+    // rafFile: ruta del archivo RAF (como en DIndex)
+    OmniRTree(const string& rafFile, ObjectDB* database,
+              int l_pivots, size_t rtreeNodeCap = 32)
+        : db(database),
+          num_pivots(l_pivots),
+          rtree(rtreeNodeCap),
+          raf(rafFile),
+          compDist(0),
+          pageReads(0) {}
+
+    // Carga pivotes desde archivo HFI y construye el índice sobre *todos* los objetos [0..N-1]
+    //
+    // Formato esperado del archivo de pivotes:
+    //   - enteros separados por espacios o saltos de línea
+    //   - se toman los primeros num_pivots IDs que se encuentren
+    void build(const string& pivotsFile) {
         raf.clear();
         pivots.clear();
         mappedCache.clear();
-        
-        // Selección aleatoria de pivotes
-        vector<int> allIds;
-        for (int i = 0; i < db->size(); i++) {
-            allIds.push_back(i);
+        objPage.clear();
+
+        // -----------------------------
+        // 1) Leer pivotes desde archivo HFI
+        // -----------------------------
+        ifstream in(pivotsFile);
+        if (!in.is_open()) {
+            throw runtime_error("OmniRTree::build - no se pudo abrir pivotsFile: " + pivotsFile);
         }
-        
-        random_shuffle(allIds.begin(), allIds.end());
-        for (int i = 0; i < num_pivots && i < (int)allIds.size(); i++) {
-            pivots.push_back(allIds[i]);
+
+        string token;
+    while (in >> token) {
+        // eliminar [, ], , y espacios raros
+        token.erase(remove_if(token.begin(), token.end(), [](char c) {
+            return c == '[' || c == ']' || c == ',';
+        }), token.end());
+
+        if (token.empty()) continue;
+
+        // solo aceptamos tokens que son todo dígitos
+        if (all_of(token.begin(), token.end(), ::isdigit)) {
+            int pid = stoi(token);
+            pivots.push_back(pid);
+            if ((int)pivots.size() == num_pivots) break;
         }
-        
-        cout << "[BUILD] Pivotes seleccionados: " << pivots.size() << "\n";
-        cout << "[BUILD] Iniciando mapeo e inserción de " << db->size() << " objetos...\n" << flush;
-        
-        // Construir índice: mapear cada objeto y agregarlo al R-tree
+    }
+    in.close();
+
+        if ((int)pivots.size() < num_pivots) {
+            cerr << "[WARN][OmniRTree] Solo se leyeron " << pivots.size()
+                 << " pivotes de " << num_pivots << " requeridos. "
+                 << "Se usarán los disponibles.\n";
+        }
+
+        cerr << "[BUILD][OmniRTree] Pivotes HFI cargados: " << pivots.size() << "\n";
+        cerr << "[BUILD][OmniRTree] Indexando " << db->size() << " objetos...\n";
+
+        // -----------------------------
+        // 2) Construir índice: mapear cada objeto e insertarlo en el R-tree
+        //    y simular layout en RAF para medir pages
+        // -----------------------------
         for (int objId = 0; objId < db->size(); objId++) {
             vector<double> mapped = mapObject(objId);
             mappedCache[objId] = mapped;
-            
-            // Simular escritura a RAF (no estrictamente necesario para búsqueda)
-            // pero lo hacemos para simular el overhead de disco
+
+            // Simular escritura en RAF: un registro por objeto
+            // (puedes cambiar el tamaño de "dummy" si quieres)
             vector<double> dummy(1, 0.0);
-            raf.append(objId, dummy);
-            
+            streampos pos = raf.append(objId, dummy);
+
+            // Calcular página lógica en la que cae este registro
+            long long offset = (long long)pos;
+            int pageId = (int)(offset / (long long)OMNI_PAGE_SIZE);
+            objPage[objId] = pageId;
+
+            // Insertar en R-tree
             rtree.insert(mapped, objId);
-            
-            if ((objId + 1) % 1000 == 0 || objId == 0) {
-                cout << "  Indexados " << (objId + 1) << " objetos (" 
-                     << (int)((objId + 1) * 100.0 / db->size()) << "%)\n" << flush;
+
+            if ((objId + 1) % 100000 == 0 || objId == 0) {
+                cerr << "  [BUILD][OmniRTree] " << (objId + 1) << " objetos indexados ("
+                     << (int)((objId + 1) * 100.0 / db->size()) << "%)\n";
             }
         }
-        cout << "\n[BUILD] Total objetos indexados: " << db->size() << " (100%)\n";
+
+        cerr << "[BUILD][OmniRTree] Total objetos indexados: " << db->size() << " (100%)\n";
     }
-    
-    vector<double> mapObject(int objId) {
+
+    // Distancias a pivotes (mapObject usa los pivotes HFI cargados)
+    vector<double> mapObject(int objId) const {
         vector<double> mapped(pivots.size());
         for (size_t i = 0; i < pivots.size(); i++) {
             mapped[i] = db->distance(objId, pivots[i]);
         }
         return mapped;
     }
-    
+
+    // MRQ (rangeSearch) como operación de índice completo:
+    //  - Aplica filtro en espacio pivotado via R-tree
+    //  - Verifica EXACTAMENTE (d(q, o) <= radius)
+    //  - compDist incluye las distancias de verificación
+    //  - pageReads cuenta páginas de datos distintas tocadas
     void rangeSearch(int queryId, double radius, vector<int>& result) {
         result.clear();
-        compDist = 0;
-        pageReads = 0;
-        
+        startQuery();
+
         // Mapear query
-        vector<double> qMap = mapObject(queryId);
-        compDist += pivots.size(); // Distancias a pivotes
-        
-        // Obtener candidatos del R-tree
+        vector<double> qMap(pivots.size());
+        for (size_t i = 0; i < pivots.size(); i++) {
+            qMap[i] = db->distance(queryId, pivots[i]);
+            compDist++; // distancias a pivotes de la query
+        }
+
+        // Obtener candidatos del R-tree (filtro OMNI)
         vector<int> candidates = rtree.rangeQuery(qMap, radius);
-        pageReads += candidates.size(); // Simular acceso a RAF
-        
-        // Verificar candidatos
+
+        // Verificación exacta
         for (int candId : candidates) {
+            registerPageAccess(candId);   // simulamos acceso a página de datos
             double d = db->distance(queryId, candId);
             compDist++;
-            
+
             if (d <= radius) {
                 result.push_back(candId);
             }
         }
     }
-    
+
+    // MkNN con poda basada en lower bounds en el espacio pivotado
+    //
+    //  - compDist incluye las distancias reales calculadas en verifyFunc
+    //  - pageReads cuenta páginas de datos distintas tocadas
     void knnSearch(int queryId, int k, vector<pair<double, int>>& result) {
         result.clear();
-        compDist = 0;
-        pageReads = 0;
-        
+        startQuery();
+
         // Mapear query
-        vector<double> qMap = mapObject(queryId);
-        compDist += pivots.size();
-        
-        // Función de verificación que cuenta distancias
-        auto verifyFunc = [&](int oid) -> double {
-            compDist++;
-            pageReads++; // Simular acceso a RAF
-            return db->distance(queryId, oid);
+        vector<double> qMap(pivots.size());
+        for (size_t i = 0; i < pivots.size(); i++) {
+            qMap[i] = db->distance(queryId, pivots[i]);
+            compDist++; // distancias a pivotes de la query
+        }
+
+        // Función de verificación que:
+        //   - registra acceso a página de datos
+        //   - cuenta la distancia real
+        auto verifyFunc = [this, queryId](int oid) -> double {
+            this->registerPageAccess(oid);
+            this->compDist++;
+            return this->db->distance(queryId, oid);
         };
-        
-        result = rtree.knnQuery(qMap, k, verifyFunc);
+
+        result = rtree.knnQuery(qMap, (size_t)k, verifyFunc);
     }
-    
+
     void clear_counters() {
         compDist = 0;
         pageReads = 0;
+        pagesAccessed.clear();
     }
-    
+
     long long get_compDist() const { return compDist; }
     long long get_pageReads() const { return pageReads; }
 };
