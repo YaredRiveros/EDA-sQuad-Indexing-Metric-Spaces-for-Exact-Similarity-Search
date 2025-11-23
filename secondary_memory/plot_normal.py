@@ -28,6 +28,10 @@ datasets = sorted(set([d["dataset"] for d in mrq]))
 out_dir = "mrq_plots_linear"
 os.makedirs(out_dir, exist_ok=True)
 
+# Colores y marcadores
+colors = plt.cm.tab20.colors  # 20 colores distintos
+markers = ['o', 's', '^', 'v', 'D', 'P', '*', 'X', 'H', '<', '>']  # 11 símbolos
+
 # ============================================================
 # Función para graficar una métrica (sin escala log)
 # ============================================================
@@ -38,7 +42,7 @@ def plot_metric(metric, ylabel):
         # Filtrar dataset
         subset = [d for d in mrq if d["dataset"] == ds]
 
-        for idx in indexes:
+        for i, idx in enumerate(indexes):
             points = [d for d in subset if d["index"] == idx]
             if not points:
                 continue
@@ -49,7 +53,12 @@ def plot_metric(metric, ylabel):
             xs = [p["selectivity"] for p in points]
             ys = [p[metric] for p in points]
 
-            plt.plot(xs, ys, marker="o", linewidth=2, markersize=6, label=idx)
+            # Seleccionar color y marcador único
+            color = colors[i % len(colors)]
+            marker = markers[i % len(markers)]
+
+            plt.plot(xs, ys, marker=marker, linewidth=2, markersize=6,
+                     label=idx, color=color)
 
         plt.xlabel("Selectivity (%)")
         plt.ylabel(ylabel)
