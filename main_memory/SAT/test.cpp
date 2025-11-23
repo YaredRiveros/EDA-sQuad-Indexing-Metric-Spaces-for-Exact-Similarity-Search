@@ -15,7 +15,8 @@ static const vector<double> SELECTIVITIES = {0.02, 0.04, 0.08, 0.16, 0.32};
 static const vector<int> K_VALUES = {5, 10, 20, 50, 100};
 
 // Datasets evaluados
-static const vector<string> DATASETS = {"LA", "Words", "Color", "Synthetic"};
+//static const vector<string> DATASETS = {"LA", "Words", "Color", "Synthetic"};
+static const vector<string> DATASETS = {"Words"}//, "Color", "Synthetic"};
 
 // SAT no tiene parámetros configurables (construye el árbol completo)
 // Para mantener consistencia con otros índices, ejecutaremos con un solo "config"
