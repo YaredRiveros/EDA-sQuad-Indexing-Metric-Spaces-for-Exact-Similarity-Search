@@ -1,308 +1,275 @@
 #include <bits/stdc++.h>
-#include <filesystem>
-#include <chrono>
-#include "main.h"
-#include "Objvector.h"
-#include "Interpreter.h"
-#include "Tuple.h"
-#include "Cache.h"
+#include "ept.hpp"
 #include "../../datasets/paths.hpp"
 
 using namespace std;
 using namespace chrono;
 
 // ============================================================
-// CONFIGURACIÓN EXACTA DEL PAPER (Tabla 6)
+// CONFIGURACIÓN IGUAL CHEN
 // ============================================================
 
 static const vector<double> SELECTIVITIES = {0.02, 0.04, 0.08, 0.16, 0.32};
 static const vector<int>    K_VALUES      = {5, 10, 20, 50, 100};
-//static const vector<string> DATASETS      = {"Synthetic", "Words", "LA", "Color"};
-static const vector<string> DATASETS      = {"Synthetic"};
-static const vector<int> L_VALUES = {10, 15, 20, 25, 30}; // Número de pivotes por objeto
+static const vector<string> DATASETS      = {"LA", "Words", "Color", "Synthetic"};
+
+// Parámetros EPT* (l pivots por objeto, cp_scale candidatos PSA)
+// Parámetros EPT* (l pivots por objeto, cp_scale candidatos PSA)
+struct EPT_Params {
+    int l;
+    int cp_scale;
+};
+
+// Experimentos en memoria principal al estilo Chen:
+// l ∈ {3, 5, 10, 15, 20}, cp_scale = 40 (fijo)
+static const vector<EPT_Params> PARAMS_LA = {
+    { 3, 40 },
+    { 5, 40 },
+    {10, 40 },
+    {15, 40 },
+    {20, 40 }
+};
+
+static const vector<EPT_Params> PARAMS_WORDS = {
+    { 3, 40 },
+    { 5, 40 },
+    {10, 40 },
+    {15, 40 },
+    {20, 40 }
+};
+
+static const vector<EPT_Params> PARAMS_COLOR = {
+    { 3, 40 },
+    { 5, 40 },
+    {10, 40 },
+    {15, 40 },
+    {20, 40 }
+};
+
+static const vector<EPT_Params> PARAMS_SYNTH = {
+    { 3, 40 },
+    { 5, 40 },
+    {10, 40 },
+    {15, 40 },
+    {20, 40 }
+};
 
 // ============================================================
-// FUNCIONES EXTERNAS DE main.cpp (EPT*)
-// ============================================================
-extern double compDists;
-extern Interpreter* pi;
-extern int **pivotSeq;
-extern set<int> pivotSet;
-extern Tuple ** gb;
-extern float* DB;
-extern Tuple* G;
-extern int * sequence;
-extern int LGroup;
-extern float* nobj;
-extern double recyc_times;
-
-// Funciones de EPT* definidas en main.cpp
-extern void algorithm3(char* fname);
-extern void saveIndex(Tuple * t, char *fname);
-extern bool readIndex(Tuple* t, char* fname);
-extern double KNNQuery(float* q, int k);
-extern int rangeQuery(float* q, double radius, int qj);
-extern double calculateDistance(float* o1, int v2);
-
-#define num_cand 40
-extern int * cand;
-extern bool *ispivot;
-extern double** O_P_matrix;
-extern vector<int> samples_objs;
-
-// ============================================================
-// CARGA DE QUERIES VECTORIALES (específico de EPT)
+// DistanceAdapter: wrapper con contador COMPARTIDO
+//  • Cuenta distance() tanto en build como en consultas
+//  • Podemos separar build vs query reseteando el contador
 // ============================================================
 
-// Generar queries aleatorias desde DB (array global de EPT)
-vector<vector<float>> generate_random_queries(Interpreter* pi, int num_queries = 100) {
-    vector<vector<float>> queries;
-    
-    if (!pi || pi->num == 0 || pi->dim == 0) {
-        cerr << "[ERROR] Interpreter no válido o dataset vacío\n";
-        return queries;
+struct DistanceAdapter {
+    ObjectDB* db;
+    shared_ptr<long long> counter;
+
+    DistanceAdapter(ObjectDB* dbptr)
+        : db(dbptr), counter(make_shared<long long>(0)) {}
+
+    // copia: comparte el mismo contador
+    DistanceAdapter(const DistanceAdapter& other)
+        : db(other.db), counter(other.counter) {}
+
+    double operator()(int a, int b) const {
+        ++(*counter);
+        return db->distance(a, b);
     }
-    
-    if (!DB) {
-        cerr << "[ERROR] DB no inicializado\n";
-        return queries;
-    }
-    
-    if (pi->num < num_queries) {
-        num_queries = pi->num;
-    }
-    
-    // Generar índices aleatorios únicos
-    set<int> selected_indices;
-    while (selected_indices.size() < (size_t)num_queries) {
-        int idx = rand() % pi->num;
-        selected_indices.insert(idx);
-    }
-    
-    // Extraer los vectores correspondientes desde DB
-    for (int idx : selected_indices) {
-        vector<float> query_vec;
-        // DB es un array lineal: DB[idx * dim + d] para acceder al elemento d del objeto idx
-        for (int d = 0; d < pi->dim; d++) {
-            query_vec.push_back(DB[idx * pi->dim + d]);
-        }
-        queries.push_back(query_vec);
-    }
-    
-    cerr << "[INFO] Generadas " << queries.size() << " queries aleatorias desde el dataset\n";
-    return queries;
-}
 
-// Determinar categoría del dataset
-string dataset_category(const string& dataset) {
-    if (dataset == "LA") return "vectors";
-    if (dataset == "Color") return "vectors";
-    if (dataset == "Synthetic") return "vectors";
-    if (dataset == "Words") return "strings";
-    return "unknown";
-}
+    void reset() const { *counter = 0; }
+    long long get() const { return *counter; }
+};
+
 
 // ============================================================
-// MAIN — EXPERIMENTACIÓN COMPLETA
+// MAIN
 // ============================================================
-int main()
-{
-    srand((unsigned int)time(NULL));
-    
-    // Inicializar variables globales de EPT*
-    pi = nullptr;
-    G = nullptr;
-    DB = nullptr;
-    nobj = nullptr;
-    cand = nullptr;
-    ispivot = nullptr;
-    O_P_matrix = nullptr;
-    
-    // Crear directorio results
-    std::filesystem::create_directories("results");
+
+int main() {
+    srand(12345);
+    filesystem::create_directories("results");
 
     for (const string& dataset : DATASETS)
     {
-        // ------------------------------------------------------------
-        // 1. Resolver dataset físico
-        // ------------------------------------------------------------
+        // -------------------------------------------------------
+        // 1. Localizar dataset
+        // -------------------------------------------------------
         string dbfile = path_dataset(dataset);
-        if (dbfile == "" || !std::filesystem::exists(dbfile)) {
-            cerr << "[WARN] Dataset no encontrado, omitido: " << dataset << "\n";
+        if (dbfile == "") {
+            cerr << "[WARN] Dataset no encontrado: " << dataset << "\n";
             continue;
         }
 
-        cerr << "\n==========================================\n";
-        cerr << "[INFO] Dataset: " << dataset << "   File=" << dbfile << "\n";
-        cerr << "==========================================\n";
+        // -------------------------------------------------------
+        // 2. Cargar dataset
+        // -------------------------------------------------------
+        unique_ptr<ObjectDB> db;
 
-        // ------------------------------------------------------------
-        // 2. Parsear dataset con Interpreter (EPT*)
-        // ------------------------------------------------------------
-        pi = new Interpreter();
-        pi->parseRawData(dbfile.c_str());
+        if (dataset == "LA")             db = make_unique<VectorDB>(dbfile, 2);
+        else if (dataset == "Color")     db = make_unique<VectorDB>(dbfile, 1);
+        else if (dataset == "Synthetic") db = make_unique<VectorDB>(dbfile, 999999);
+        else if (dataset == "Words")     db = make_unique<StringDB>(dbfile);
+        else continue;
 
-        if (pi->num == 0) {
-            cerr << "[WARN] Dataset vacío, omitido: " << dataset << "\n";
-            delete pi;
-            continue;
-        }
+        int N = db->size();
 
-        cerr << "[INFO] Objetos: " << pi->num << "  Dimensión: " << pi->dim << "\n";
+        cerr << "\n==============================================\n";
+        cerr << "[INFO] Dataset: " << dataset << "   N=" << N << "\n";
+        cerr << "==============================================\n";
 
-        // Omitir datasets con dimensión 0 (problemas con queries)
-        if (pi->dim == 0 && dataset_category(dataset) == "vectors") {
-            cerr << "[ERROR] No se pudo leer dimensión " << pi->dim << " de query.\n";
-            cerr << "[WARN] Queries ausentes, omitiendo dataset: " << dataset << "\n";
-            delete pi;
-            continue;
-        }
+        // -------------------------------------------------------
+        // 3. Queries y radios (como en Chen)
+        // -------------------------------------------------------
+        vector<int> queries = load_queries_file(path_queries(dataset));
+        auto radii          = load_radii_file(path_radii(dataset));
 
-        // ------------------------------------------------------------
-        // 3. Generar queries aleatorias y cargar radios
-        // ------------------------------------------------------------
-        vector<vector<float>> queries = generate_random_queries(pi, 10);
-        
         if (queries.empty()) {
-            cerr << "[WARN] No se pudieron generar queries, omitiendo dataset: " << dataset << "\n";
-            delete pi;
+            cerr << "[WARN] No hay queries. Saltando dataset.\n";
             continue;
         }
 
-        auto radii = load_radii_file(path_radii(dataset));
-        if (radii.empty()) {
-            cerr << "[WARN] Radios ausentes, omitiendo dataset: " << dataset << "\n";
-            delete pi;
-            continue;
-        }
+        cerr << "[INFO] Queries: " << queries.size() << "\n";
 
-        cerr << "[INFO] Cargados " << radii.size() << " radii precomputados\n";
+        // -------------------------------------------------------
+        // 4. Parámetros por dataset
+        // -------------------------------------------------------
+        vector<EPT_Params> params;
+        if (dataset == "LA")         params = PARAMS_LA;
+        else if (dataset == "Words") params = PARAMS_WORDS;
+        else if (dataset == "Color") params = PARAMS_COLOR;
+        else if (dataset == "Synthetic") params = PARAMS_SYNTH;
 
-        // ------------------------------------------------------------
-        // 4. Archivo JSON
-        // ------------------------------------------------------------
+        // -------------------------------------------------------
+        // 5. JSON output (mismo formato que FQT)
+        // -------------------------------------------------------
         string jsonOut = "results/results_EPT_" + dataset + ".json";
         ofstream J(jsonOut);
         if (!J.is_open()) {
-            cerr << "[ERROR] No se pudo abrir JSON para escribir.\n";
-            delete pi;
+            cerr << "[ERROR] No se pudo abrir JSON: " << jsonOut << "\n";
             return 1;
         }
 
         J << "[\n";
+        bool first = true;
 
-        // ------------------------------------------------------------
-        // 5. Experimentos con diferentes valores de L
-        // ------------------------------------------------------------
-        bool firstConfig = true;
-
-        for (int L : L_VALUES)
+        // -------------------------------------------------------
+        // 6. Loop de configuraciones (como en FQT)
+        // -------------------------------------------------------
+        for (size_t c = 0; c < params.size(); c++)
         {
-            cerr << "[INFO] ============ L=" << L << " ============\n";
-            
-            LGroup = L; // Variable global de EPT*
-            string indexfile = "index_EPT_" + dataset + "_L" + to_string(L) + ".idx";
+            auto P = params[c];
 
-            // CONSTRUCCIÓN DEL ÍNDICE
-            cerr << "[INFO] Construyendo índice EPT* con L=" << L << "...\n";
+            cerr << "[INFO] Config " << (c+1) << "/" << params.size()
+                 << "  l=" << P.l
+                 << "  cp_scale=" << P.cp_scale << "\n";
+
+            // Adaptador de distancia con contador compartido
+            DistanceAdapter dist(db.get());
+
+            // Vector de IDs [0..N-1]
+            vector<int> ids(N);
+            iota(ids.begin(), ids.end(), 0);
+
+            // ---------------------------------------------------
+            // BUILD — como Chen: medimos tiempo y compdists SOLO build
+            // ---------------------------------------------------
+            dist.reset();
             auto t1 = high_resolution_clock::now();
-            compDists = 0;
-            
-            algorithm3((char*)indexfile.c_str());
-            saveIndex(G, (char*)indexfile.c_str());
-            
+            EPTStar<int, DistanceAdapter> index(ids, dist, P.l, P.cp_scale);
             auto t2 = high_resolution_clock::now();
-            double buildTime = duration_cast<milliseconds>(t2 - t1).count();
-            double buildDists = compDists;
 
-            cerr << "[INFO] Construcción completada: " << buildTime << " ms, " 
-                 << buildDists << " compdists\n";
+            double build_ms    = duration_cast<milliseconds>(t2 - t1).count();
+            long long build_cd = dist.get();   // solo build
+            cerr << "  Build: " << build_ms << " ms"
+                 << "  compdists_build=" << build_cd << "\n";
 
-            // ========================================
-            // EXPERIMENTOS MkNN
-            // ========================================
-            cerr << "[INFO] Ejecutando MkNN queries...\n";
-            
+            // A partir de aquí, las consultas tendrán su propio conteo
+            // Reseteamos el contador ANTES de MkNN/MRQ
+            // (esto separa build de consultas como hace Chen)
+            // =======================================================
+
+            // =======================================================
+            // MkNN — exactamente al estilo Chen, promedio por query
+            // =======================================================
+            cerr << "  MkNN...\n";
+
             for (int k : K_VALUES)
             {
-                cerr << "  k=" << k << "...\n";
-                
-                // Reset contadores
-                compDists = 0;
+                dist.reset();  // solo compdists de este conjunto de consultas
                 auto start = high_resolution_clock::now();
-                
-                double sumRadius = 0;
-                for (const auto& q : queries) {
-                    double kth_dist = KNNQuery((float*)q.data(), k);
-                    sumRadius += kth_dist;
-                }
-                
-                auto end = high_resolution_clock::now();
-                double totalTime = duration_cast<milliseconds>(end - start).count();
-                
-                double avgTime = totalTime / queries.size();
-                double avgDists = compDists / queries.size();
-                double avgRadius = sumRadius / queries.size();
 
-                // JSON output
-                if (!firstConfig) J << ",\n";
-                firstConfig = false;
+                double sumK = 0.0;
+                for (int q : queries) {
+                    double kth = index.knnQuery(q, k);
+                    sumK += kth;
+                }
+
+                auto end = high_resolution_clock::now();
+                double t = duration_cast<milliseconds>(end - start).count();
+
+                double avgTime  = t / queries.size();
+                double avgDists = static_cast<double>(dist.get()) / queries.size();
+                double avgKth   = sumK / queries.size();
+
+                if (!first) J << ",\n";
+                first = false;
 
                 J << "  {\n";
-                J << "    \"index\": \"EPT\",\n";
+                J << "    \"index\": \"EPT*\",\n";
                 J << "    \"dataset\": \"" << dataset << "\",\n";
-                J << "    \"category\": \"" << dataset_category(dataset) << "\",\n";
-                J << "    \"num_pivots\": " << L << ",\n";
+                J << "    \"category\": \"" 
+                  << (dataset == "Words" ? "strings" : "vectors") << "\",\n";
+                J << "    \"num_pivots\": " << P.l << ",\n";
                 J << "    \"num_centers_path\": null,\n";
                 J << "    \"arity\": null,\n";
                 J << "    \"bucket_size\": null,\n";
                 J << "    \"query_type\": \"MkNN\",\n";
                 J << "    \"selectivity\": null,\n";
-                J << "    \"radius\": " << avgRadius << ",\n";
+                J << "    \"radius\": " << avgKth << ",\n";
                 J << "    \"k\": " << k << ",\n";
                 J << "    \"compdists\": " << avgDists << ",\n";
                 J << "    \"time_ms\": " << avgTime << ",\n";
                 J << "    \"n_queries\": " << queries.size() << ",\n";
-                J << "    \"run_id\": \"EPT_" << dataset << "_L" << L << "_k" << k << "\"\n";
+                J << "    \"run_id\": \"EPT_" << dataset
+                  << "_l" << P.l
+                  << "_c" << P.cp_scale
+                  << "_k" << k << "\"\n";
                 J << "  }";
             }
 
-            // ========================================
-            // EXPERIMENTOS MRQ
-            // ========================================
-            cerr << "[INFO] Ejecutando MRQ queries...\n";
+            // =======================================================
+            // MRQ — mismo formato y conteo que FQT / Chen
+            // =======================================================
+            cerr << "  MRQ...\n";
 
-            for (const auto& entry : radii)
+            for (auto& R : radii)
             {
-                double sel = entry.first;   // selectivity es la clave
-                double radius = entry.second; // radius es el valor
-                
-                cerr << "  selectivity=" << sel << ", radius=" << radius << "...\n";
-                
-                // Reset contadores
-                compDists = 0;
-                auto start = high_resolution_clock::now();
-                
-                int totalResults = 0;
-                for (size_t qi = 0; qi < queries.size(); qi++) {
-                    int count = rangeQuery((float*)queries[qi].data(), radius, qi);
-                    totalResults += count;
-                }
-                
-                auto end = high_resolution_clock::now();
-                double totalTime = duration_cast<milliseconds>(end - start).count();
-                
-                double avgTime = totalTime / queries.size();
-                double avgDists = compDists / queries.size();
-                double avgResults = (double)totalResults / queries.size();
+                double sel    = R.first;
+                double radius = R.second;
 
-                // JSON output
-                J << ",\n";
+                dist.reset();  // solo este conjunto (este r / selectividad)
+                auto start = high_resolution_clock::now();
+
+                int total = 0;
+                for (int q : queries) {
+                    total += index.rangeQuery(q, radius);
+                }
+
+                auto end = high_resolution_clock::now();
+                double t = duration_cast<milliseconds>(end - start).count();
+
+                double avgTime  = t / queries.size();
+                double avgDists = static_cast<double>(dist.get()) / queries.size();
+
+                if (!first) J << ",\n";
+                first = false;
+
                 J << "  {\n";
-                J << "    \"index\": \"EPT\",\n";
+                J << "    \"index\": \"EPT*\",\n";
                 J << "    \"dataset\": \"" << dataset << "\",\n";
-                J << "    \"category\": \"" << dataset_category(dataset) << "\",\n";
-                J << "    \"num_pivots\": " << L << ",\n";
+                J << "    \"category\": \"" 
+                  << (dataset == "Words" ? "strings" : "vectors") << "\",\n";
+                J << "    \"num_pivots\": " << P.l << ",\n";
                 J << "    \"num_centers_path\": null,\n";
                 J << "    \"arity\": null,\n";
                 J << "    \"bucket_size\": null,\n";
@@ -313,33 +280,19 @@ int main()
                 J << "    \"compdists\": " << avgDists << ",\n";
                 J << "    \"time_ms\": " << avgTime << ",\n";
                 J << "    \"n_queries\": " << queries.size() << ",\n";
-                J << "    \"run_id\": \"EPT_" << dataset << "_L" << L << "_sel" << sel << "\"\n";
+                J << "    \"run_id\": \"EPT_" << dataset
+                  << "_l" << P.l
+                  << "_c" << P.cp_scale
+                  << "_sel" << sel << "\"\n";
                 J << "  }";
             }
-
-            // NO limpiar aquí - se acumula para múltiples L
-            // La limpieza se hace al final del dataset
         }
 
         J << "\n]\n";
-        J.flush();  // Asegurar que se escribe
         J.close();
-
-        cerr << "[INFO] Resultados guardados en: " << jsonOut << "\n";
-
-        // Limpiar estructuras globales del dataset (sin double free)
-        // NOTA: No limpiamos porque EPT tiene memoria global compartida
-        // que puede causar double free. Dejamos que el OS limpie al terminar.
-        pi = nullptr;
-        DB = nullptr;
-        nobj = nullptr;
-        G = nullptr;
-        cand = nullptr;
-        ispivot = nullptr;
-        O_P_matrix = nullptr;
-
+        cerr << "[INFO] Guardado JSON: " << jsonOut << "\n";
     }
 
-    cerr << "\n[DONE] EPT* benchmark completado.\n";
+    cerr << "\n[OK] Benchmark EPT* completado.\n";
     return 0;
 }
