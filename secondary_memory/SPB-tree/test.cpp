@@ -27,7 +27,7 @@ static const vector<string> DATASETS = {
 // Número de pivotes (Chen: l = 5)
 static const int NUM_PIVOTS = 5;
 
-// Parámetros del B+ tree (puedes ajustarlos si quieres)
+// Parámetros del B+ tree
 static const size_t LEAF_CAPACITY = 128;
 static const size_t FANOUT        = 64;
 
@@ -141,6 +141,10 @@ int main() {
             hfiPivots = auto_fix_ids(hfiPivots, db->size());
         }
 
+        // Factor lógico de páginas (Chen: 40KB = 10×4KB para Color/Synthetic)
+        size_t logicalPageFactor =
+            (dataset == "Color" || dataset == "Synthetic") ? 10 : 1;
+
         // --------------------------------------------------------------------
         // Archivo JSON de salida
         // --------------------------------------------------------------------
@@ -152,7 +156,7 @@ int main() {
         // --------------------------------------------------------------------
         // Construcción del SPB-tree como en Chen:
         //   - l = 5 pivotes (HFI, mismos para todos los índices)
-        //   - RAF simulado (para contar pageReads)
+        //   - RAF simulado (para contar pageReads lógicos)
         // --------------------------------------------------------------------
         cerr << "[BUILD] Construyendo SPB-tree (l=" << NUM_PIVOTS << ")...\n";
 
@@ -165,7 +169,8 @@ int main() {
             LEAF_CAPACITY,
             FANOUT,
             dataset,
-            true   // useHfiPivots (si hay IDs)
+            true,               // useHfiPivots (si hay IDs)
+            logicalPageFactor   // factor lógico de páginas
         );
 
         // Construir todos los objetos
@@ -188,7 +193,7 @@ int main() {
 
             long long totalD = 0;   // distancias totales (pivot + verificación)
             long long totalT = 0;   // tiempo (µs)
-            long long totalP = 0;   // page reads en RAF
+            long long totalP = 0;   // page reads lógicos en RAF
 
             for (int q : queries) {
                 spb.clear_counters();
@@ -200,14 +205,14 @@ int main() {
                 long long elapsed =
                     chrono::duration_cast<chrono::microseconds>(end - start).count();
 
-                // En esta implementación, SPBTree::MRQ ya:
+                // SPBTree::MRQ ya:
                 //  - cuenta distancias a pivotes (φ(q), φ(o))
                 //  - cuenta distancias reales d(q,o) en VerifyRQ
                 totalD += spb.get_compDist();
                 totalT += elapsed;
                 totalP += spb.get_pageReads();
 
-                (void)results; // si no quieres usar el resultado aquí
+                (void)results;
             }
 
             double avgD   = double(totalD) / queries.size();
@@ -251,20 +256,17 @@ int main() {
                 spb.clear_counters();
 
                 auto start = chrono::high_resolution_clock::now();
-                auto knn   = spb.MkNN(q, k);
+                auto knn   = spb.MkNN(q, (size_t)k);
                 auto end   = chrono::high_resolution_clock::now();
 
                 long long elapsed =
                     chrono::duration_cast<chrono::microseconds>(end - start).count();
 
-                // SPBTree::MkNN ya suma:
-                //  - distancias a pivotes (φ(q), φ(o))
-                //  - distancias reales d(q,o) de los candidatos
                 totalD += spb.get_compDist();
                 totalT += elapsed;
                 totalP += spb.get_pageReads();
 
-                (void)knn; // no necesitamos el contenido para el benchmark global
+                (void)knn;
             }
 
             double avgD   = double(totalD) / queries.size();
