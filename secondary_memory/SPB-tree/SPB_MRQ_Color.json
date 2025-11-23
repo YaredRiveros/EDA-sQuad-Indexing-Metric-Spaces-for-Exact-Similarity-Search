@@ -1,7 +1,0 @@
-[
-  {"dataset":"Color","query_type":"MRQ","selectivity":0.02,"radius":3763.11,"compdists":4,"time_ms":0.59623,"pages":0,"n_queries":100},
-  {"dataset":"Color","query_type":"MRQ","selectivity":0.04,"radius":4106.1,"compdists":4,"time_ms":0.74196,"pages":0,"n_queries":100},
-  {"dataset":"Color","query_type":"MRQ","selectivity":0.08,"radius":4484.69,"compdists":4,"time_ms":0.95358,"pages":0,"n_queries":100},
-  {"dataset":"Color","query_type":"MRQ","selectivity":0.16,"radius":4946.69,"compdists":4,"time_ms":0.5974,"pages":0,"n_queries":100},
-  {"dataset":"Color","query_type":"MRQ","selectivity":0.32,"radius":5591.93,"compdists":4,"time_ms":0.71806,"pages":0,"n_queries":100}
-]

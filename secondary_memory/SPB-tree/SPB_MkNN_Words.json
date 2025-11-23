@@ -1,7 +1,0 @@
-[
-  {"dataset":"Words","query_type":"MkNN","k":5,"compdists":9,"time_ms":0.55628,"pages":0,"n_queries":100},
-  {"dataset":"Words","query_type":"MkNN","k":10,"compdists":14,"time_ms":0.61552,"pages":0,"n_queries":100},
-  {"dataset":"Words","query_type":"MkNN","k":20,"compdists":24,"time_ms":0.61869,"pages":0,"n_queries":100},
-  {"dataset":"Words","query_type":"MkNN","k":50,"compdists":54,"time_ms":0.71042,"pages":0,"n_queries":100},
-  {"dataset":"Words","query_type":"MkNN","k":100,"compdists":104,"time_ms":0.91692,"pages":0,"n_queries":100}
-]

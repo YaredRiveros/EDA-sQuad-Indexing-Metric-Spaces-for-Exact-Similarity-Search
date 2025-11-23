@@ -1,0 +1,12 @@
+[
+{"index":"DIndex","dataset":"Color","category":"D","num_levels":5,"rho":5.000000,"query_type":"MRQ","selectivity":0.020000,"radius":3763.105713,"k":null,"compdists":95482.000000,"time_ms":0.056420,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Color","category":"D","num_levels":5,"rho":5.000000,"query_type":"MRQ","selectivity":0.040000,"radius":4106.096191,"k":null,"compdists":95482.000000,"time_ms":0.052850,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Color","category":"D","num_levels":5,"rho":5.000000,"query_type":"MRQ","selectivity":0.080000,"radius":4484.691406,"k":null,"compdists":95482.000000,"time_ms":0.053030,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Color","category":"D","num_levels":5,"rho":5.000000,"query_type":"MRQ","selectivity":0.160000,"radius":4946.693848,"k":null,"compdists":95482.000000,"time_ms":0.053330,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Color","category":"D","num_levels":5,"rho":5.000000,"query_type":"MRQ","selectivity":0.320000,"radius":5591.930664,"k":null,"compdists":95482.000000,"time_ms":0.058800,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Color","category":"D","num_levels":5,"rho":5.000000,"query_type":"MkNN","selectivity":null,"radius":null,"k":5,"compdists":9516.300000,"time_ms":0.444550,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Color","category":"D","num_levels":5,"rho":5.000000,"query_type":"MkNN","selectivity":null,"radius":null,"k":10,"compdists":9516.300000,"time_ms":0.398550,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Color","category":"D","num_levels":5,"rho":5.000000,"query_type":"MkNN","selectivity":null,"radius":null,"k":20,"compdists":9536.380000,"time_ms":0.401010,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Color","category":"D","num_levels":5,"rho":5.000000,"query_type":"MkNN","selectivity":null,"radius":null,"k":50,"compdists":10077.760000,"time_ms":0.418580,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Color","category":"D","num_levels":5,"rho":5.000000,"query_type":"MkNN","selectivity":null,"radius":null,"k":100,"compdists":10174.920000,"time_ms":0.420370,"pages":0.000000,"n_queries":100,"run_id":1}
+]
