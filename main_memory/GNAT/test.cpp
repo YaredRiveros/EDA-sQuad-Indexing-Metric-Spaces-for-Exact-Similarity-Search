@@ -1,11 +1,7 @@
 #include <bits/stdc++.h>
 #include <filesystem>
 #include <chrono>
-
-#include "db.h"
-#include "GNAT.h"
-#include "../../datasets/paths.hpp"
-
+#include "../../../datasets/paths.hpp"
 
 using namespace std;
 using namespace chrono;
