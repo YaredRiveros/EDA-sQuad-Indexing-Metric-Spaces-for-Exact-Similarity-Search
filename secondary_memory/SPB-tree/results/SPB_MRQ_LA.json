@@ -1,7 +1,0 @@
-[
-  {"index":"SPB","dataset":"LA","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MRQ","selectivity":0.02,"radius":408.823,"k":null,"compdists":4,"time_ms":10.1931,"pages":0,"n_queries":100,"run_id":1},
-  {"index":"SPB","dataset":"LA","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MRQ","selectivity":0.04,"radius":625.361,"k":null,"compdists":4,"time_ms":10.4522,"pages":0,"n_queries":100,"run_id":1},
-  {"index":"SPB","dataset":"LA","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MRQ","selectivity":0.08,"radius":957.997,"k":null,"compdists":4,"time_ms":11.3724,"pages":0,"n_queries":100,"run_id":1},
-  {"index":"SPB","dataset":"LA","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MRQ","selectivity":0.16,"radius":1431.56,"k":null,"compdists":4,"time_ms":12.439,"pages":0,"n_queries":100,"run_id":1},
-  {"index":"SPB","dataset":"LA","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MRQ","selectivity":0.32,"radius":2069.03,"k":null,"compdists":4,"time_ms":14.061,"pages":0,"n_queries":100,"run_id":1}
-]
