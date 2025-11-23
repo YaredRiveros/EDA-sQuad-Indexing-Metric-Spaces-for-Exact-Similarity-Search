@@ -1,0 +1,12 @@
+[
+{"index":"SPBTree","dataset":"Words","category":"SPB","num_pivots":5,"query_type":"MRQ","selectivity":0.020000,"radius":7.370000,"k":null,"compdists":504409.990000,"time_ms":2444.587210,"pages":504404.990000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Words","category":"SPB","num_pivots":5,"query_type":"MRQ","selectivity":0.040000,"radius":7.760000,"k":null,"compdists":504409.990000,"time_ms":2366.658360,"pages":504404.990000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Words","category":"SPB","num_pivots":5,"query_type":"MRQ","selectivity":0.080000,"radius":8.230000,"k":null,"compdists":526099.400000,"time_ms":2476.160470,"pages":526094.400000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Words","category":"SPB","num_pivots":5,"query_type":"MRQ","selectivity":0.160000,"radius":8.740000,"k":null,"compdists":526099.400000,"time_ms":2459.681870,"pages":526094.400000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Words","category":"SPB","num_pivots":5,"query_type":"MRQ","selectivity":0.320000,"radius":9.460000,"k":null,"compdists":540007.370000,"time_ms":2539.281720,"pages":540002.370000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Words","category":"SPB","num_pivots":5,"query_type":"MkNN","selectivity":null,"radius":null,"k":5,"compdists":132637.670000,"time_ms":635.756580,"pages":132632.670000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Words","category":"SPB","num_pivots":5,"query_type":"MkNN","selectivity":null,"radius":null,"k":10,"compdists":194009.920000,"time_ms":929.081990,"pages":194004.920000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Words","category":"SPB","num_pivots":5,"query_type":"MkNN","selectivity":null,"radius":null,"k":20,"compdists":242344.790000,"time_ms":1188.451110,"pages":242339.790000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Words","category":"SPB","num_pivots":5,"query_type":"MkNN","selectivity":null,"radius":null,"k":50,"compdists":302361.660000,"time_ms":1538.713700,"pages":302356.660000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Words","category":"SPB","num_pivots":5,"query_type":"MkNN","selectivity":null,"radius":null,"k":100,"compdists":334972.100000,"time_ms":1679.880720,"pages":334967.100000,"n_queries":100,"run_id":1}
+]
