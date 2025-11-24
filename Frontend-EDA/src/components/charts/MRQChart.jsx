@@ -1,4 +1,3 @@
-// src/components/charts/MRQChart.jsx
 import { Line } from "react-chartjs-2";
 import { ChartContainer } from "./ChartContainer";
 import { colorForIndex } from "../../constants/colors";

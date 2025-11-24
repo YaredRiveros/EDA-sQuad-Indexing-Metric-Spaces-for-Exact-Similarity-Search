@@ -1,4 +1,3 @@
-// src/utils/xScaleSecondary.js
 export function buildXScale({ memory = "main", query = "MRQ", label = "X" }) {
   // por defecto: lineal
   const base = {

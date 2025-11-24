@@ -1,4 +1,3 @@
-// src/utils/scale.js
 export function chooseYScaleFromSeries(series, key) {
   const values = [];
 

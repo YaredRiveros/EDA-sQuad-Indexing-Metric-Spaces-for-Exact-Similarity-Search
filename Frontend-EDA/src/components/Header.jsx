@@ -10,15 +10,12 @@ export default function Header({ memory, setMemory }) {
         px-8 py-4 flex items-center justify-between shadow-lg
       "
     >
-      {/* TITLE */}
       <h1 className="text-xl font-semibold tracking-wide text-gray-100">
         Metric Dashboard
       </h1>
 
-      {/* MEMORY SWITCH */}
       <div className="flex items-center gap-2 bg-[#0f0f10] border border-white/10 p-1 rounded-xl">
 
-        {/* MAIN MEMORY */}
         <button
           onClick={() => setMemory("main")}
           className={`
@@ -33,7 +30,6 @@ export default function Header({ memory, setMemory }) {
           Main Memory
         </button>
 
-        {/* SECONDARY MEMORY */}
         <button
           onClick={() => setMemory("secondary")}
           className={`
@@ -48,16 +44,6 @@ export default function Header({ memory, setMemory }) {
           Secondary Memory
         </button>
 
-       <button
-  onClick={() => {}}
-  className="
-    px-4 py-1 rounded-lg text-sm font-medium transition-all
-    bg-transparent text-gray-300 
-    active:bg-white active:text-black active:shadow
-  "
->
-  RUN
-</button>
       </div>
     </header>
   );
