@@ -46,7 +46,7 @@
     "radius": 43.2333,
     "k": 20,
     "compdists": 147.6,
-    "time_ms": 0.01,
+    "time_ms": 0,
     "n_queries": 100,
     "run_id": "FQT_LA_b100_a5_k20"
   },
@@ -63,7 +63,7 @@
     "radius": 61.8003,
     "k": 50,
     "compdists": 200.99,
-    "time_ms": 0.05,
+    "time_ms": 0.04,
     "n_queries": 100,
     "run_id": "FQT_LA_b100_a5_k50"
   },
@@ -80,7 +80,7 @@
     "radius": 84.5785,
     "k": 100,
     "compdists": 286.31,
-    "time_ms": 0.2,
+    "time_ms": 0.14,
     "n_queries": 100,
     "run_id": "FQT_LA_b100_a5_k100"
   },
@@ -97,7 +97,7 @@
     "radius": 188.423,
     "k": null,
     "compdists": 1162.54,
-    "time_ms": 0.01,
+    "time_ms": 0,
     "n_queries": 100,
     "run_id": "FQT_LA_b100_a5_sel0.32"
   },
@@ -233,7 +233,7 @@
     "radius": 53.9648,
     "k": 50,
     "compdists": 188.75,
-    "time_ms": 0.04,
+    "time_ms": 0.03,
     "n_queries": 100,
     "run_id": "FQT_LA_b50_a5_k50"
   },
@@ -250,7 +250,7 @@
     "radius": 75.2222,
     "k": 100,
     "compdists": 283.18,
-    "time_ms": 0.19,
+    "time_ms": 0.12,
     "n_queries": 100,
     "run_id": "FQT_LA_b50_a5_k100"
   },
@@ -403,7 +403,7 @@
     "radius": 51.3067,
     "k": 50,
     "compdists": 174.79,
-    "time_ms": 0.04,
+    "time_ms": 0.03,
     "n_queries": 100,
     "run_id": "FQT_LA_b20_a5_k50"
   },
@@ -420,7 +420,7 @@
     "radius": 71.5496,
     "k": 100,
     "compdists": 322.64,
-    "time_ms": 0.22,
+    "time_ms": 0.14,
     "n_queries": 100,
     "run_id": "FQT_LA_b20_a5_k100"
   },
@@ -573,7 +573,7 @@
     "radius": 60.5197,
     "k": 50,
     "compdists": 182.38,
-    "time_ms": 0.05,
+    "time_ms": 0.03,
     "n_queries": 100,
     "run_id": "FQT_LA_b10_a5_k50"
   },
@@ -590,7 +590,7 @@
     "radius": 73.1027,
     "k": 100,
     "compdists": 286.21,
-    "time_ms": 0.2,
+    "time_ms": 0.13,
     "n_queries": 100,
     "run_id": "FQT_LA_b10_a5_k100"
   },
@@ -726,7 +726,7 @@
     "radius": 31.9861,
     "k": 20,
     "compdists": 105.54,
-    "time_ms": 0.01,
+    "time_ms": 0,
     "n_queries": 100,
     "run_id": "FQT_LA_b5_a5_k20"
   },
@@ -743,7 +743,7 @@
     "radius": 50.7899,
     "k": 50,
     "compdists": 217.5,
-    "time_ms": 0.06,
+    "time_ms": 0.04,
     "n_queries": 100,
     "run_id": "FQT_LA_b5_a5_k50"
   },
@@ -760,7 +760,7 @@
     "radius": 70.845,
     "k": 100,
     "compdists": 342.12,
-    "time_ms": 0.35,
+    "time_ms": 0.15,
     "n_queries": 100,
     "run_id": "FQT_LA_b5_a5_k100"
   },

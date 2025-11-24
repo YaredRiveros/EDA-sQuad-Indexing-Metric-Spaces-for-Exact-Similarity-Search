@@ -1,0 +1,12 @@
+[
+{"index":"MTREE","dataset":"Words","category":"DM","num_pivots":0,"num_centers_path":1,"arity":146,"query_type":"MRQ","selectivity":0.020000,"radius":5.390000,"k":null,"compdists":1481.140000,"time_ms":0.499230,"pages":172.170000,"n_queries":100,"run_id":1},
+{"index":"MTREE","dataset":"Words","category":"DM","num_pivots":0,"num_centers_path":1,"arity":146,"query_type":"MRQ","selectivity":0.040000,"radius":5.930000,"k":null,"compdists":1481.140000,"time_ms":0.497580,"pages":172.170000,"n_queries":100,"run_id":1},
+{"index":"MTREE","dataset":"Words","category":"DM","num_pivots":0,"num_centers_path":1,"arity":146,"query_type":"MRQ","selectivity":0.080000,"radius":6.400000,"k":null,"compdists":1705.890000,"time_ms":0.576970,"pages":232.620000,"n_queries":100,"run_id":1},
+{"index":"MTREE","dataset":"Words","category":"DM","num_pivots":0,"num_centers_path":1,"arity":146,"query_type":"MRQ","selectivity":0.160000,"radius":7.000000,"k":null,"compdists":1898.550000,"time_ms":0.654550,"pages":298.390000,"n_queries":100,"run_id":1},
+{"index":"MTREE","dataset":"Words","category":"DM","num_pivots":0,"num_centers_path":1,"arity":146,"query_type":"MRQ","selectivity":0.320000,"radius":7.740000,"k":null,"compdists":1898.550000,"time_ms":0.677960,"pages":298.390000,"n_queries":100,"run_id":1},
+{"index":"MTREE","dataset":"Words","category":"DM","num_pivots":0,"num_centers_path":1,"arity":146,"query_type":"MkNN","selectivity":null,"radius":null,"k":5,"compdists":1334.820000,"time_ms":0.529450,"pages":74.960000,"n_queries":100,"run_id":1},
+{"index":"MTREE","dataset":"Words","category":"DM","num_pivots":0,"num_centers_path":1,"arity":146,"query_type":"MkNN","selectivity":null,"radius":null,"k":10,"compdists":1499.270000,"time_ms":0.602310,"pages":102.370000,"n_queries":100,"run_id":1},
+{"index":"MTREE","dataset":"Words","category":"DM","num_pivots":0,"num_centers_path":1,"arity":146,"query_type":"MkNN","selectivity":null,"radius":null,"k":20,"compdists":1638.510000,"time_ms":0.656120,"pages":128.380000,"n_queries":100,"run_id":1},
+{"index":"MTREE","dataset":"Words","category":"DM","num_pivots":0,"num_centers_path":1,"arity":146,"query_type":"MkNN","selectivity":null,"radius":null,"k":50,"compdists":1836.560000,"time_ms":0.755140,"pages":176.770000,"n_queries":100,"run_id":1},
+{"index":"MTREE","dataset":"Words","category":"DM","num_pivots":0,"num_centers_path":1,"arity":146,"query_type":"MkNN","selectivity":null,"radius":null,"k":100,"compdists":1935.380000,"time_ms":0.813820,"pages":203.870000,"n_queries":100,"run_id":1}
+]

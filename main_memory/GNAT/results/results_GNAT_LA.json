@@ -80,7 +80,7 @@
     "radius": 5936.61,
     "k": 100,
     "compdists": 346.66,
-    "time_ms": 0.01,
+    "time_ms": 0,
     "n_queries": 100,
     "run_id": "GNAT_LA_H3_k100"
   },
@@ -250,7 +250,7 @@
     "radius": 5936.61,
     "k": 100,
     "compdists": 205.76,
-    "time_ms": 0.01,
+    "time_ms": 0,
     "n_queries": 100,
     "run_id": "GNAT_LA_H5_k100"
   },
@@ -267,7 +267,7 @@
     "radius": 188.423,
     "k": null,
     "compdists": 867.71,
-    "time_ms": 0.01,
+    "time_ms": 0,
     "n_queries": 100,
     "run_id": "GNAT_LA_H5_sel0.32"
   },
@@ -301,7 +301,7 @@
     "radius": 79.6665,
     "k": null,
     "compdists": 324.97,
-    "time_ms": 0.01,
+    "time_ms": 0,
     "n_queries": 100,
     "run_id": "GNAT_LA_H5_sel0.08"
   },
@@ -318,7 +318,7 @@
     "radius": 51.1257,
     "k": null,
     "compdists": 213.06,
-    "time_ms": 0.01,
+    "time_ms": 0,
     "n_queries": 100,
     "run_id": "GNAT_LA_H5_sel0.04"
   },
@@ -420,7 +420,7 @@
     "radius": 5936.61,
     "k": 100,
     "compdists": 200.69,
-    "time_ms": 0.01,
+    "time_ms": 0,
     "n_queries": 100,
     "run_id": "GNAT_LA_H10_k100"
   },
@@ -454,7 +454,7 @@
     "radius": 120.043,
     "k": null,
     "compdists": 514.12,
-    "time_ms": 0.01,
+    "time_ms": 0,
     "n_queries": 100,
     "run_id": "GNAT_LA_H10_sel0.16"
   },
@@ -624,7 +624,7 @@
     "radius": 120.043,
     "k": null,
     "compdists": 518.3,
-    "time_ms": 0.01,
+    "time_ms": 0,
     "n_queries": 100,
     "run_id": "GNAT_LA_H15_sel0.16"
   },
@@ -743,7 +743,7 @@
     "radius": 3681.39,
     "k": 50,
     "compdists": 125.28,
-    "time_ms": 0.01,
+    "time_ms": 0,
     "n_queries": 100,
     "run_id": "GNAT_LA_H20_k50"
   },
@@ -760,7 +760,7 @@
     "radius": 5936.61,
     "k": 100,
     "compdists": 202.64,
-    "time_ms": 0.01,
+    "time_ms": 0,
     "n_queries": 100,
     "run_id": "GNAT_LA_H20_k100"
   },
@@ -794,7 +794,7 @@
     "radius": 120.043,
     "k": null,
     "compdists": 521.63,
-    "time_ms": 0.01,
+    "time_ms": 0,
     "n_queries": 100,
     "run_id": "GNAT_LA_H20_sel0.16"
   },

@@ -1,0 +1,12 @@
+[
+{"index":"PMTREE","dataset":"Words","category":"DM","num_pivots":5,"num_centers_path":1,"arity":null,"query_type":"MRQ","selectivity":0.020000,"radius":5.390000,"k":null,"compdists":0.000000,"time_ms":0.000000,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"PMTREE","dataset":"Words","category":"DM","num_pivots":5,"num_centers_path":1,"arity":null,"query_type":"MRQ","selectivity":0.040000,"radius":5.930000,"k":null,"compdists":0.000000,"time_ms":0.000000,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"PMTREE","dataset":"Words","category":"DM","num_pivots":5,"num_centers_path":1,"arity":null,"query_type":"MRQ","selectivity":0.080000,"radius":6.400000,"k":null,"compdists":0.000000,"time_ms":0.000000,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"PMTREE","dataset":"Words","category":"DM","num_pivots":5,"num_centers_path":1,"arity":null,"query_type":"MRQ","selectivity":0.160000,"radius":7.000000,"k":null,"compdists":0.000000,"time_ms":0.000000,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"PMTREE","dataset":"Words","category":"DM","num_pivots":5,"num_centers_path":1,"arity":null,"query_type":"MRQ","selectivity":0.320000,"radius":7.740000,"k":null,"compdists":0.000000,"time_ms":0.000000,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"PMTREE","dataset":"Words","category":"DM","num_pivots":5,"num_centers_path":1,"arity":null,"query_type":"MkNN","selectivity":null,"radius":null,"k":5,"compdists":0.000000,"time_ms":0.000000,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"PMTREE","dataset":"Words","category":"DM","num_pivots":5,"num_centers_path":1,"arity":null,"query_type":"MkNN","selectivity":null,"radius":null,"k":10,"compdists":0.000000,"time_ms":0.000000,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"PMTREE","dataset":"Words","category":"DM","num_pivots":5,"num_centers_path":1,"arity":null,"query_type":"MkNN","selectivity":null,"radius":null,"k":20,"compdists":0.000000,"time_ms":0.000000,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"PMTREE","dataset":"Words","category":"DM","num_pivots":5,"num_centers_path":1,"arity":null,"query_type":"MkNN","selectivity":null,"radius":null,"k":50,"compdists":0.000000,"time_ms":0.000000,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"PMTREE","dataset":"Words","category":"DM","num_pivots":5,"num_centers_path":1,"arity":null,"query_type":"MkNN","selectivity":null,"radius":null,"k":100,"compdists":0.000000,"time_ms":0.000000,"pages":0.000000,"n_queries":100,"run_id":1}
+]

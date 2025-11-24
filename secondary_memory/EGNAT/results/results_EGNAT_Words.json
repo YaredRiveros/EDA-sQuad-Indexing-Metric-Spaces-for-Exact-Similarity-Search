@@ -1,0 +1,12 @@
+[
+{"index":"EGNAT","dataset":"Words","category":"DM","num_pivots":5,"num_centers_path":null,"arity":5,"query_type":"MRQ","selectivity":0.020000,"radius":5.390000,"k":null,"compdists":1580.130000,"time_ms":0.404890,"pages":25.560000,"n_queries":100,"run_id":1},
+{"index":"EGNAT","dataset":"Words","category":"DM","num_pivots":5,"num_centers_path":null,"arity":5,"query_type":"MRQ","selectivity":0.040000,"radius":5.930000,"k":null,"compdists":1580.130000,"time_ms":0.408690,"pages":25.560000,"n_queries":100,"run_id":1},
+{"index":"EGNAT","dataset":"Words","category":"DM","num_pivots":5,"num_centers_path":null,"arity":5,"query_type":"MRQ","selectivity":0.080000,"radius":6.400000,"k":null,"compdists":1686.570000,"time_ms":0.447650,"pages":25.670000,"n_queries":100,"run_id":1},
+{"index":"EGNAT","dataset":"Words","category":"DM","num_pivots":5,"num_centers_path":null,"arity":5,"query_type":"MRQ","selectivity":0.160000,"radius":7.000000,"k":null,"compdists":1775.890000,"time_ms":0.473690,"pages":25.750000,"n_queries":100,"run_id":1},
+{"index":"EGNAT","dataset":"Words","category":"DM","num_pivots":5,"num_centers_path":null,"arity":5,"query_type":"MRQ","selectivity":0.320000,"radius":7.740000,"k":null,"compdists":1775.890000,"time_ms":0.473280,"pages":25.750000,"n_queries":100,"run_id":1},
+{"index":"EGNAT","dataset":"Words","category":"DM","num_pivots":5,"num_centers_path":null,"arity":5,"query_type":"MkNN","selectivity":null,"radius":null,"k":5,"compdists":1591.940000,"time_ms":0.459070,"pages":25.880000,"n_queries":100,"run_id":1},
+{"index":"EGNAT","dataset":"Words","category":"DM","num_pivots":5,"num_centers_path":null,"arity":5,"query_type":"MkNN","selectivity":null,"radius":null,"k":10,"compdists":1693.440000,"time_ms":0.488100,"pages":25.910000,"n_queries":100,"run_id":1},
+{"index":"EGNAT","dataset":"Words","category":"DM","num_pivots":5,"num_centers_path":null,"arity":5,"query_type":"MkNN","selectivity":null,"radius":null,"k":20,"compdists":1771.980000,"time_ms":0.508240,"pages":25.970000,"n_queries":100,"run_id":1},
+{"index":"EGNAT","dataset":"Words","category":"DM","num_pivots":5,"num_centers_path":null,"arity":5,"query_type":"MkNN","selectivity":null,"radius":null,"k":50,"compdists":1834.310000,"time_ms":0.535930,"pages":25.990000,"n_queries":100,"run_id":1},
+{"index":"EGNAT","dataset":"Words","category":"DM","num_pivots":5,"num_centers_path":null,"arity":5,"query_type":"MkNN","selectivity":null,"radius":null,"k":100,"compdists":1871.380000,"time_ms":0.555290,"pages":26.000000,"n_queries":100,"run_id":1}
+]

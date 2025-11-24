@@ -1,0 +1,12 @@
+[
+{"index":"SPBTree","dataset":"Color","category":"SPB","num_pivots":5,"query_type":"MRQ","selectivity":0.020000,"radius":3709.620000,"k":null,"compdists":1311.320000,"time_ms":5.130920,"pages":79.200000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Color","category":"SPB","num_pivots":5,"query_type":"MRQ","selectivity":0.040000,"radius":4024.330000,"k":null,"compdists":1422.760000,"time_ms":5.554910,"pages":79.200000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Color","category":"SPB","num_pivots":5,"query_type":"MRQ","selectivity":0.080000,"radius":4462.200000,"k":null,"compdists":1554.650000,"time_ms":6.056210,"pages":79.200000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Color","category":"SPB","num_pivots":5,"query_type":"MRQ","selectivity":0.160000,"radius":4995.010000,"k":null,"compdists":1683.020000,"time_ms":6.532610,"pages":79.200000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Color","category":"SPB","num_pivots":5,"query_type":"MRQ","selectivity":0.320000,"radius":5613.520000,"k":null,"compdists":1790.010000,"time_ms":6.972370,"pages":79.200000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Color","category":"SPB","num_pivots":5,"query_type":"MkNN","selectivity":null,"radius":null,"k":5,"compdists":6.000000,"time_ms":0.046320,"pages":10.000000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Color","category":"SPB","num_pivots":5,"query_type":"MkNN","selectivity":null,"radius":null,"k":10,"compdists":6.000000,"time_ms":0.045610,"pages":10.000000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Color","category":"SPB","num_pivots":5,"query_type":"MkNN","selectivity":null,"radius":null,"k":20,"compdists":6.000000,"time_ms":0.045840,"pages":10.000000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Color","category":"SPB","num_pivots":5,"query_type":"MkNN","selectivity":null,"radius":null,"k":50,"compdists":6.000000,"time_ms":0.044910,"pages":10.000000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Color","category":"SPB","num_pivots":5,"query_type":"MkNN","selectivity":null,"radius":null,"k":100,"compdists":6.000000,"time_ms":0.045290,"pages":10.000000,"n_queries":100,"run_id":1}
+]

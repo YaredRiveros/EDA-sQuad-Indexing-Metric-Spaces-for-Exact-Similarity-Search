@@ -1,0 +1,12 @@
+[
+{"index":"SPBTree","dataset":"Synthetic","category":"SPB","num_pivots":5,"query_type":"MRQ","selectivity":0.020000,"radius":2695.068200,"k":null,"compdists":651.640000,"time_ms":2.330870,"pages":80.000000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Synthetic","category":"SPB","num_pivots":5,"query_type":"MRQ","selectivity":0.040000,"radius":3181.737600,"k":null,"compdists":872.450000,"time_ms":3.107470,"pages":80.000000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Synthetic","category":"SPB","num_pivots":5,"query_type":"MRQ","selectivity":0.080000,"radius":3788.967200,"k":null,"compdists":1120.700000,"time_ms":4.243080,"pages":80.000000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Synthetic","category":"SPB","num_pivots":5,"query_type":"MRQ","selectivity":0.160000,"radius":4559.718000,"k":null,"compdists":1369.320000,"time_ms":5.174550,"pages":80.000000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Synthetic","category":"SPB","num_pivots":5,"query_type":"MRQ","selectivity":0.320000,"radius":5542.173600,"k":null,"compdists":1520.780000,"time_ms":5.668810,"pages":80.000000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Synthetic","category":"SPB","num_pivots":5,"query_type":"MkNN","selectivity":null,"radius":null,"k":5,"compdists":6.000000,"time_ms":0.050890,"pages":10.000000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Synthetic","category":"SPB","num_pivots":5,"query_type":"MkNN","selectivity":null,"radius":null,"k":10,"compdists":6.000000,"time_ms":0.050050,"pages":10.000000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Synthetic","category":"SPB","num_pivots":5,"query_type":"MkNN","selectivity":null,"radius":null,"k":20,"compdists":6.000000,"time_ms":0.049020,"pages":10.000000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Synthetic","category":"SPB","num_pivots":5,"query_type":"MkNN","selectivity":null,"radius":null,"k":50,"compdists":6.000000,"time_ms":0.050530,"pages":10.000000,"n_queries":100,"run_id":1},
+{"index":"SPBTree","dataset":"Synthetic","category":"SPB","num_pivots":5,"query_type":"MkNN","selectivity":null,"radius":null,"k":100,"compdists":6.000000,"time_ms":0.050300,"pages":10.000000,"n_queries":100,"run_id":1}
+]

@@ -1,0 +1,12 @@
+[
+{"index":"DIndex","dataset":"Synthetic","category":"D","num_levels":5,"rho":5.000000,"query_type":"MRQ","selectivity":0.020000,"radius":2695.068200,"k":null,"compdists":1205.500000,"time_ms":0.005720,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Synthetic","category":"D","num_levels":5,"rho":5.000000,"query_type":"MRQ","selectivity":0.040000,"radius":3181.737600,"k":null,"compdists":1575.860000,"time_ms":0.008270,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Synthetic","category":"D","num_levels":5,"rho":5.000000,"query_type":"MRQ","selectivity":0.080000,"radius":3788.967200,"k":null,"compdists":1816.000000,"time_ms":0.011030,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Synthetic","category":"D","num_levels":5,"rho":5.000000,"query_type":"MRQ","selectivity":0.160000,"radius":4559.718000,"k":null,"compdists":1915.960000,"time_ms":0.014170,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Synthetic","category":"D","num_levels":5,"rho":5.000000,"query_type":"MRQ","selectivity":0.320000,"radius":5542.173600,"k":null,"compdists":1975.940000,"time_ms":0.015910,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Synthetic","category":"D","num_levels":5,"rho":5.000000,"query_type":"MkNN","selectivity":null,"radius":null,"k":5,"compdists":25.000000,"time_ms":0.000000,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Synthetic","category":"D","num_levels":5,"rho":5.000000,"query_type":"MkNN","selectivity":null,"radius":null,"k":10,"compdists":25.000000,"time_ms":0.000000,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Synthetic","category":"D","num_levels":5,"rho":5.000000,"query_type":"MkNN","selectivity":null,"radius":null,"k":20,"compdists":25.000000,"time_ms":0.000000,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Synthetic","category":"D","num_levels":5,"rho":5.000000,"query_type":"MkNN","selectivity":null,"radius":null,"k":50,"compdists":25.000000,"time_ms":0.000000,"pages":0.000000,"n_queries":100,"run_id":1},
+{"index":"DIndex","dataset":"Synthetic","category":"D","num_levels":5,"rho":5.000000,"query_type":"MkNN","selectivity":null,"radius":null,"k":100,"compdists":25.000000,"time_ms":0.000000,"pages":0.000000,"n_queries":100,"run_id":1}
+]

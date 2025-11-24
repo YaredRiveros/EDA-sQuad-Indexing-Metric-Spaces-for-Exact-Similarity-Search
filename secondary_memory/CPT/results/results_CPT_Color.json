@@ -1,0 +1,12 @@
+[
+{"index":"CPT","dataset":"Color","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MRQ","selectivity":0.020000,"radius":3709.620000,"k":null,"compdists":1326.380000,"time_ms":0.838770,"pages":1.000000,"n_queries":100,"run_id":1},
+{"index":"CPT","dataset":"Color","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MRQ","selectivity":0.040000,"radius":4024.330000,"k":null,"compdists":1436.270000,"time_ms":0.865730,"pages":1.000000,"n_queries":100,"run_id":1},
+{"index":"CPT","dataset":"Color","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MRQ","selectivity":0.080000,"radius":4462.200000,"k":null,"compdists":1567.350000,"time_ms":1.025630,"pages":1.000000,"n_queries":100,"run_id":1},
+{"index":"CPT","dataset":"Color","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MRQ","selectivity":0.160000,"radius":4995.010000,"k":null,"compdists":1693.460000,"time_ms":1.104310,"pages":1.000000,"n_queries":100,"run_id":1},
+{"index":"CPT","dataset":"Color","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MRQ","selectivity":0.320000,"radius":5613.520000,"k":null,"compdists":1798.370000,"time_ms":1.137000,"pages":1.000000,"n_queries":100,"run_id":1},
+{"index":"CPT","dataset":"Color","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MkNN","selectivity":null,"radius":null,"k":5,"compdists":1626.030000,"time_ms":0.996690,"pages":1.000000,"n_queries":100,"run_id":1},
+{"index":"CPT","dataset":"Color","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MkNN","selectivity":null,"radius":null,"k":10,"compdists":1714.540000,"time_ms":0.962100,"pages":1.000000,"n_queries":100,"run_id":1},
+{"index":"CPT","dataset":"Color","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MkNN","selectivity":null,"radius":null,"k":20,"compdists":1841.860000,"time_ms":1.022910,"pages":1.000000,"n_queries":100,"run_id":1},
+{"index":"CPT","dataset":"Color","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MkNN","selectivity":null,"radius":null,"k":50,"compdists":2005.000000,"time_ms":1.071040,"pages":1.000000,"n_queries":100,"run_id":1},
+{"index":"CPT","dataset":"Color","category":"DM","num_pivots":5,"num_centers_path":null,"arity":null,"query_type":"MkNN","selectivity":null,"radius":null,"k":100,"compdists":2005.000000,"time_ms":1.022520,"pages":1.000000,"n_queries":100,"run_id":1}
+]
