@@ -11,8 +11,8 @@ using namespace chrono;
 
 static const vector<double> SELECTIVITIES = {0.02, 0.04, 0.08, 0.16, 0.32};
 static const vector<int>    K_VALUES      = {5, 10, 20, 50, 100};
-// static const vector<string> DATASETS      = {"LA", "Words", "Color", "Synthetic"};
-static const vector<string> DATASETS = {"LA"};
+// Ejecutar todos los datasets disponibles por defecto
+static const vector<string> DATASETS      = {"LA", "Words", "Color", "Synthetic"};
 
 // Parámetros FQT: {bucket_size, arity}
 // Altura implícita por el número de pivotes seleccionados durante construcción
@@ -147,9 +147,26 @@ int main(int argc, char** argv)
             cerr << "[INFO] ===== Config " << (config_idx+1) << "/" << params.size()
                  << ": bucket=" << param.bucket << ", arity=" << param.arity << " =====\n";
 
+            // Preparar pivotes definidos por test (si se quiere controlar la altura)
+            // Valores objetivo de altura por configuración (aprox.): 3,5,10,15,20
+            std::vector<int> target_heights = {3,5,10,15,20};
+            int target_height = 0;
+            if (config_idx < target_heights.size()) target_height = target_heights[config_idx];
+            if (target_height <= 0) target_height = 3;
+
+            std::vector<int> pivots_list;
+            if (db->size() > 0) {
+                int step = std::max(1, db->size() / target_height);
+                for (int p = 0; p < target_height; ++p) {
+                    int idx = (p * step) % db->size();
+                    pivots_list.push_back(idx);
+                }
+            }
+
             // CONSTRUCCIÓN
             auto t1 = high_resolution_clock::now();
-            FQT tree(db.get(), param.bucket, param.arity);
+            // Pasar pivotes definidos por test al constructor de FQT
+            FQT tree(db.get(), param.bucket, param.arity, pivots_list);
             tree.build();
             auto t2 = high_resolution_clock::now();
             

@@ -37,6 +37,8 @@ private:
     long long compdists;
     
     std::vector<int> pivots;  // pivotes por nivel (uno por nivel)
+    std::vector<int> external_pivots; // pivotes provistos externamente (desde test)
+    bool use_external_pivots = false;
     std::unique_ptr<FQTNode> root;
 
     // Construcción recursiva del árbol
@@ -54,12 +56,19 @@ private:
         
         // Seleccionar pivote para este nivel
         if (depth >= height) {
-            // Añadir nuevo pivote
-            int pivot_idx = rand() % objects.size();
-            int pivot = objects[pivot_idx];
-            objects.erase(objects.begin() + pivot_idx);
-            pivots.push_back(pivot);
-            height++;
+            if (use_external_pivots) {
+                // No hay más pivotes definidos; tratar este nodo como hoja
+                node->is_leaf = true;
+                node->bucket = objects;
+                return node;
+            } else {
+                // Añadir nuevo pivote generado internamente (comportamiento original)
+                int pivot_idx = rand() % objects.size();
+                int pivot = objects[pivot_idx];
+                objects.erase(objects.begin() + pivot_idx);
+                pivots.push_back(pivot);
+                height++;
+            }
         }
         
         if (objects.empty()) return node;
@@ -216,14 +225,26 @@ private:
     }
 
 public:
-    FQT(ObjectDB* database, int bucket_sz, int ar)
-        : db(database), bucket_size(bucket_sz), arity(ar), height(0), compdists(0) {}
+    // Optional: pass a list of pivots to force pivot selection and height
+    FQT(ObjectDB* database, int bucket_sz, int ar, const std::vector<int>& pivots_list = {})
+        : db(database), bucket_size(bucket_sz), arity(ar), height(0), compdists(0)
+    {
+        if (!pivots_list.empty()) {
+            external_pivots = pivots_list;
+            use_external_pivots = true;
+        }
+    }
 
     void build() {
         compdists = 0;
         height = 0;
         pivots.clear();
         
+        // if external pivots provided, use them and set height accordingly
+        if (use_external_pivots) {
+            pivots = external_pivots;
+            height = (int)pivots.size();
+        }
         // Crear lista de todos los objetos
         std::vector<int> all_objects;
         for (int i = 0; i < db->size(); i++) {
