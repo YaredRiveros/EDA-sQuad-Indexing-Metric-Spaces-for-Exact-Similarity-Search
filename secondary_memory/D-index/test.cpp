@@ -13,17 +13,32 @@ static const vector<int> K_VALUES = {
     5, 10, 20, 50, 100
 };
 
-static const vector<string> DATASETS = {
-    "LA", "Words", "Color", "Synthetic"
-};
+// static const vector<string> DATASETS = {
+//     "LA", "Words", "Color", "Synthetic"
+// };
 
-int main() {
+static const vector<string> DATASETS = {"LA"};
+
+int main(int argc, char** argv) {
     srand(12345);
+
+    vector<string> datasets;
+
+    if (argc > 1) {
+        // Los argumentos [1..argc-1] son nombres de dataset
+        for (int i = 1; i < argc; ++i) {    
+            datasets.push_back(argv[i]);
+        }
+    } else {
+        // Si no se pasa nada, usa el set por defecto
+        datasets = DATASETS;
+    }
+
 
     std::filesystem::create_directories("results");
     std::filesystem::create_directories("dindex_indexes");
 
-    for (const string &dataset : DATASETS) {
+    for (const string &dataset : datasets) {
 
         string dbfile = path_dataset(dataset);
         if (dbfile == "") {

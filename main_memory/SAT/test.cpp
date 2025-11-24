@@ -24,14 +24,26 @@ static const vector<int> L_VALUES = {3, 5, 10, 15, 20};
 // ============================================================
 // MAIN — EXPERIMENTACIÓN COMPLETA PARA SAT
 // ============================================================
-int main()
+int main(int argc, char** argv)
 {
     srand(12345);
+
+    vector<string> datasets;
+
+    if (argc > 1) {
+        // Los argumentos [1..argc-1] son nombres de dataset
+        for (int i = 1; i < argc; ++i) {    
+            datasets.push_back(argv[i]);
+        }
+    } else {
+        // Si no se pasa nada, usa el set por defecto
+        datasets = DATASETS;
+    }
 
     // CREAR SUBCARPETA 'results'
     std::filesystem::create_directories("results");
 
-    for (const string &dataset : DATASETS)
+    for (const string &dataset : datasets)
     {
         // ------------------------------------------------------------
         // 1. Resolver dataset físico

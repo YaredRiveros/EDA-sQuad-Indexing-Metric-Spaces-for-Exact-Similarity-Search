@@ -39,9 +39,9 @@ static const string BASE_EXPERIMENT_DIR =
     "../../datasets/dataset_processing/prepared_experiment/";
 
 // Subfolders
-static const string QUERIES_DIR = BASE_EXPERIMENT_DIR + string("queries/");
-static const string RADII_DIR   = BASE_EXPERIMENT_DIR + string("radii/");
-static const string PIVOTS_DIR  = BASE_EXPERIMENT_DIR + string("pivots/");
+static const string QUERIES_DIR = BASE_EXPERIMENT_DIR + string("queries2k/");
+static const string RADII_DIR   = BASE_EXPERIMENT_DIR + string("radii2k/");
+static const string PIVOTS_DIR  = BASE_EXPERIMENT_DIR + string("pivots2k/");
 
 // ------------------------------------------------------------
 // DATASETS DIRECTORY (for LA.txt, Words.txt, etc.)
@@ -51,7 +51,7 @@ static const string DATASET_DIR = "../../datasets/";
 
 // dataset file = datasets/<dataset>.txt
 inline string path_dataset(const string &dataset) {
-    string p = resolve_path(DATASET_DIR + dataset + ".txt");
+    string p = resolve_path(DATASET_DIR + dataset +"_2k"+ ".txt");
     if (p == "")
         cerr << "[WARN] Dataset file not found: " 
              << DATASET_DIR + dataset + ".txt" << "\n";

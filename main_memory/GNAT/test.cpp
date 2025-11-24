@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 #include <filesystem>
 #include <chrono>
-#include "../../../datasets/paths.hpp"
+#include "../../datasets/paths.hpp"
 
 using namespace std;
 using namespace chrono;
@@ -447,7 +447,8 @@ void GNAT_t::knnSearch(vector<int> &queries, int k, double& ave_r)
 
 static const vector<double> SELECTIVITIES = {0.02, 0.04, 0.08, 0.16, 0.32};
 static const vector<int>    K_VALUES      = {5, 10, 20, 50, 100};
-static const vector<string> DATASETS      = {"LA", "Words", "Color", "Synthetic"};
+// static const vector<string> DATASETS      = {"LA", "Words", "Color", "Synthetic"};
+static const vector<string> DATASETS = {"LA"};
 static const vector<int> HEIGHT_VALUES = {3, 5, 10, 15, 20};
 
 // ============================================================
@@ -465,12 +466,24 @@ string dataset_category(const string& dataset) {
 // ============================================================
 // MAIN — EXPERIMENTACIÓN COMPLETA
 // ============================================================
-int main()
+int main(int argc, char** argv)
 {
+	vector<string> datasets;
+
+    if (argc > 1) {
+        // Los argumentos [1..argc-1] son nombres de dataset
+        for (int i = 1; i < argc; ++i) {    
+            datasets.push_back(argv[i]);
+        }
+    } else {
+        // Si no se pasa nada, usa el set por defecto
+        datasets = DATASETS;
+    }
+
     // Crear directorio results
     std::filesystem::create_directories("results");
 
-    for (const string& dataset : DATASETS)
+    for (const string& dataset : datasets)
     {
         // ------------------------------------------------------------
         // 1. Resolver dataset físico

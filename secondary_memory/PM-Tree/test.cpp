@@ -21,7 +21,8 @@ static const vector<int> K_VALUES = {5, 10, 20, 50, 100};
 static const vector<int> L_VALUES = {5};
 
 // Datasets evaluados
-static const vector<string> DATASETS = {"LA", "Color", "Synthetic", "Words"};
+// static const vector<string> DATASETS = {"LA", "Color", "Synthetic", "Words"};
+static const vector<string> DATASETS = {"LA"};
 
 // ============================================================
 // CARGAR PIVOTS (JSON) HFI
@@ -52,13 +53,26 @@ vector<int> load_pivots_json(const string& path) {
 // ============================================================
 // pm_test — ejecución completa
 // ============================================================
-int main() {
+int main(int argc, char** argv) {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
+    vector<string> datasets;
+
+    if (argc > 1) {
+        // Los argumentos [1..argc-1] son nombres de dataset
+        for (int i = 1; i < argc; ++i) {    
+            datasets.push_back(argv[i]);
+        }
+    } else {
+        // Si no se pasa nada, usa el set por defecto
+        datasets = DATASETS;
+    }
+
+
     std::filesystem::create_directories("results");
 
-    for (const string& dataset : DATASETS) {
+    for (const string& dataset : datasets) {
 
         // -----------------------------------------
         // 1. Resolver dataset físico

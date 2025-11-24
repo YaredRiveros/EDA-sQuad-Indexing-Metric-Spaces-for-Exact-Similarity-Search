@@ -13,7 +13,7 @@ Thread(s) per core:                   2
 Core(s) per socket:                   8
 Socket(s):                            1
 Stepping:                             1
-BogoMIPS:                             3593.13
+BogoMIPS:                             3593.15
 Flags:                                fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip rdpid
 Virtualization:                       AMD-V
 Hypervisor vendor:                    Microsoft
@@ -39,4 +39,7 @@ Vulnerability Spectre v2:             Mitigation; Retpolines; IBPB conditional; 
 Vulnerability Srbds:                  Not affected
 Vulnerability Tsx async abort:        Not affected
 
-Start time: Sun Nov 16 18:30:34 -05 2025
+Start time: Mon Nov 24 02:23:11 -05 2025
+Dataset: Synthetic
+
+End time: Mon Nov 24 02:23:44 -05 2025

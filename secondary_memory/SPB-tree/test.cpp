@@ -20,9 +20,11 @@ static const vector<int> K_VALUES = {
 };
 
 // Datasets del entorno experimental
-static const vector<string> DATASETS = {
-    "LA", "Words", "Color", "Synthetic"
-};
+// static const vector<string> DATASETS = {
+//     "LA", "Words", "Color", "Synthetic"
+// };
+
+static const vector<string> DATASETS = {"LA"};
 
 // Número de pivotes (Chen: l = 5)
 static const int NUM_PIVOTS = 5;
@@ -83,14 +85,27 @@ vector<DataObject> build_dataset_for_spb(size_t nObjects) {
     return dataset;
 }
 
-int main() {
+int main(int argc, char** argv) {
     srand(12345);
+
+    vector<string> datasets;
+
+    if (argc > 1) {
+        // Los argumentos [1..argc-1] son nombres de dataset
+        for (int i = 1; i < argc; ++i) {    
+            datasets.push_back(argv[i]);
+        }
+    } else {
+        // Si no se pasa nada, usa el set por defecto
+        datasets = DATASETS;
+    }
+
 
     // Crear carpetas de salida
     std::filesystem::create_directories("results");
     std::filesystem::create_directories("spb_indexes");
 
-    for (const string &dataset : DATASETS) {
+    for (const string &dataset : datasets) {
 
         // --------------------------------------------------------------------
         // Cargar dataset

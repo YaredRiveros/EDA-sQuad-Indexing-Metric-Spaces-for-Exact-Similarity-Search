@@ -18,7 +18,8 @@ static const vector<double> SELECTIVITIES = {0.02, 0.04, 0.08, 0.16, 0.32};
 static const vector<int> K_VALUES = {5, 10, 20, 50, 100};
 
 // Datasets evaluados
-static const vector<string> DATASETS = {"LA", "Color", "Synthetic", "Words"};
+// static const vector<string> DATASETS = {"LA", "Color", "Synthetic", "Words"};
+static const vector<string> DATASETS = {"LA"};
 
 // Parámetros del DSACL-tree (puedes ajustarlos según Chen)
 static const int DSACLT_MAX_ARITY   = 32;
@@ -27,13 +28,26 @@ static const int DSACLT_K_CLUSTER   = 10;
 // ============================================================
 // dsaclt_test — ejecución completa
 // ============================================================
-int main() {
+int main(int argc, char** argv) {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
+    vector<string> datasets;
+
+    if (argc > 1) {
+        // Los argumentos [1..argc-1] son nombres de dataset
+        for (int i = 1; i < argc; ++i) {    
+            datasets.push_back(argv[i]);
+        }
+    } else {
+        // Si no se pasa nada, usa el set por defecto
+        datasets = DATASETS;
+    }
+
+
     std::filesystem::create_directories("results");
 
-    for (const string& dataset : DATASETS) {
+    for (const string& dataset : datasets) {
 
         // -----------------------------------------
         // 1. Resolver dataset físico

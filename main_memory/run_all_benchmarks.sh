@@ -1,138 +1,80 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# ============================================================
-# Script para ejecutar todos los benchmarks de estructuras
-# de índices métricos en main_memory
-# ============================================================
+set -euo pipefail
 
-set -e  # Exit on error
+STRUCTURES=("BST" "LAESA" "BKT" "MVPT" "EPT" "FQT" "GNAT" "SAT")
 
-STRUCTURES=("BST" "LAESA" "BKT" "mvpt" "EPT" "FQT" "GNAT")
+# Dataset objetivo desde argumento, default LA
+TARGET_DATASET="${1:-LA}"
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "=========================================="
 echo "Main-Memory Index Structures Benchmark"
 echo "=========================================="
 echo "CPU Info:"
-lscpu | grep "Model name"
+lscpu | grep "Model name" || true
 echo ""
 echo "Starting time: $(date)"
+echo "Dataset objetivo: ${TARGET_DATASET}"
 echo "=========================================="
 echo ""
 
-# Record CPU info
-echo "CPU Info:" > benchmark_system_info.txt
-lscpu >> benchmark_system_info.txt
-echo "" >> benchmark_system_info.txt
-echo "Start time: $(date)" >> benchmark_system_info.txt
+{
+  echo "CPU Info:"
+  lscpu
+  echo ""
+  echo "Start time: $(date)"
+  echo "Dataset: ${TARGET_DATASET}"
+} > "${SCRIPT_DIR}/benchmark_system_info.txt"
 
 for struct in "${STRUCTURES[@]}"; do
-    echo ""
-    echo "=========================================="
-    echo "Structure: $struct"
-    echo "=========================================="
-    
-    cd "$SCRIPT_DIR/$struct"
-    
-    # Compile
-    echo "[1/3] Compiling..."
-    if [ "$struct" == "mvpt" ]; then
-        # mvpt paths are different
-        g++ -O3 -std=gnu++17 test.cpp -o ${struct}_test -I..
-    elif [ "$struct" == "EPT" ]; then
-        # EPT* uses Makefile with existing source files
-        echo "Compiling EPT* with its dependencies..."
-        g++ -O3 -std=gnu++17 test.cpp Interpreter.cpp Objvector.cpp Tuple.cpp -o ${struct}_test
-    elif [ "$struct" == "FQT" ]; then
-        # FQT is C code, needs special compilation
-        echo "Compiling FQT (C code) with C++ wrapper..."
-        gcc -O3 -c fqt.c -o fqt.o
-        gcc -O3 -c ../../index.c -o index_fqt.o
-        gcc -O3 -c ../../bucket.c -o bucket_fqt.o
-        g++ -O3 -std=gnu++17 test.cpp fqt.o index_fqt.o bucket_fqt.o -o ${struct}_test
-    elif [ "$struct" == "GNAT" ]; then
-        # GNAT is in nested directory
-        cd GNAT
-        echo "Compiling GNAT with its dependencies..."
-        g++ -O3 -std=gnu++17 test.cpp db.cpp GNAT.cpp -o ../GNAT_test
-        cd ..
-    else
-        g++ -O3 -std=gnu++17 test.cpp -o ${struct}_test
-    fi
-    
-    if [ $? -ne 0 ]; then
-        echo "[ERROR] Compilation failed for $struct"
-        cd "$SCRIPT_DIR"
-        continue
-    fi
-    echo "[✓] Compilation successful"
-    
-    # Run benchmark
-    echo "[2/3] Running benchmark..."
-    echo "This may take several minutes..."
-    
-    ./${struct}_test > ${struct}_benchmark.log 2>&1
-    
-    if [ $? -ne 0 ]; then
-        echo "[ERROR] Execution failed for $struct"
-        echo "Check ${struct}_benchmark.log for details"
-    else
-        echo "[✓] Benchmark completed successfully"
-    fi
-    
-    # Summary
-    echo "[3/3] Results summary:"
-    if [ -d "results" ]; then
-        # Convert struct name to uppercase for matching JSON files
-        struct_upper=$(echo "$struct" | tr '[:lower:]' '[:upper:]')
-        ls -lh results/results_${struct_upper}*.json 2>/dev/null
-        if [ $? -ne 0 ]; then
-            # Try with original case if uppercase didn't work
-            ls -lh results/results_${struct}*.json 2>/dev/null
-        fi
-        count=$(ls results/results_${struct_upper}*.json 2>/dev/null | wc -l)
-        if [ $count -eq 0 ]; then
-            count=$(ls results/results_${struct}*.json 2>/dev/null | wc -l)
-        fi
-        echo "Total result files: $count"
-    else
-        echo "[WARN] No results directory found"
-    fi
-    
+  echo ""
+  echo "=========================================="
+  echo "Structure: $struct"
+  echo "=========================================="
+
+  cd "${SCRIPT_DIR}/${struct}"
+
+  echo "[1/3] Compiling..."
+  g++ -O3 -std=c++17 test.cpp -o "${struct}_test"
+  compile_exit=$?
+  if [ "$compile_exit" -ne 0 ]; then
+    echo "[ERROR] Compilation FAILED for ${struct} (exit code=${compile_exit})"
     cd "$SCRIPT_DIR"
-    echo ""
+    continue
+  fi
+  echo "[✓] Compilation finished (exit code ${compile_exit})"
+
+  echo "[2/3] Running benchmark for dataset=${TARGET_DATASET}..."
+  "./${struct}_test" "${TARGET_DATASET}" > "${struct}_benchmark_${TARGET_DATASET}.log" 2>&1
+  run_exit=$?
+
+  if [ "$run_exit" -ne 0 ]; then
+    echo "[ERROR] Benchmark for ${struct} FAILED (exit code=${run_exit})"
+    echo "        Check ${struct}_benchmark_${TARGET_DATASET}.log"
+  else
+    echo "[✓] Benchmark completed successfully"
+  fi
+
+  echo "[3/3] Results summary:"
+  if [ -d "results" ]; then
+    ls -lh results/*.json 2>/dev/null || echo "No JSON results found for ${struct}"
+  else
+    echo "[WARN] No results directory found for ${struct}"
+  fi
+
+  cd "$SCRIPT_DIR"
 done
 
-# Final summary
 echo ""
 echo "=========================================="
-echo "All Benchmarks Completed!"
+echo "All Benchmarks Completed for dataset=${TARGET_DATASET}!"
 echo "=========================================="
 echo "End time: $(date)"
 echo ""
 
-echo "Results location:"
-for struct in "${STRUCTURES[@]}"; do
-    if [ -d "$struct/results" ]; then
-        echo "  $struct/results/"
-    fi
-done
-
-echo ""
-echo "Logs:"
-for struct in "${STRUCTURES[@]}"; do
-    if [ -f "$struct/${struct}_benchmark.log" ]; then
-        echo "  $struct/${struct}_benchmark.log"
-    fi
-done
-
-echo ""
-echo "Next steps:"
-echo "  1. Review individual logs for any warnings"
-echo "  2. Run Python aggregation script: python3 aggregate_results.py"
-echo "  3. Analyze consolidated results"
-echo ""
-
-# Record end time
-echo "" >> benchmark_system_info.txt
-echo "End time: $(date)" >> benchmark_system_info.txt
+{
+  echo ""
+  echo "End time: $(date)"
+} >> "${SCRIPT_DIR}/benchmark_system_info.txt"

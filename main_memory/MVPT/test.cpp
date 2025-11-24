@@ -9,7 +9,8 @@ using namespace std;
 static const vector<double> SELECTIVITIES = {0.02, 0.04, 0.08, 0.16, 0.32};
 static const vector<int>    K_VALUES       = {5, 10, 20, 50, 100};
 static const vector<int>    PIVOT_COUNTS   = {3, 5, 10, 15, 20};
-static const vector<string> DATASETS       = {"LA", "Words", "Color", "Synthetic"};
+// static const vector<string> DATASETS       = {"LA", "Words", "Color", "Synthetic"};
+static const vector<string> DATASETS = {"LA"};
 
 // Load pivots JSON (precomputed by HFI) — same parser used in LAESA test
 vector<int> load_pivots_json(const string& path) {
@@ -33,11 +34,23 @@ vector<int> load_pivots_json(const string& path) {
     return piv;
 }
 
-int main()
+int main(int argc, char** argv)
 {
+    vector<string> datasets;
+
+    if (argc > 1) {
+        // Los argumentos [1..argc-1] son nombres de dataset
+        for (int i = 1; i < argc; ++i) {    
+            datasets.push_back(argv[i]);
+        }
+    } else {
+        // Si no se pasa nada, usa el set por defecto
+        datasets = DATASETS;
+    }
+
     filesystem::create_directories("results");
 
-    for (const string& dataset : DATASETS)
+    for (const string& dataset : datasets)
     {
         string dbfile = path_dataset(dataset);
         if (dbfile == "") { cerr << "[WARN] Dataset not found: " << dataset << "\n"; continue; }

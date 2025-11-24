@@ -282,10 +282,21 @@ void test_dataset(const string& dataset) {
     cout << "==========================================\n";
 }
 
-int main() {
+int main(int argc, char** argv) {
     srand(12345);
 
-    vector<string> datasets = {"LA", "Words", "Color", "Synthetic"};
+    vector<string> datasets;
+
+    if (argc > 1) {
+        // Los argumentos [1..argc-1] son nombres de dataset
+        for (int i = 1; i < argc; ++i) {    
+            datasets.push_back(argv[i]);
+        }
+    } else {
+        // Si no se pasa nada, usa el set por defecto
+        // datasets = {"LA", "Words", "Color", "Synthetic"};
+        datasets = {"LA"};
+    }
 
     for (const auto& dataset : datasets) {
         try {
@@ -296,9 +307,7 @@ int main() {
     }
 
     cout << "\n\n";
-    cout << "##########################################\n";
-    cout << "### TODAS LAS PRUEBAS COMPLETADAS\n";
-    cout << "##########################################\n";
+    cout << "TODAS LAS PRUEBAS COMPLETADAS:)\n";
 
     return 0;
 }

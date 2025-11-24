@@ -15,7 +15,8 @@ static const vector<double> SELECTIVITIES = {0.02, 0.04, 0.08, 0.16, 0.32};
 static const vector<int> K_VALUES = {5, 10, 20, 50, 100};
 
 // Datasets evaluados
-static const vector<string> DATASETS = {"LA", "Words", "Color", "Synthetic"};
+// static const vector<string> DATASETS = {"LA", "Words", "Color", "Synthetic"};
+static const vector<string> DATASETS = {"LA"};
 
 // Conjuntos de parámetros BKT que vamos a probar
 // (equivalentes a {3,5,10,15,20} alturas del paper)
@@ -75,13 +76,26 @@ double estimate_avg_dist(const ObjectDB* db, int samples = 1000)
 // ============================================================
 // MAIN — EXPERIMENTACIÓN COMPLETA
 // ============================================================
-int main()
+int main(int argc, char** argv)
 {
     srand(12345);
 
+    // 1) Decidir qué datasets correr
+    vector<string> datasets;
+
+    if (argc > 1) {
+        // Los argumentos [1..argc-1] son nombres de dataset
+        for (int i = 1; i < argc; ++i) {    
+            datasets.push_back(argv[i]);
+        }
+    } else {
+        // Si no se pasa nada, usa el set por defecto
+        datasets = DATASETS;
+    }
+
     // CREAR SUBCARPETA 'RESULTS'
     std::filesystem::create_directories("results");
-    for (const string& dataset : DATASETS)
+    for (const string& dataset : datasets)
     {
         // ------------------------------------------------------------
         // 1. Resolver dataset físico
