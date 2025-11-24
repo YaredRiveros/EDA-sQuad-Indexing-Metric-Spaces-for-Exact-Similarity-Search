@@ -5,9 +5,6 @@
 using namespace std;
 using namespace chrono;
 
-// ============================================================
-// CONFIGURACIÓN DEL PAPER
-// ============================================================
 
 static const vector<double> SELECTIVITIES = {0.02, 0.04, 0.08, 0.16, 0.32};
 static const vector<int>    K_VALUES      = {5, 10, 20, 50, 100};
@@ -15,7 +12,6 @@ static const vector<int>    K_VALUES      = {5, 10, 20, 50, 100};
 static const vector<string> DATASETS      = {"LA", "Words", "Color", "Synthetic"};
 
 // Parámetros FQT: {bucket_size, arity}
-// Altura implícita por el número de pivotes seleccionados durante construcción
 struct FQT_Params {
     int bucket;
     int arity;
@@ -23,11 +19,11 @@ struct FQT_Params {
 
 // Parámetros para cada dataset (ajustados según tamaño y características)
 static const vector<FQT_Params> PARAMS_LA = {
-    {100, 5},  // ~height 3
-    { 50, 5},  // ~height 5
-    { 20, 5},  // ~height 10
-    { 10, 5},  // ~height 15
-    {  5, 5}   // ~height 20
+    {100, 5},  
+    { 50, 5},  
+    { 20, 5},  
+    { 10, 5},  
+    {  5, 5}   
 };
 
 static const vector<FQT_Params> PARAMS_WORDS = {
@@ -54,9 +50,6 @@ static const vector<FQT_Params> PARAMS_COLOR = {
     {  5, 5}
 };
 
-// ============================================================
-// MAIN — EXPERIMENTACIÓN COMPLETA
-// ============================================================
 int main(int argc, char** argv)
 {
     srand(12345);
@@ -68,7 +61,6 @@ int main(int argc, char** argv)
             datasets.push_back(argv[i]);
         }
     } else {
-        // Si no se pasa nada, usa el set por defecto
         datasets = DATASETS;
     }
 
@@ -76,18 +68,12 @@ int main(int argc, char** argv)
     
     for (const string& dataset : datasets)
     {
-        // ------------------------------------------------------------
-        // 1. Resolver dataset físico
-        // ------------------------------------------------------------
         string dbfile = path_dataset(dataset);
         if (dbfile == "") {
             cerr << "[WARN] Dataset no encontrado: " << dataset << "\n";
             continue;
         }
 
-        // ------------------------------------------------------------
-        // 2. Cargar dataset con su métrica
-        // ------------------------------------------------------------
         unique_ptr<ObjectDB> db;
         
         if (dataset == "LA")              db = make_unique<VectorDB>(dbfile, 2);
@@ -102,9 +88,6 @@ int main(int argc, char** argv)
         cerr << "[INFO] Dataset: " << dataset << "   N=" << nObjects << "\n";
         cerr << "==========================================\n";
 
-        // ------------------------------------------------------------
-        // 3. Cargar queries y radios
-        // ------------------------------------------------------------
         vector<int> queries = load_queries_file(path_queries(dataset));
         auto radii = load_radii_file(path_radii(dataset));
 
@@ -115,18 +98,12 @@ int main(int argc, char** argv)
 
         cerr << "[INFO] Cargadas " << queries.size() << " queries\n";
 
-        // ------------------------------------------------------------
-        // 4. Seleccionar parámetros según dataset
-        // ------------------------------------------------------------
         vector<FQT_Params> params;
         if (dataset == "LA")              params = PARAMS_LA;
         else if (dataset == "Words")      params = PARAMS_WORDS;
         else if (dataset == "Color")      params = PARAMS_COLOR;
         else if (dataset == "Synthetic")  params = PARAMS_SYNTH;
 
-        // ------------------------------------------------------------
-        // 5. Archivo JSON
-        // ------------------------------------------------------------
         string jsonOut = "results/results_FQT_" + dataset + ".json";
         ofstream J(jsonOut);
         if (!J.is_open()) {
@@ -137,9 +114,6 @@ int main(int argc, char** argv)
         J << "[\n";
         bool firstOutput = true;
 
-        // ------------------------------------------------------------
-        // 6. Experimentos con diferentes configuraciones
-        // ------------------------------------------------------------
         for (size_t config_idx = 0; config_idx < params.size(); config_idx++)
         {
             auto& param = params[config_idx];
@@ -147,8 +121,7 @@ int main(int argc, char** argv)
             cerr << "[INFO] ===== Config " << (config_idx+1) << "/" << params.size()
                  << ": bucket=" << param.bucket << ", arity=" << param.arity << " =====\n";
 
-            // Preparar pivotes definidos por test (si se quiere controlar la altura)
-            // Valores objetivo de altura por configuración (aprox.): 3,5,10,15,20
+            // Preparar pivotes definidos por test
             std::vector<int> target_heights = {3,5,10,15,20};
             int target_height = 0;
             if (config_idx < target_heights.size()) target_height = target_heights[config_idx];
@@ -163,7 +136,6 @@ int main(int argc, char** argv)
                 }
             }
 
-            // CONSTRUCCIÓN
             auto t1 = high_resolution_clock::now();
             // Pasar pivotes definidos por test al constructor de FQT
             FQT tree(db.get(), param.bucket, param.arity, pivots_list);
@@ -177,9 +149,6 @@ int main(int argc, char** argv)
             cerr << "[INFO] Construcción: " << buildTime << " ms, " 
                  << buildDists << " compdists, altura=" << height << "\n";
 
-            // ========================================
-            // EXPERIMENTOS MkNN
-            // ========================================
             cerr << "[INFO] Ejecutando MkNN queries...\n";
             
             for (int k : K_VALUES)
@@ -223,9 +192,6 @@ int main(int argc, char** argv)
                 J << "  }";
             }
 
-            // ========================================
-            // EXPERIMENTOS MRQ
-            // ========================================
             cerr << "[INFO] Ejecutando MRQ queries...\n";
 
             for (const auto& entry : radii)

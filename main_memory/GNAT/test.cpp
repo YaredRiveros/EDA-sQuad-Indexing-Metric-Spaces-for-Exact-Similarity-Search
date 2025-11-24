@@ -7,14 +7,8 @@
 using namespace std;
 using namespace chrono;
 
-// ============================================================
-// INLINE IMPLEMENTATIONS (db.h, db.cpp, index.h, GNAT.h, GNAT.cpp)
-// ============================================================
-
-// Variable global de GNAT
 int MaxHeight;
 
-// --- db.h ---
 class db_t
 {
 public:
@@ -62,7 +56,6 @@ public:
 	double dist(int x, int y) const;
 };
 
-// --- db.cpp implementations ---
 void double_db_t::read(string path)
 {
 	ifstream in(path);
@@ -443,23 +436,12 @@ void GNAT_t::knnSearch(vector<int> &queries, int k, double& ave_r)
 	}
 }
 
-// ============================================================
-// END OF INLINE IMPLEMENTATIONS
-// ============================================================
-
-// ============================================================
-// CONFIGURACIÓN EXACTA DEL PAPER (Tabla 6)
-// ============================================================
 
 static const vector<double> SELECTIVITIES = {0.02, 0.04, 0.08, 0.16, 0.32};
 static const vector<int>    K_VALUES      = {5, 10, 20, 50, 100};
 // static const vector<string> DATASETS      = {"LA", "Words", "Color", "Synthetic"};
 static const vector<string> DATASETS = {"LA"};
 static const vector<int> HEIGHT_VALUES = {3, 5, 10, 15, 20};
-
-// ============================================================
-// FUNCIONES AUXILIARES
-// ============================================================
 
 string dataset_category(const string& dataset) {
     if (dataset == "LA") return "vectors";
@@ -469,9 +451,6 @@ string dataset_category(const string& dataset) {
     return "unknown";
 }
 
-// ============================================================
-// MAIN — EXPERIMENTACIÓN COMPLETA
-// ============================================================
 int main(int argc, char** argv)
 {
 	vector<string> datasets;
@@ -491,9 +470,6 @@ int main(int argc, char** argv)
 
     for (const string& dataset : datasets)
     {
-        // ------------------------------------------------------------
-        // 1. Resolver dataset físico
-        // ------------------------------------------------------------
         string dbfile = path_dataset(dataset);
         if (dbfile == "" || !std::filesystem::exists(dbfile)) {
             cerr << "[WARN] Dataset no encontrado, omitido: " << dataset << "\n";
@@ -504,9 +480,6 @@ int main(int argc, char** argv)
         cerr << "[INFO] Dataset: " << dataset << "   File=" << dbfile << "\n";
         cerr << "==========================================\n";
 
-        // ------------------------------------------------------------
-        // 2. Cargar base de datos (tipos correctos)
-        // ------------------------------------------------------------
         unique_ptr<db_t> db;
 
         if (dataset == "LA")
@@ -531,8 +504,6 @@ int main(int argc, char** argv)
             continue;
         }
 
-        // Limitar Words a 30K objetos desde la carga
-        // (el archivo tiene 597K líneas pero las queries fueron generadas para ~26K)
         if (dataset == "Words") {
             cerr << "[INFO] Cargando Words con límite de 30000 objetos\n";
             db->read(dbfile, 30000);
@@ -548,9 +519,6 @@ int main(int argc, char** argv)
 
         cerr << "[INFO] Objetos: " << nObjects << "\n";
 
-        // ------------------------------------------------------------
-        // 3. Cargar queries y radios (precomputados desde JSON)
-        // ------------------------------------------------------------
         vector<int> queries = load_queries_file(path_queries(dataset));
         auto radii          = load_radii_file(path_radii(dataset));
 
@@ -579,9 +547,6 @@ int main(int argc, char** argv)
         cerr << "[INFO] Loaded " << queries.size() << " queries\n";
         cerr << "[INFO] Loaded " << radii.size() << " radii\n";
 
-        // ------------------------------------------------------------
-        // 4. Archivo JSON
-        // ------------------------------------------------------------
         string jsonOut = "results/results_GNAT_" + dataset + ".json";
         ofstream J(jsonOut);
         if (!J.is_open()) {
@@ -591,9 +556,6 @@ int main(int argc, char** argv)
 
         J << "[\n";
 
-        // ------------------------------------------------------------
-        // 5. Experimentos con diferentes valores de HEIGHT
-        // ------------------------------------------------------------
         bool firstConfig = true;
 
         for (int HEIGHT : HEIGHT_VALUES)
@@ -603,7 +565,6 @@ int main(int argc, char** argv)
             MaxHeight = HEIGHT; // Variable global de GNAT
             int arity = 5; // M (arity) fijo como en el main.cpp original
             
-            // CONSTRUCCIÓN DEL ÍNDICE
             cerr << "[INFO] Construyendo índice GNAT con HEIGHT=" << HEIGHT << ", M=" << arity << "...\n";
             GNAT_t index(db.get(), arity);
             
@@ -619,9 +580,6 @@ int main(int argc, char** argv)
             cerr << "[INFO] Construcción completada: " << buildTime << " ms, " 
                  << buildDists << " compdists\n";
 
-            // ========================================
-            // EXPERIMENTOS MkNN
-            // ========================================
             cerr << "[INFO] Ejecutando MkNN queries...\n";
             
             for (int k : K_VALUES)
@@ -664,9 +622,6 @@ int main(int argc, char** argv)
                 J << "  }";
             }
 
-            // ========================================
-            // EXPERIMENTOS MRQ
-            // ========================================
             cerr << "[INFO] Ejecutando MRQ queries...\n";
 
             for (const auto& entry : radii)

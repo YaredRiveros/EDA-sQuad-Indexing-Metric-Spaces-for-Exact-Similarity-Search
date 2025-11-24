@@ -4,20 +4,12 @@
 #include <filesystem>
 using namespace std;
 
-// ============================================================
-// CONFIGURACIÓN EXACTA DEL PAPER (Tabla 6)
-// ============================================================
-
 static const vector<double> SELECTIVITIES = {0.02, 0.04, 0.08, 0.16, 0.32};
 static const vector<int>    K_VALUES      = {5, 10, 20, 50, 100};
 static const vector<int>    PIVOT_COUNTS  = {3, 5, 10, 15, 20};
 // static const vector<string> DATASETS      = {"LA", "Words", "Color", "Synthetic"};
 static const vector<string> DATASETS = {"LA"};
 
-
-// ============================================================
-// Cargar pivots desde JSON (precomputed by HFI)
-// ============================================================
 
 vector<int> load_pivots_json(const string& path) {
     vector<int> piv;
@@ -44,9 +36,6 @@ vector<int> load_pivots_json(const string& path) {
 }
 
 
-// ============================================================
-// MAIN — EXPERIMENTACIÓN COMPLETA
-// ============================================================
 int main(int argc, char** argv)
 {
     vector<string> datasets;
@@ -65,9 +54,6 @@ int main(int argc, char** argv)
 
     for (const string& dataset : datasets)
     {
-        // ------------------------------------------------------------
-        // 1. Resolver dataset físico
-        // ------------------------------------------------------------
         string dbfile = path_dataset(dataset);
 
         if (dbfile == "") {
@@ -75,9 +61,6 @@ int main(int argc, char** argv)
             continue;
         }
 
-        // ------------------------------------------------------------
-        // 2. Cargar base de datos con la métrica correspondiente
-        // ------------------------------------------------------------
         unique_ptr<ObjectDB> db;
 
         if (dataset == "LA")
@@ -85,7 +68,7 @@ int main(int argc, char** argv)
         else if (dataset == "Color")
             db = make_unique<VectorDB>(dbfile, 1);        // L1 norm
         else if (dataset == "Synthetic")
-            db = make_unique<VectorDB>(dbfile, 999999);   // L∞ norm
+            db = make_unique<VectorDB>(dbfile, 999999);   // Linf norm
         else if (dataset == "Words")
             db = make_unique<StringDB>(dbfile);           // Edit distance
         else {
@@ -105,9 +88,6 @@ int main(int argc, char** argv)
             continue;
         }
 
-        // ------------------------------------------------------------
-        // 3. Cargar queries + radios
-        // ------------------------------------------------------------
         vector<int> queries = load_queries_file(path_queries(dataset));
         auto radii = load_radii_file(path_radii(dataset));
 
@@ -116,18 +96,11 @@ int main(int argc, char** argv)
             continue;
         }
 
-        // ------------------------------------------------------------
-        // 4. Archivo JSON final
-        // ------------------------------------------------------------
         string jsonOut = "results/results_LAESA_" + dataset + ".json";
         ofstream J(jsonOut);
         J << "[\n";
         bool firstOutput = true;
 
-
-        // ============================================================
-        // 5. PROBAR nPivots = {3, 5, 10, 15, 20}
-        // ============================================================
         for (int nPivots : PIVOT_COUNTS)
         {
             cerr << "\n------------------------------------------\n";
@@ -147,10 +120,6 @@ int main(int argc, char** argv)
             LAESA laesa(db.get(), nPivots);
             laesa.overridePivots(pivots);
 
-
-            // ========================================================
-            //  MRQ (range queries)
-            // ========================================================
             for (double sel : SELECTIVITIES)
             {
                 if (!radii.count(sel)) continue;
@@ -195,10 +164,6 @@ int main(int argc, char** argv)
                   << "}";
             }
 
-
-            // ========================================================
-            //  MkNN
-            // ========================================================
             for (int k : K_VALUES)
             {
                 long long totalD = 0;

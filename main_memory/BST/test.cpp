@@ -4,20 +4,12 @@
 #include <filesystem>
 using namespace std;
 
-// ============================================================
-// CONFIGURACIÓN EXACTA DEL PAPER (Tabla 6)
-// ============================================================
-
 static const vector<double> SELECTIVITIES = {0.02, 0.04, 0.08, 0.16, 0.32};
 static const vector<int>    K_VALUES      = {5, 10, 20, 50, 100};
 // static const vector<string> DATASETS      = {"LA", "Words", "Color", "Synthetic"};
 static const vector<string> DATASETS = {"LA"};
 static const vector<int> HEIGHT_VALUES = {3, 5, 10, 15, 20};
 
-
-// ============================================================
-// MAIN — EXPERIMENTACIÓN COMPLETA
-// ============================================================
 int main(int argc, char** argv)
 {
 
@@ -33,14 +25,10 @@ int main(int argc, char** argv)
         datasets = DATASETS;
     }
 
-    // CREAR SUBCARPETA 'RESULTS'
     std::filesystem::create_directories("results");
 
     for (const string& dataset : datasets)
     {
-        // ------------------------------------------------------------
-        // 1. Resolver dataset físico (LA.txt, Words.txt, Color.txt...)
-        // ------------------------------------------------------------
         string dbfile = path_dataset(dataset);
 
         if (dbfile == "") {
@@ -48,9 +36,6 @@ int main(int argc, char** argv)
             continue;
         }
 
-        // ------------------------------------------------------------
-        // 2. Cargar base de datos (tipos correctos)
-        // ------------------------------------------------------------
         unique_ptr<ObjectDB> db;
 
         if (dataset == "LA")
@@ -87,10 +72,6 @@ int main(int argc, char** argv)
              << "   File=" << dbfile << "\n";
         cerr << "==========================================\n";
 
-
-        // ------------------------------------------------------------
-        // 3. Cargar queries y radios (precomputados)
-        // ------------------------------------------------------------
         vector<int> queries = load_queries_file(path_queries(dataset));
         auto radii          = load_radii_file(path_radii(dataset));
 
@@ -101,10 +82,6 @@ int main(int argc, char** argv)
 
         cerr << "[INFO] Loaded " << queries.size() << " queries\n";
 
-
-        // ------------------------------------------------------------
-        // 4. Archivo JSON (modo append)
-        // ------------------------------------------------------------
         string jsonOut = "results/results_BST_" + dataset + ".json";
         ofstream J(jsonOut);
         if (!J.is_open()) {
@@ -116,9 +93,6 @@ int main(int argc, char** argv)
         bool firstOutput = true;
 
 
-        // ============================================================
-        // 5. PARA CADA ALTURA = {3,5,10,15,20}
-        // ============================================================
         int bucket = 10; // fijo para BST
 
         for (int hparam : HEIGHT_VALUES)

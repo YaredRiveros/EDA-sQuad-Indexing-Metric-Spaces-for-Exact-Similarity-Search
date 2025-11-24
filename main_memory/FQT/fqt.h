@@ -1,10 +1,6 @@
 #ifndef FQT_H
 #define FQT_H
 
-/* Encabezado corregido para FQ-Tree (FQVP tree).
- * Mantiene las mismas dependencias originales. Asegúrate que
- * ../../index.h y ../../bucket.h declaren Obj, Tdist, Index, etc.
- */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,7 +11,7 @@
 #include "../../index.h"
 #include "../../bucket.h"
 
-/* Nodo del árbol FQ (hoja o interno). Se conserva la unión original. */
+/* Nodo del árbol FQ (hoja o interno) */
 typedef struct sfqnode {
     bool hoja;
     union {
@@ -24,15 +20,11 @@ typedef struct sfqnode {
             int size;        /* número de objetos en el bucket */
         } hoja;
         struct {
-            void *children;  /* puntero a array de Tchild (se castea) */
+            void *children;  /* puntero a array de Tchild */
         } interno;
     } u;
 } fqvpnode;
 
-/* Un hijo contiene el límite (dist) y el nodo hijo. 
- * Nota: el diseño original tenía fqvpnode por valor dentro de Tchild.
- * Lo dejamos por compatibilidad (evita cambiar API externa).
- */
 typedef struct {
     Tdist dist;     /* [dist, dist siguiente) */
     fqvpnode child; /* subárbol */
@@ -57,7 +49,6 @@ typedef struct {
 
 #define child(node,i) (((Tchild*)((node)->u.interno.children))[i])
 
-/* Entrada auxiliar para ordenamiento (objeto + distancia) */
 typedef struct {
     Obj obj;
     Tdist dist;

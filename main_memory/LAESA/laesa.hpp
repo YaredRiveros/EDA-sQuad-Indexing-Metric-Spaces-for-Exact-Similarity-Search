@@ -26,13 +26,6 @@ class LAESA {
                                         // distMatrix[i][j] = distance from object i to pivot j
 
 public:
-    /**
-     * Builds the LAESA index
-     * 
-     * @param db Pointer to the object database
-     * @param nPivots Number of pivots to use
-     *                Recommendation: between sqrt(n) and 0.1*n, where n = number of objects
-     */
     LAESA(ObjectDB *db, int nPivots);
 
     void overridePivots(const vector<int>& newPivots) {
@@ -43,35 +36,11 @@ public:
         pivots = newPivots;
     }
 
-    /**
-     * Finds all objects within distance <= radius from the query
-     * 
-     * @param queryId ID of the query object
-     * @param radius Search radius
-     * @param result Vector to store the IDs of found objects
-     */
     void rangeSearch(int queryId, double radius, vector<int> &result) const;
 
-    /**
-     * k-Nearest Neighbors search
-     * 
-     * @param queryId ID of the query object
-     * @param k NNumber of neighbors to find
-     * @param out Vector to store the k neighbors (sorted by distance)
-     */
     void knnSearch(int queryId, int k, vector<ResultElem> &out) const;
 
 private:
-    /**
-     * Calculates the lower bound distance using the triangle inequality
-     * 
-     * For each pivot p: |d(q,p) - d(o,p)| <= d(q,o)
-     * Returns the maximum of all differences (tightest lower bound)
-     *
-     * @param queryDists Distances from the query to the pivots
-     * @param objectIdx Index of the candidate object
-     * @return Lower bound of the distance d(query, object)
-     */
     double lowerBound(const vector<double> &queryDists, int objectIdx) const;
 };
 
@@ -81,13 +50,11 @@ LAESA::LAESA(ObjectDB *db, int nPivots)
     if (nPivots > n) nPivots = n;
     this->nPivots = nPivots;
 
-    // 1. Select the first nPivots objects
     pivots.resize(nPivots);
     for (int i = 0; i < nPivots; i++) {
         pivots[i] = i;
     }
 
-    // 2. Precompute distance matrix (n × nPivots)
     distMatrix.resize(n, vector<double>(nPivots));
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < nPivots; j++) {
@@ -117,7 +84,6 @@ void LAESA::rangeSearch(int queryId, double radius, vector<int> &result) const
     //compdists = compdistsBuild;  // Start counting from precomputed distances
     compdists = 0;
 
-    // 1. Calculate distances from the query to the pivots
     vector<double> queryDists(nPivots);
     for (int j = 0; j < nPivots; j++) {
         queryDists[j] = db->distance(queryId, pivots[j]);
@@ -128,7 +94,6 @@ void LAESA::rangeSearch(int queryId, double radius, vector<int> &result) const
         }
     }
 
-    // 2. Filter and check non-pivot objects
     for (int i = 0; i < n; i++) {
         // Skip if it's a pivot (already checked)
         bool isPivot = false;
@@ -162,7 +127,6 @@ void LAESA::knnSearch(int queryId, int k, vector<ResultElem> &out) const
     //compdists = compdistsBuild;  // Start counting from precomputed distances
     compdists = 0;
 
-    // 1. Calculate distances from the query to the pivots and add them
     vector<double> queryDists(nPivots);
     for (int j = 0; j < nPivots; j++) {
         queryDists[j] = db->distance(queryId, pivots[j]);
@@ -177,11 +141,9 @@ void LAESA::knnSearch(int queryId, int k, vector<ResultElem> &out) const
 
     double tau = pq.size() == k ? pq.top().dist : numeric_limits<double>::infinity();
 
-    // 2. Calculate L1 distances to order candidates (heuristic)
     vector<pair<double, int>> candidates;  // (L1 distance, object ID)
 
     for (int i = 0; i < n; i++) {
-        // Skip if it's a pivot
         bool isPivot = false;
         for (int p : pivots) {
             if (i == p) {
@@ -199,10 +161,8 @@ void LAESA::knnSearch(int queryId, int k, vector<ResultElem> &out) const
         candidates.push_back({dist1, i});
     }
 
-    // 3. Sort candidates by L1 distance (process the most promising first)
     sort(candidates.begin(), candidates.end());
 
-    // 4. Process candidates in order with filtering
     for (const auto &cand : candidates) {
         int i = cand.second;
         
@@ -224,7 +184,6 @@ void LAESA::knnSearch(int queryId, int k, vector<ResultElem> &out) const
         // If lb > tau, the object is pruned
     }
 
-    // 5. Extract results and sort by distance
     while (!pq.empty()) {
         out.push_back(pq.top());
         pq.pop();

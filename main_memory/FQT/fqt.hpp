@@ -8,13 +8,6 @@
 #include <cmath>
 #include <memory>
 
-// ============================================================
-// FQT - Fixed Queries Tree (Wrapper C++ sobre ObjectDB)
-// ============================================================
-// Paper: "FQT utilizes the same pivot at the same level"
-// Paper: "FQT is an unbalanced tree"
-// ============================================================
-
 class FQT {
 private:
     struct FQTNode {
@@ -62,7 +55,6 @@ private:
                 node->bucket = objects;
                 return node;
             } else {
-                // Añadir nuevo pivote generado internamente (comportamiento original)
                 int pivot_idx = rand() % objects.size();
                 int pivot = objects[pivot_idx];
                 objects.erase(objects.begin() + pivot_idx);
@@ -225,7 +217,6 @@ private:
     }
 
 public:
-    // Optional: pass a list of pivots to force pivot selection and height
     FQT(ObjectDB* database, int bucket_sz, int ar, const std::vector<int>& pivots_list = {})
         : db(database), bucket_size(bucket_sz), arity(ar), height(0), compdists(0)
     {
@@ -264,7 +255,6 @@ public:
             compdists++;
             if (d <= radius) {
                 // El pivote es resultado pero no lo contamos aquí 
-                // (ya está en algún bucket)
             }
         }
         
