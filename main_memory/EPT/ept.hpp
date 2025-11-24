@@ -10,27 +10,6 @@
 
 #include "../../objectdb.hpp"
 
-//
-// ===========================================================
-//  EPT* — IMPLEMENTACIÓN EXACTA SEGÚN CHEN (VLDB 2017)
-// ===========================================================
-//
-// • Incluye HF (Heuristic Filtering) real para pivot candidates
-// • Incluye PSA (Algorithm 1) tal cual aparece en el paper
-// • Incluye MRQ/MkNN exactamente igual a LAESA/EPT*
-// • NO contiene heurísticas ni aproximaciones
-//
-// Basado en:
-//
-//  Algorithm 1 – Pivot Selecting Algorithm (PSA)
-//  HF algorithm – referenced from OmniR-tree (HFI in SISAP’13)
-//  Section 3.2 – EPT and EPT*
-//  Lemma 1 – Pivot Filtering
-//  Lemma 4 – Pivot Validation
-//
-// ===========================================================
-//
-
 
 template<typename Object, typename Distance>
 class EPTStar {
@@ -50,10 +29,8 @@ private:
         dist_t distance;
     };
 
-    // CP = HF(...)
     std::vector<size_t> candidate_pivots;
 
-    // EPT* table
     std::vector<std::vector<PivotEntry>> table;
 
 
@@ -73,36 +50,15 @@ public:
         build();
     }
 
-
-    // ===========================================================
-    // ===============  CONSTRUCCIÓN EPT* REAL ===================
-    // ===========================================================
-    //
-    //   EPT* Algorithm:
-    //
-    //   1. S = sample()
-    //   2. CP = HF(O, cp_scale)
-    //   3. For each object o:
-    //        P = {}
-    //        while |P| < l:
-    //            choose pi from CP maximizing dispersion criterion
-    //        write (pi, d(o,pi))
-    //
-    // ===========================================================
-    //
-
     void build()
     {
         size_t n = objects.size();
         if (n == 0) return;
 
-        // (1) Obtain S
         std::vector<size_t> S = sample_indices(std::min(n, cp_scale * 4));
 
-        // (2) HF — Heuristic Filtering to get CP (true outliers)
         candidate_pivots = HF_candidates(S);
 
-        // (3) Build full EPT*
         table.assign(n, {});
 
         for (size_t oid = 0; oid < n; oid++)
@@ -116,7 +72,6 @@ public:
                 P.push_back(best);
             }
 
-            // Save table entries
             for (size_t pid : P) {
                 table[oid].push_back({
                     pid,
@@ -126,17 +81,11 @@ public:
         }
     }
 
-
-    // ===========================================================
-    // =============== MRQ EXACTO (Chen / LAESA) =================
-    // ===========================================================
-
     int rangeQuery(size_t qid, dist_t r) const
     {
         const Object& q = objects[qid];
         size_t n = objects.size();
 
-        // Precompute distances q->pivots using pivots of object 0
         std::vector<dist_t> q_dists(l);
         for (size_t i = 0; i < l; i++)
             q_dists[i] = dist(q, objects[ table[0][i].pivot_id ]);
@@ -168,18 +117,12 @@ public:
                 continue;
             }
 
-            // Final verification
             if (dist(q, objects[oid]) <= r)
                 count++;
         }
 
         return count;
     }
-
-
-    // ===========================================================
-    // ================= MkNN EXACTO (Chen) ======================
-    // ===========================================================
 
     dist_t knnQuery(size_t qid, size_t k) const
     {
@@ -231,22 +174,7 @@ public:
     }
 
 
-
-
 private:
-
-    // ===========================================================
-    // ===========   HF — TRUE HEURISTIC FILTERING   =============
-    // ===========================================================
-    //
-    // HF selects the objects with highest “excentricity” in S:
-    //
-    //    ecc(o) = average_j( d(o, Sj) )
-    //
-    // This is exactly the HF used by OmniR-tree and referenced by
-    // Chen (line 27–28).
-    //
-    // ===========================================================
 
     std::vector<size_t> HF_candidates(const std::vector<size_t>& S)
     {
@@ -261,7 +189,6 @@ private:
             ecc[i] = sum / s;
         }
 
-        // Select cp_scale objects with largest eccentricity:
         std::vector<size_t> idx(s);
         std::iota(idx.begin(), idx.end(), 0);
 
@@ -277,20 +204,6 @@ private:
         return CP;
     }
 
-
-    // ===========================================================
-    // ========== select_best_pivot — PSA correctness ============
-    // ===========================================================
-    //
-    // For object o and current pivot set P:
-    //
-    //   select pi ∈ CP maximizing:
-    //
-    //      criterion(pi) = min_{pj in P}( |d(o,pi) - d(o,pj)| )
-    //
-    // If P is empty → choose pivot with highest average distance
-    //
-    // ===========================================================
 
     size_t select_best_pivot(size_t oid, const std::vector<size_t>& P)
     {
@@ -330,11 +243,6 @@ private:
 
         return best;
     }
-
-
-    // ===========================================================
-    // ============ sample_indices (random selection) ============
-    // ===========================================================
 
     std::vector<size_t> sample_indices(size_t k)
     {

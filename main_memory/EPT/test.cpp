@@ -5,23 +5,16 @@
 using namespace std;
 using namespace chrono;
 
-// ============================================================
-// CONFIGURACIÓN IGUAL CHEN
-// ============================================================
-
 static const vector<double> SELECTIVITIES = {0.02, 0.04, 0.08, 0.16, 0.32};
 static const vector<int>    K_VALUES      = {5, 10, 20, 50, 100};
 //static const vector<string> DATASETS      = {"LA", "Words", "Color", "Synthetic"};
 static const vector<string> DATASETS      = {"LA"};
-// Parámetros EPT* (l pivots por objeto, cp_scale candidatos PSA)
 // Parámetros EPT* (l pivots por objeto, cp_scale candidatos PSA)
 struct EPT_Params {
     int l;
     int cp_scale;
 };
 
-// Experimentos en memoria principal al estilo Chen:
-// l ∈ {3, 5, 10, 15, 20}, cp_scale = 40 (fijo)
 static const vector<EPT_Params> PARAMS_LA = {
     { 3, 40 },
     { 5, 40 },
@@ -67,7 +60,6 @@ struct DistanceAdapter {
     DistanceAdapter(ObjectDB* dbptr)
         : db(dbptr), counter(make_shared<long long>(0)) {}
 
-    // copia: comparte el mismo contador
     DistanceAdapter(const DistanceAdapter& other)
         : db(other.db), counter(other.counter) {}
 
@@ -81,21 +73,15 @@ struct DistanceAdapter {
 };
 
 
-// ============================================================
-// MAIN
-// ============================================================
-
 int main(int argc, char** argv) {
     srand(12345);
     vector<string> datasets;
 
     if (argc > 1) {
-        // Los argumentos [1..argc-1] son nombres de dataset
         for (int i = 1; i < argc; ++i) {    
             datasets.push_back(argv[i]);
         }
     } else {
-        // Si no se pasa nada, usa el set por defecto
         datasets = DATASETS;
     }
 
@@ -103,18 +89,12 @@ int main(int argc, char** argv) {
 
     for (const string& dataset : datasets)
     {
-        // -------------------------------------------------------
-        // 1. Localizar dataset
-        // -------------------------------------------------------
         string dbfile = path_dataset(dataset);
         if (dbfile == "") {
             cerr << "[WARN] Dataset no encontrado: " << dataset << "\n";
             continue;
         }
 
-        // -------------------------------------------------------
-        // 2. Cargar dataset
-        // -------------------------------------------------------
         unique_ptr<ObjectDB> db;
 
         if (dataset == "LA")             db = make_unique<VectorDB>(dbfile, 2);
@@ -129,9 +109,6 @@ int main(int argc, char** argv) {
         cerr << "[INFO] Dataset: " << dataset << "   N=" << N << "\n";
         cerr << "==============================================\n";
 
-        // -------------------------------------------------------
-        // 3. Queries y radios (como en Chen)
-        // -------------------------------------------------------
         vector<int> queries = load_queries_file(path_queries(dataset));
         auto radii          = load_radii_file(path_radii(dataset));
 
@@ -142,18 +119,12 @@ int main(int argc, char** argv) {
 
         cerr << "[INFO] Queries: " << queries.size() << "\n";
 
-        // -------------------------------------------------------
-        // 4. Parámetros por dataset
-        // -------------------------------------------------------
         vector<EPT_Params> params;
         if (dataset == "LA")         params = PARAMS_LA;
         else if (dataset == "Words") params = PARAMS_WORDS;
         else if (dataset == "Color") params = PARAMS_COLOR;
         else if (dataset == "Synthetic") params = PARAMS_SYNTH;
 
-        // -------------------------------------------------------
-        // 5. JSON output (mismo formato que FQT)
-        // -------------------------------------------------------
         string jsonOut = "results/results_EPT_" + dataset + ".json";
         ofstream J(jsonOut);
         if (!J.is_open()) {
@@ -164,9 +135,6 @@ int main(int argc, char** argv) {
         J << "[\n";
         bool first = true;
 
-        // -------------------------------------------------------
-        // 6. Loop de configuraciones (como en FQT)
-        // -------------------------------------------------------
         for (size_t c = 0; c < params.size(); c++)
         {
             auto P = params[c];
@@ -175,16 +143,11 @@ int main(int argc, char** argv) {
                  << "  l=" << P.l
                  << "  cp_scale=" << P.cp_scale << "\n";
 
-            // Adaptador de distancia con contador compartido
             DistanceAdapter dist(db.get());
 
-            // Vector de IDs [0..N-1]
             vector<int> ids(N);
             iota(ids.begin(), ids.end(), 0);
 
-            // ---------------------------------------------------
-            // BUILD — como Chen: medimos tiempo y compdists SOLO build
-            // ---------------------------------------------------
             dist.reset();
             auto t1 = high_resolution_clock::now();
             EPTStar<int, DistanceAdapter> index(ids, dist, P.l, P.cp_scale);
@@ -195,14 +158,6 @@ int main(int argc, char** argv) {
             cerr << "  Build: " << build_ms << " ms"
                  << "  compdists_build=" << build_cd << "\n";
 
-            // A partir de aquí, las consultas tendrán su propio conteo
-            // Reseteamos el contador ANTES de MkNN/MRQ
-            // (esto separa build de consultas como hace Chen)
-            // =======================================================
-
-            // =======================================================
-            // MkNN — exactamente al estilo Chen, promedio por query
-            // =======================================================
             cerr << "  MkNN...\n";
 
             for (int k : K_VALUES)
@@ -249,9 +204,6 @@ int main(int argc, char** argv) {
                 J << "  }";
             }
 
-            // =======================================================
-            // MRQ — mismo formato y conteo que FQT / Chen
-            // =======================================================
             cerr << "  MRQ...\n";
 
             for (auto& R : radii)

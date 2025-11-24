@@ -33,7 +33,6 @@ class BKT
     int bucketSize;
     double step;
 
-    // === Counters (metricas para el benchmark) ===
     mutable long long compDist = 0;   // # distance computations
     mutable long long queryTime = 0;  // μs acumulados
 
@@ -79,9 +78,6 @@ private:
     }
 };
 
-// ============================================================
-//  IMPLEMENTACIÓN
-// ============================================================
 
 BKT::BKT(const ObjectDB *db_, int bsize, double step_)
     : db(db_), root(new BKNode), bucketSize(bsize), step(step_) {}
@@ -102,7 +98,6 @@ void BKT::insert(int objId)
     addBKT(root, objId);
 }
 
-// ------------ info de pivotes / altura ------------
 
 int BKT::height(const BKNode *node) const 
 {
@@ -129,9 +124,6 @@ void BKT::printPivotsInfo() const
     std::cout << "Pivots (nodos internos): " << countPivots(root) << "\n";
 }
 
-// ============================================================
-//  RANGE SEARCH (MRQ)
-// ============================================================
 
 void BKT::rangeSearch(int qId, double r, std::vector<int> &res) const
 {
@@ -170,10 +162,6 @@ void BKT::searchRange(BKNode *node, int qId, double r, std::vector<int> &res) co
             searchRange(child, qId, r, res);
     }
 }
-
-// ============================================================
-//  KNN (MkNN)
-// ============================================================
 
 std::vector<std::pair<double,int>> BKT::knnQuery(int qId, int k) const
 {
@@ -243,10 +231,6 @@ void BKT::searchKNN(BKNode *node, int qId, int k,
     }
 }
 
-// ============================================================
-//  FREE
-// ============================================================
-
 void BKT::freeNode(BKNode *node)
 {
     if (!node) return;
@@ -257,9 +241,6 @@ void BKT::freeNode(BKNode *node)
 
 void BKT::addBKT(BKNode *node, int objId)
 {
-    // ============================
-    // 1. Nodo hoja → insertar o dividir
-    // ============================
     if (node->isLeaf)
     {
         // Hay espacio en el bucket
@@ -269,12 +250,11 @@ void BKT::addBKT(BKNode *node, int objId)
             return;
         }
 
-        // --- SPLIT EXACTO como el original ---
         std::vector<int> oldBucket = node->bucket;
         node->bucket.clear();
         node->isLeaf = false;
 
-        // Primer objeto del bucket → pivot = query
+        // Primer objeto del bucket - pivot = query
         node->pivot = oldBucket[0];
 
         // Los demás se reinsertan
@@ -286,19 +266,10 @@ void BKT::addBKT(BKNode *node, int objId)
         return;
     }
 
-    // ============================
-    // 2. Nodo interno → seleccionar hijo según banda
-    // ============================
-
     double d = dist(objId, node->pivot);  // distancia al pivot
 
     BKNode *child = nullptr;
 
-    // Buscar banda CHILD que satisfaga:
-    //    ringDist <= d < ringDist + step
-    //
-    // Esto es EXACTAMENTE lo que implementa el código original de C.
-    //
     for (auto &pr : node->children)
     {
         double ringDist = pr.first;
@@ -310,9 +281,6 @@ void BKT::addBKT(BKNode *node, int objId)
         }
     }
 
-    // ============================
-    // 2b. Si NO existe banda → crear hijo nuevo
-    // ============================
 
     if (!child)
     {
@@ -326,9 +294,6 @@ void BKT::addBKT(BKNode *node, int objId)
         child = newChild;
     }
 
-    // ============================
-    // 3. Insertar recursivamente
-    // ============================
     addBKT(child, objId);
 }
 
