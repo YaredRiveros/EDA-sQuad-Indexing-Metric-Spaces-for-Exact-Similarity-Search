@@ -122,116 +122,116 @@ int main(int argc, char** argv)
         int bucket = 10; // fijo para BST
 
         for (int hparam : HEIGHT_VALUES)
-        {
-            cerr << "\n------------------------------------------\n";
-            cerr << "[INFO] Construyendo BST con altura = " << hparam << "...\n";
-            cerr << "------------------------------------------\n";
+{
+    cerr << "\n------------------------------------------\n";
+    cerr << "[INFO] Construyendo BST con altura param = " << hparam << "...\n";
+    cerr << "------------------------------------------\n";
 
-            BST bst(db.get(), nObjects, bucket, hparam);
-            int realHeight = bst.get_height();
+    BST bst(db.get(), nObjects, bucket, hparam);
+    int realHeight = bst.get_height();
+    int H_param    = hparam;  // el valor que queremos etiquetar (3,5,10,15,20)
 
-            cerr << "[INFO] Altura real del BST = " << realHeight << "\n";
+    cerr << "[INFO] Altura real del BST = " << realHeight << "\n";
 
-
-            
-            // ========================================================
-            //  MRQ (range queries)
-            // ========================================================
-            for (double sel : SELECTIVITIES)
-            {
-                if (radii.find(sel) == radii.end()) {
-                    cerr << "[WARN] No hay radio precalculado para selectivity=" << sel << "\n";
-                    continue;
-                }
-
-                double R = radii[sel];
-                long long totalD = 0;
-
-                auto t1 = chrono::high_resolution_clock::now();
-
-                for (int q : queries)
-                {
-                    vector<int> out;
-                    bst.clear_counters();
-                    bst.rangeSearch(q, R, out);
-                    totalD += bst.get_compDist();
-                }
-
-                auto t2 = chrono::high_resolution_clock::now();
-                double totalTimeUS = chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
-
-                double avgD = double(totalD) / queries.size();
-                double avgT = totalTimeUS / queries.size();
-
-                if (!firstOutput) J << ",\n";
-                firstOutput = false;
-
-                J << fixed << setprecision(6);
-                J << "{"
-                << "\"index\":\"BST\","
-                << "\"dataset\":\"" << dataset << "\","
-                << "\"category\":\"CP\","
-                << "\"num_pivots\":0,"
-                << "\"num_centers_path\":" << realHeight << ","
-                << "\"arity\":null,"
-                << "\"query_type\":\"MRQ\","
-                << "\"selectivity\":" << sel << ","
-                << "\"radius\":" << R << ","
-                << "\"k\":null,"
-                << "\"compdists\":" << avgD << ","
-                << "\"time_ms\":" << (avgT / 1000.0) << ","
-                << "\"n_queries\":" << queries.size() << ","
-                << "\"run_id\":1"
-                << "}";
-            }
-
-            // ========================================================
-            //  MkNN
-            // ========================================================
-            for (int k : K_VALUES)
-            {
-                long long totalD = 0;
-
-                auto t1 = chrono::high_resolution_clock::now();
-
-                for (int q : queries)
-                {
-                    vector<ResultElem> out;
-                    bst.clear_counters();
-                    bst.knnSearch(q, k, out);
-                    totalD += bst.get_compDist();
-                }
-
-                auto t2 = chrono::high_resolution_clock::now();
-                double totalTimeUS = chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
-
-                double avgD = double(totalD) / queries.size();
-                double avgT = totalTimeUS / queries.size();
-
-                if (!firstOutput) J << ",\n";
-                firstOutput = false;
-
-                J << fixed << setprecision(6);
-                J << "{"
-                << "\"index\":\"BST\","
-                << "\"dataset\":\"" << dataset << "\","
-                << "\"category\":\"CP\","
-                << "\"num_pivots\":0,"
-                << "\"num_centers_path\":" << realHeight << ","
-                << "\"arity\":null,"
-                << "\"query_type\":\"MkNN\","
-                << "\"selectivity\":null,"
-                << "\"radius\":null,"
-                << "\"k\":" << k << ","
-                << "\"compdists\":" << avgD << ","
-                << "\"time_ms\":" << (avgT / 1000.0) << ","
-                << "\"n_queries\":" << queries.size() << ","
-                << "\"run_id\":1"
-                << "}";
-            }
-
-
+    // ===================== MRQ ==========================
+    for (double sel : SELECTIVITIES)
+    {
+        if (radii.find(sel) == radii.end()) {
+            cerr << "[WARN] No hay radio precalculado para selectivity=" << sel << "\n";
+            continue;
         }
+
+        double R = radii[sel];
+        long long totalD = 0;
+
+        auto t1 = chrono::high_resolution_clock::now();
+
+        for (int q : queries)
+        {
+            vector<int> out;
+            bst.clear_counters();
+            bst.rangeSearch(q, R, out);
+            totalD += bst.get_compDist();
+        }
+
+        auto t2 = chrono::high_resolution_clock::now();
+        double totalTimeUS =
+            chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
+
+        double avgD = double(totalD) / queries.size();
+        double avgT = totalTimeUS / queries.size();
+
+        if (!firstOutput) J << ",\n";
+        firstOutput = false;
+
+        J << fixed << setprecision(6);
+        J << "{"
+          << "\"index\":\"BST\","
+          << "\"dataset\":\"" << dataset << "\","
+          << "\"category\":\"CP\","
+          << "\"num_pivots\":0,"
+          // IMPORTANTE: usamos el parámetro H, no la altura real:
+          << "\"num_centers_path\":" << H_param << ","
+          << "\"real_height\":" << realHeight << ","   // <--- nuevo campo
+          << "\"arity\":null,"
+          << "\"query_type\":\"MRQ\","
+          << "\"selectivity\":" << sel << ","
+          << "\"radius\":" << R << ","
+          << "\"k\":null,"
+          << "\"compdists\":" << avgD << ","
+          << "\"time_ms\":" << (avgT / 1000.0) << ","
+          << "\"n_queries\":" << queries.size() << ","
+          << "\"run_id\":1"
+          << "}";
+    }
+
+    // ===================== MkNN =========================
+    for (int k : K_VALUES)
+    {
+        long long totalD = 0;
+
+        auto t1 = chrono::high_resolution_clock::now();
+
+        for (int q : queries)
+        {
+            vector<ResultElem> out;
+            bst.clear_counters();
+            bst.knnSearch(q, k, out);
+            totalD += bst.get_compDist();
+        }
+
+        auto t2 = chrono::high_resolution_clock::now();
+        double totalTimeUS =
+            chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
+
+        double avgD = double(totalD) / queries.size();
+        double avgT = totalTimeUS / queries.size();
+
+        if (!firstOutput) J << ",\n";
+        firstOutput = false;
+
+        J << fixed << setprecision(6);
+        J << "{"
+          << "\"index\":\"BST\","
+          << "\"dataset\":\"" << dataset << "\","
+          << "\"category\":\"CP\","
+          << "\"num_pivots\":0,"
+          // otra vez, el parámetro H:
+          << "\"num_centers_path\":" << H_param << ","
+          << "\"real_height\":" << realHeight << ","    // <--- nuevo campo
+          << "\"arity\":null,"
+          << "\"query_type\":\"MkNN\","
+          << "\"selectivity\":null,"
+          << "\"radius\":null,"
+          << "\"k\":" << k << ","
+          << "\"compdists\":" << avgD << ","
+          << "\"time_ms\":" << (avgT / 1000.0) << ","
+          << "\"n_queries\":" << queries.size() << ","
+          << "\"run_id\":1"
+          << "}";
+    }
+}
+
 
         J << "\n]\n";
         J.close();

@@ -20,6 +20,7 @@ def cut_random(input_path, output_path, n, seed=12345):
     total = 0
 
     with open(input_path, "r", encoding="utf-8") as fin:
+        first_line = fin.readline()
         for line in fin:
             total += 1
             if len(reservoir) < n:

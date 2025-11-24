@@ -46,7 +46,7 @@
     "radius": 225600,
     "k": 20,
     "compdists": 1480.19,
-    "time_ms": 0.03,
+    "time_ms": 0.02,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H3_k20"
   },
@@ -63,7 +63,7 @@
     "radius": 283336,
     "k": 50,
     "compdists": 1771.87,
-    "time_ms": 0.04,
+    "time_ms": 0.03,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H3_k50"
   },
@@ -97,7 +97,7 @@
     "radius": 5542.17,
     "k": null,
     "compdists": 2000,
-    "time_ms": 0.04,
+    "time_ms": 0.03,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H3_sel0.32"
   },
@@ -165,7 +165,7 @@
     "radius": 2695.07,
     "k": null,
     "compdists": 1758.28,
-    "time_ms": 0.03,
+    "time_ms": 0.02,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H3_sel0.02"
   },
@@ -182,7 +182,7 @@
     "radius": 155923,
     "k": 5,
     "compdists": 291.62,
-    "time_ms": 0.01,
+    "time_ms": 0,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H5_k5"
   },
@@ -216,7 +216,7 @@
     "radius": 225600,
     "k": 20,
     "compdists": 545.1,
-    "time_ms": 0.02,
+    "time_ms": 0.01,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H5_k20"
   },
@@ -233,7 +233,7 @@
     "radius": 283336,
     "k": 50,
     "compdists": 790.68,
-    "time_ms": 0.03,
+    "time_ms": 0.02,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H5_k50"
   },
@@ -250,7 +250,7 @@
     "radius": 335132,
     "k": 100,
     "compdists": 1013.55,
-    "time_ms": 0.04,
+    "time_ms": 0.03,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H5_k100"
   },
@@ -284,7 +284,7 @@
     "radius": 4559.72,
     "k": null,
     "compdists": 1274.17,
-    "time_ms": 0.04,
+    "time_ms": 0.03,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H5_sel0.16"
   },
@@ -301,7 +301,7 @@
     "radius": 3788.97,
     "k": null,
     "compdists": 990.34,
-    "time_ms": 0.03,
+    "time_ms": 0.02,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H5_sel0.08"
   },
@@ -318,7 +318,7 @@
     "radius": 3181.74,
     "k": null,
     "compdists": 774.9,
-    "time_ms": 0.03,
+    "time_ms": 0.02,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H5_sel0.04"
   },
@@ -335,7 +335,7 @@
     "radius": 2695.07,
     "k": null,
     "compdists": 607.21,
-    "time_ms": 0.02,
+    "time_ms": 0.01,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H5_sel0.02"
   },
@@ -352,7 +352,7 @@
     "radius": 155923,
     "k": 5,
     "compdists": 289.56,
-    "time_ms": 0.01,
+    "time_ms": 0,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H10_k5"
   },
@@ -386,7 +386,7 @@
     "radius": 225600,
     "k": 20,
     "compdists": 533.01,
-    "time_ms": 0.02,
+    "time_ms": 0.01,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H10_k20"
   },
@@ -403,7 +403,7 @@
     "radius": 283336,
     "k": 50,
     "compdists": 762.43,
-    "time_ms": 0.03,
+    "time_ms": 0.02,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H10_k50"
   },
@@ -420,7 +420,7 @@
     "radius": 335132,
     "k": 100,
     "compdists": 997.32,
-    "time_ms": 0.04,
+    "time_ms": 0.03,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H10_k100"
   },
@@ -437,7 +437,7 @@
     "radius": 5542.17,
     "k": null,
     "compdists": 1621.37,
-    "time_ms": 0.06,
+    "time_ms": 0.05,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H10_sel0.32"
   },
@@ -454,7 +454,7 @@
     "radius": 4559.72,
     "k": null,
     "compdists": 1260.58,
-    "time_ms": 0.05,
+    "time_ms": 0.04,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H10_sel0.16"
   },
@@ -505,7 +505,7 @@
     "radius": 2695.07,
     "k": null,
     "compdists": 583.69,
-    "time_ms": 0.02,
+    "time_ms": 0.01,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H10_sel0.02"
   },
@@ -539,7 +539,7 @@
     "radius": 188585,
     "k": 10,
     "compdists": 429.93,
-    "time_ms": 0.02,
+    "time_ms": 0.01,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H15_k10"
   },
@@ -556,7 +556,7 @@
     "radius": 225600,
     "k": 20,
     "compdists": 577.35,
-    "time_ms": 0.03,
+    "time_ms": 0.02,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H15_k20"
   },
@@ -573,7 +573,7 @@
     "radius": 283336,
     "k": 50,
     "compdists": 814.19,
-    "time_ms": 0.04,
+    "time_ms": 0.03,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H15_k50"
   },
@@ -590,7 +590,7 @@
     "radius": 335132,
     "k": 100,
     "compdists": 1042.99,
-    "time_ms": 0.05,
+    "time_ms": 0.04,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H15_k100"
   },
@@ -607,7 +607,7 @@
     "radius": 5542.17,
     "k": null,
     "compdists": 1629.74,
-    "time_ms": 0.06,
+    "time_ms": 0.05,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H15_sel0.32"
   },
@@ -624,7 +624,7 @@
     "radius": 4559.72,
     "k": null,
     "compdists": 1278.45,
-    "time_ms": 0.05,
+    "time_ms": 0.04,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H15_sel0.16"
   },
@@ -658,7 +658,7 @@
     "radius": 3181.74,
     "k": null,
     "compdists": 787.39,
-    "time_ms": 0.04,
+    "time_ms": 0.02,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H15_sel0.04"
   },
@@ -675,7 +675,7 @@
     "radius": 2695.07,
     "k": null,
     "compdists": 627.83,
-    "time_ms": 0.02,
+    "time_ms": 0.01,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H15_sel0.02"
   },
@@ -726,7 +726,7 @@
     "radius": 225600,
     "k": 20,
     "compdists": 548.98,
-    "time_ms": 0.02,
+    "time_ms": 0.01,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H20_k20"
   },
@@ -743,7 +743,7 @@
     "radius": 283336,
     "k": 50,
     "compdists": 790.2,
-    "time_ms": 0.03,
+    "time_ms": 0.02,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H20_k50"
   },
@@ -760,7 +760,7 @@
     "radius": 335132,
     "k": 100,
     "compdists": 1018.46,
-    "time_ms": 0.05,
+    "time_ms": 0.04,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H20_k100"
   },
@@ -777,7 +777,7 @@
     "radius": 5542.17,
     "k": null,
     "compdists": 1644.89,
-    "time_ms": 0.06,
+    "time_ms": 0.05,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H20_sel0.32"
   },
@@ -794,7 +794,7 @@
     "radius": 4559.72,
     "k": null,
     "compdists": 1289.18,
-    "time_ms": 0.05,
+    "time_ms": 0.04,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H20_sel0.16"
   },
@@ -811,7 +811,7 @@
     "radius": 3788.97,
     "k": null,
     "compdists": 998.01,
-    "time_ms": 0.04,
+    "time_ms": 0.03,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H20_sel0.08"
   },
@@ -828,7 +828,7 @@
     "radius": 3181.74,
     "k": null,
     "compdists": 766.75,
-    "time_ms": 0.03,
+    "time_ms": 0.02,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H20_sel0.04"
   },
@@ -845,7 +845,7 @@
     "radius": 2695.07,
     "k": null,
     "compdists": 603.98,
-    "time_ms": 0.02,
+    "time_ms": 0.01,
     "n_queries": 100,
     "run_id": "GNAT_Synthetic_H20_sel0.02"
   }

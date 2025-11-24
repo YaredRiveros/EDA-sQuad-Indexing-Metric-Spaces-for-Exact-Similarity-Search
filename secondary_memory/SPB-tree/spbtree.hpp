@@ -28,6 +28,11 @@ class RAF {
     static constexpr size_t PAGE_SIZE = 4096; // 4KB físicos
 
     string filename;
+
+    // Fichero binario abierto persistentemente (lectura/escritura aleatoria)
+    mutable fstream file;
+
+    // Mapa objeto -> offset físico
     unordered_map<uint64_t, streampos> offsets;
 
     // Páginas físicas únicas tocadas en la query actual
@@ -36,46 +41,109 @@ class RAF {
     // Factor lógico de páginas (Chen: 40KB = 10×4KB para Color/Synthetic)
     size_t logicalPageFactor;
 
+    void ensureOpenForRW() const {
+        if (!file.is_open()) {
+            // reabrir en modo lectura + escritura, sin truncar
+            const_cast<RAF*>(this)->file.open(
+                filename,
+                ios::binary | ios::in | ios::out
+            );
+            if (!file.is_open()) {
+                throw runtime_error("RAF: cannot reopen file " + filename);
+            }
+        }
+    }
+
 public:
     RAF(const string &fname, size_t logicalFactor = 1)
         : filename(fname), logicalPageFactor(logicalFactor)
     {
-        ofstream ofs(filename, ios::binary | ios::trunc);
+        // Crear/truncar el fichero y dejarlo abierto en RW
+        file.open(filename, ios::binary | ios::in | ios::out | ios::trunc);
+        if (!file.is_open()) {
+            throw runtime_error("RAF: cannot open file " + filename);
+        }
     }
 
+    ~RAF() {
+        if (file.is_open()) {
+            file.close();
+        }
+    }
+
+    // Permite reutilizar el mismo RAF al reconstruir el índice
+    void resetFile() {
+        if (file.is_open()) {
+            file.close();
+        }
+        offsets.clear();
+        pagesVisited.clear();
+        file.open(filename, ios::binary | ios::in | ios::out | ios::trunc);
+        if (!file.is_open()) {
+            throw runtime_error("RAF: cannot reset file " + filename);
+        }
+    }
+
+    // Escribe un objeto al final del fichero y devuelve el offset
     streampos append(const DataObject &o) {
-        ofstream ofs(filename, ios::binary | ios::app);
-        streampos pos = ofs.tellp();
-        ofs.write((const char *)&o.id, sizeof(o.id));
+        ensureOpenForRW();
+
+        // Ir al final para append explícito
+        file.seekp(0, ios::end);
+        streampos pos = file.tellp();
+
+        // Escribir (id, len, payload)
+        file.write(reinterpret_cast<const char*>(&o.id), sizeof(o.id));
         uint64_t len = o.payload.size();
-        ofs.write((const char *)&len, sizeof(len));
-        if (len > 0)
-            ofs.write((const char *)o.payload.data(), len * sizeof(double));
-        ofs.close();
+        file.write(reinterpret_cast<const char*>(&len), sizeof(len));
+        if (len > 0) {
+            file.write(reinterpret_cast<const char*>(o.payload.data()),
+                       len * sizeof(double));
+        }
+        file.flush(); // forzar que se materialice en disco
+
         offsets[o.id] = pos;
         return pos;
     }
 
+    // Lectura real desde disco + conteo de páginas físicas
     DataObject read(uint64_t id) const {
+        ensureOpenForRW();
+
         auto it = offsets.find(id);
         if (it == offsets.end())
             throw runtime_error("RAF: id not found");
 
-        // Simular acceso a página física de 4KB
         long long off = static_cast<long long>(it->second);
-        uint64_t pageId = static_cast<uint64_t>(off / static_cast<long long>(PAGE_SIZE));
+        uint64_t pageId = static_cast<uint64_t>(
+            off / static_cast<long long>(PAGE_SIZE)
+        );
         pagesVisited.insert(pageId);
 
-        ifstream ifs(filename, ios::binary);
-        ifs.seekg(it->second);
+        // Posicionarse y leer registro
+        file.seekg(it->second);
+        if (!file.good()) {
+            throw runtime_error("RAF: seekg failed");
+        }
+
         DataObject o;
-        ifs.read((char *)&o.id, sizeof(o.id));
-        uint64_t len;
-        ifs.read((char *)&len, sizeof(len));
+        file.read(reinterpret_cast<char*>(&o.id), sizeof(o.id));
+        uint64_t len = 0;
+        file.read(reinterpret_cast<char*>(&len), sizeof(len));
+
+        if (!file.good()) {
+            throw runtime_error("RAF: read header failed");
+        }
+
         o.payload.assign(len, 0.0);
-        if (len > 0)
-            ifs.read((char *)o.payload.data(), len * sizeof(double));
-        ifs.close();
+        if (len > 0) {
+            file.read(reinterpret_cast<char*>(o.payload.data()),
+                      len * sizeof(double));
+            if (!file.good()) {
+                throw runtime_error("RAF: read payload failed");
+            }
+        }
+
         return o;
     }
 
@@ -90,9 +158,6 @@ public:
     }
 };
 
-/* -------------------------
-   Pivot table & mapping
-   ------------------------- */
 struct PivotTable {
     vector<DataObject> pivots; // solo usamos id
     ObjectDB *db;
@@ -465,7 +530,7 @@ class SPBTree {
         }
 
         // Verificación final con distancia real d(q,o)
-        raf.read(objId); // acceso a RAF (cuenta páginas)
+        raf.read(objId); // acceso real a RAF (cuenta páginas físicas)
         double dist = db->distance((int)queryId, (int)objId);
         pt.compDist++;
         if (dist <= r)
@@ -494,6 +559,9 @@ public:
                const vector<int> &hfiPivotIds = {},
                uint64_t pivotSeed = 42)
     {
+        // Reiniciar fichero RAF para esta construcción
+        raf.resetFile();
+
         // Escribir todos los objetos al RAF
         for (auto &o : dataset) {
             raf.append(o);
@@ -670,7 +738,7 @@ public:
                 const auto &rec = node->records[it.recIdx];
                 uint64_t objId = get<1>(rec);
 
-                raf.read(objId); // acceso a RAF
+                raf.read(objId); // acceso real a RAF
                 double dist = db->distance((int)queryId, (int)objId);
                 pt.compDist++;
 

@@ -1,6 +1,6 @@
 // omnirtree.hpp - OmniR-tree adaptado para ObjectDB y benchmarking
 // Basado en Omni-family (Chen et al. 2022)
-// Implementa pivot mapping + R-tree indexing con RAF simulado
+// Implementa pivot mapping + R-tree indexing con RAF (memoria secundaria)
 
 #pragma once
 #include "../../objectdb.hpp"
@@ -9,14 +9,11 @@
 
 using namespace std;
 
-/*** -----------------------------
-    Parámetros de simulación de disco
-    ----------------------------- ***/
+
 static const size_t OMNI_PAGE_SIZE = 4096; // bytes por página lógica
 
-/*** -----------------------------
-    RAF (Random Access File) simulator
-    ----------------------------- ***/
+
+
 class RAF {
     string filename;
     unordered_map<int, streampos> offsets;
@@ -47,15 +44,19 @@ public:
         return pos;
     }
 
-    // Lectura completa del registro (no la usamos realmente para Omni,
-    // pero queda disponible por si la necesitas)
+    // Lectura completa del registro asociado a objId
     vector<double> read(int objId) {
-        if (offsets.find(objId) == offsets.end()) {
+        auto it = offsets.find(objId);
+        if (it == offsets.end()) {
             throw runtime_error("RAF: object not found");
         }
 
         ifstream ifs(filename, ios::binary);
-        ifs.seekg(offsets[objId]);
+        if (!ifs.is_open()) {
+            throw runtime_error("RAF: cannot open file for read");
+        }
+
+        ifs.seekg(it->second);
 
         int id;
         uint64_t sz;
@@ -455,7 +456,7 @@ class OmniRTree {
     long long compDist;
     long long pageReads;
 
-    // Cache de vectores mapeados (opcional)
+    // Cache de vectores mapeados (podrías eliminarlo si ya no lo usas)
     unordered_map<int, vector<double>> mappedCache;
 
     // Mapeo objeto -> página lógica en RAF
@@ -513,22 +514,22 @@ public:
         }
 
         string token;
-    while (in >> token) {
-        // eliminar [, ], , y espacios raros
-        token.erase(remove_if(token.begin(), token.end(), [](char c) {
-            return c == '[' || c == ']' || c == ',';
-        }), token.end());
+        while (in >> token) {
+            // eliminar [, ], , y espacios raros
+            token.erase(remove_if(token.begin(), token.end(), [](char c) {
+                return c == '[' || c == ']' || c == ',';
+            }), token.end());
 
-        if (token.empty()) continue;
+            if (token.empty()) continue;
 
-        // solo aceptamos tokens que son todo dígitos
-        if (all_of(token.begin(), token.end(), ::isdigit)) {
-            int pid = stoi(token);
-            pivots.push_back(pid);
-            if ((int)pivots.size() == num_pivots) break;
+            // solo aceptamos tokens que son todo dígitos
+            if (all_of(token.begin(), token.end(), ::isdigit)) {
+                int pid = stoi(token);
+                pivots.push_back(pid);
+                if ((int)pivots.size() == num_pivots) break;
+            }
         }
-    }
-    in.close();
+        in.close();
 
         if ((int)pivots.size() < num_pivots) {
             cerr << "[WARN][OmniRTree] Solo se leyeron " << pivots.size()
@@ -541,23 +542,24 @@ public:
 
         // -----------------------------
         // 2) Construir índice: mapear cada objeto e insertarlo en el R-tree
-        //    y simular layout en RAF para medir pages
+        //    y escribir el vector pivotado en RAF (memoria secundaria)
         // -----------------------------
         for (int objId = 0; objId < db->size(); objId++) {
+            // Vector pivotado (distancias a pivotes)
             vector<double> mapped = mapObject(objId);
+
+            // (Opcional) mantener una caché en RAM
             mappedCache[objId] = mapped;
 
-            // Simular escritura en RAF: un registro por objeto
-            // (puedes cambiar el tamaño de "dummy" si quieres)
-            vector<double> dummy(1, 0.0);
-            streampos pos = raf.append(objId, dummy);
+            // Escribir el vector pivotado en RAF: un registro por objeto
+            streampos pos = raf.append(objId, mapped);
 
             // Calcular página lógica en la que cae este registro
             long long offset = (long long)pos;
             int pageId = (int)(offset / (long long)OMNI_PAGE_SIZE);
             objPage[objId] = pageId;
 
-            // Insertar en R-tree
+            // Insertar en R-tree (índice en memoria principal)
             rtree.insert(mapped, objId);
 
             if ((objId + 1) % 100000 == 0 || objId == 0) {
@@ -583,6 +585,7 @@ public:
     //  - Verifica EXACTAMENTE (d(q, o) <= radius)
     //  - compDist incluye las distancias de verificación
     //  - pageReads cuenta páginas de datos distintas tocadas
+    //  - AHORA: lee desde RAF para cada candidato verificado (E/S real)
     void rangeSearch(int queryId, double radius, vector<int>& result) {
         result.clear();
         startQuery();
@@ -597,9 +600,16 @@ public:
         // Obtener candidatos del R-tree (filtro OMNI)
         vector<int> candidates = rtree.rangeQuery(qMap, radius);
 
-        // Verificación exacta
+        // Verificación exacta + acceso a RAF
         for (int candId : candidates) {
-            registerPageAccess(candId);   // simulamos acceso a página de datos
+            // 1) Registrar acceso lógico a página
+            registerPageAccess(candId);
+
+            // 2) Leer desde RAF (E/S real de disco)
+            auto storedVec = raf.read(candId);
+            (void)storedVec; // no lo usamos, pero el I/O existe
+
+            // 3) Verificación exacta con la métrica original
             double d = db->distance(queryId, candId);
             compDist++;
 
@@ -613,6 +623,7 @@ public:
     //
     //  - compDist incluye las distancias reales calculadas en verifyFunc
     //  - pageReads cuenta páginas de datos distintas tocadas
+    //  - AHORA: verifyFunc también lee desde RAF
     void knnSearch(int queryId, int k, vector<pair<double, int>>& result) {
         result.clear();
         startQuery();
@@ -626,9 +637,17 @@ public:
 
         // Función de verificación que:
         //   - registra acceso a página de datos
+        //   - lee desde RAF (memoria secundaria)
         //   - cuenta la distancia real
         auto verifyFunc = [this, queryId](int oid) -> double {
+            // 1) registrar acceso a página lógica
             this->registerPageAccess(oid);
+
+            // 2) lectura real desde RAF
+            auto storedVec = this->raf.read(oid);
+            (void)storedVec;
+
+            // 3) distancia real en la métrica subyacente
             this->compDist++;
             return this->db->distance(queryId, oid);
         };

@@ -1,17 +1,3 @@
-// OmniRTree.cpp
-// Prototipo de OmniR-tree (Omni-family) según la descripción en Chen et al. (2022).
-// - Pivot table
-// - RAF (simulado): almacena objetos en archivo binario
-// - R-tree (en memoria) que indexa vectores mapeados (distancias a pivots)
-// - MRQ (range) y MkNN (kNN) queries con poda via Lemma 4.1 y orden best-first para kNN.
-//
-// Nota: implementación educativa y funcional; no es una librería de producción R-tree (no R*-optim).
-//
-// Compilar: g++ -std=c++17 -O2 OmniRTree.cpp -o OmniRTree
-//
-// Referencias importantes del paper: Omni-family, pivot mapping, Lemma 4.1. (véase Chen2022). 
-// :contentReference[oaicite:7]{index=7} :contentReference[oaicite:8]{index=8}
-
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -41,10 +27,6 @@ struct DataObject {
     vector<double> payload;      // original representation (e.g., original vector)
 };
 
-/*** -----------------------------
-    RAF (random access file) simulator
-    - stores objects in a binary file with simple offset table
-    ----------------------------- ***/
 class RAF {
     string filename;
     ofstream ofs;
@@ -560,9 +542,6 @@ int main(){
     size_t truecnt=0;
     for(auto id : cand) {
         DataObject o = omni.getPivotTable().pivots.size() ? DataObject() : DataObject(); // dummy to quiet unused warning
-        // read object from RAF and compute real distance
-        // We don't have a direct method to read RAF here (private in wrapper), but MkNN uses RAF + metric.
-        // For demo we will simulate verifying by computing distances using the dataset array (IDs are 1..N)
         double dist = metric.distance(q, dataset[id-1].payload);
         if(dist <= range_r) truecnt++;
     }

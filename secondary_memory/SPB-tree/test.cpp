@@ -168,11 +168,6 @@ int main(int argc, char** argv) {
         J << "[\n";
         bool firstOutput = true;
 
-        // --------------------------------------------------------------------
-        // Construcción del SPB-tree como en Chen:
-        //   - l = 5 pivotes (HFI, mismos para todos los índices)
-        //   - RAF simulado (para contar pageReads lógicos)
-        // --------------------------------------------------------------------
         cerr << "[BUILD] Construyendo SPB-tree (l=" << NUM_PIVOTS << ")...\n";
 
         string rafFile = "spb_indexes/" + dataset + "_raf.bin";

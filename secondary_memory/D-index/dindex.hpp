@@ -15,9 +15,80 @@ struct DataObject {
 };
 
 // ============================================================================
-// --- Utilidades --------------------------------------------------------------
+// --- RAF: acceso real a disco para objetos ---------------------------------
 // ============================================================================
+class DIndexRAF {
+    static constexpr size_t PAGE_SIZE = 4096; // 4KB físicos
 
+    string filename;
+    unordered_map<int, streampos> offsets;
+
+    // Páginas físicas únicas tocadas (para todas las consultas)
+    mutable unordered_set<uint64_t> pagesVisited;
+
+public:
+    explicit DIndexRAF(const string &fname)
+        : filename(fname)
+    {
+        // Crear / truncar archivo
+        ofstream ofs(filename, ios::binary | ios::trunc);
+    }
+
+    // Para reconstruir el índice (nuevo build)
+    void resetFile() {
+        offsets.clear();
+        pagesVisited.clear();
+        ofstream ofs(filename, ios::binary | ios::trunc);
+    }
+
+    // Escribe un registro mínimo (sólo id). No necesitamos payload real,
+    // sólo offsets y páginas físicas.
+    streampos append(int id) {
+        ofstream ofs(filename, ios::binary | ios::app);
+        streampos pos = ofs.tellp();
+
+        int32_t v = static_cast<int32_t>(id);
+        ofs.write(reinterpret_cast<const char*>(&v), sizeof(v));
+        ofs.close();
+
+        offsets[id] = pos;
+        return pos;
+    }
+
+    // Lectura real desde disco: posiciona el puntero, lee el id,
+    // y marca la página física como visitada.
+    void read(int id) const {
+        auto it = offsets.find(id);
+        if (it == offsets.end())
+            throw runtime_error("DIndexRAF: id not found");
+
+        long long off = static_cast<long long>(it->second);
+        uint64_t pageId =
+            static_cast<uint64_t>(off / static_cast<long long>(PAGE_SIZE));
+        pagesVisited.insert(pageId);
+
+        ifstream ifs(filename, ios::binary);
+        if (!ifs)
+            throw runtime_error("DIndexRAF: cannot open RAF file for read");
+
+        ifs.seekg(it->second);
+        int32_t tmp;
+        ifs.read(reinterpret_cast<char*>(&tmp), sizeof(tmp));
+        // No usamos el valor, lo importante es el acceso físico
+    }
+
+    long long get_pageReads() const {
+        return static_cast<long long>(pagesVisited.size());
+    }
+
+    void clear_pageReads() {
+        pagesVisited.clear();
+    }
+};
+
+// ============================================================================
+// --- Utilidades HFIPivots ---------------------------------------------------
+// ============================================================================
 inline vector<int> loadHFIPivots(const string &path) {
     vector<int> pivs;
 
@@ -63,7 +134,7 @@ inline double lbInterval(double q, const pair<double,double>& I) {
 // ============================================================================
 struct Bucket {
     vector<pair<double,double>> intervals; // Intervalos por nivel
-    vector<int> ids;                      // IDs de objetos (0..N-1)
+    vector<int> ids;                       // IDs de objetos (0..N-1)
 };
 
 // ============================================================================
@@ -73,27 +144,34 @@ class DIndex {
 private:
     ObjectDB* db;
     int N;
-    size_t L;
+    size_t L;      // nº de pivotes / niveles (hash functions en el paper)
     double rho;
 
-    vector<int> pivotIds;
+    // RAF real para “datos” (aunque sólo guardemos ids)
+    DIndexRAF raf;
+
+    vector<int>    pivotIds;
     vector<double> pivotMedians;
 
     vector<double> distMatrix;  // N x L
 
-    vector<Bucket> buckets;
-    unordered_map<uint32_t, size_t> bucketIndex;
+    vector<Bucket>                 buckets;
+    unordered_map<uint32_t,size_t> bucketIndex;
 
-    long long compDist = 0;
-    long long pageReads = 0;   // no usamos RAF pero mantenemos la API
+    long long compDist  = 0;
+    long long pageReads = 0;   // páginas lógicas (4KB) leídas en la ÚLTIMA consulta
 
 public:
-    DIndex(const string& /*rafFile*/,
+    DIndex(const string& rafFile,
            ObjectDB* database,
            size_t numLevels,
            double rho_)
-        : db(database), L(numLevels), rho(rho_) {
-
+        : db(database),
+          N(0),
+          L(numLevels),
+          rho(rho_),
+          raf(rafFile)
+    {
         N = db->size();
         pivotIds.resize(L);
         pivotMedians.resize(L);
@@ -109,6 +187,14 @@ public:
     {
         cerr << "[DIndex] BUILD START\n";
 
+        // Limpieza por si se reconstruye
+        buckets.clear();
+        bucketIndex.clear();
+        clear_counters();    // reseteamos stats globales
+
+        // Reset RAF: truncar archivo y vaciar offsets/páginas
+        raf.resetFile();
+
         cerr << "[DIndex] Loading HFI pivots if available...\n";
         selectPivots(objects, seed, pivfile);
 
@@ -120,6 +206,12 @@ public:
 
         cerr << "[DIndex] Building buckets...\n";
         buildBuckets();
+
+        // Escribir TODOS los objetos en el RAF (un registro por id)
+        cerr << "[DIndex] Writing objects to RAF...\n";
+        for (const auto& o : objects) {
+            raf.append(o.id);
+        }
 
         cerr << "[DIndex] BUILD OK\n";
     }
@@ -155,13 +247,11 @@ public:
     }
 
     void computeDistanceMatrix() {
-        compDist = 0;
-
+        // Distancias de construcción (no se cuentan en las compdist de consultas)
         for (int id = 0; id < N; id++) {
             for (size_t j = 0; j < L; j++) {
                 double d = db->distance(id, pivotIds[j]);
                 distMatrix[static_cast<size_t>(id) * L + j] = d;
-                compDist++;
             }
         }
     }
@@ -249,14 +339,14 @@ public:
         }
     }
 
-    // ========================================================================
-    // MRQ interno con distancias (Chen 2022)  // ***
-    // ========================================================================
 private:
+    // ========================================================================
+    // MRQ interno con distancias (Chen 2022) + acceso RAF real
+    // ========================================================================
     vector<pair<int,double>> MRQ_withDists(int qid, double r) {
         vector<double> q(L);
 
-        // Distancias query → pivotes
+        // Distancias query → pivotes (cuentan en compDist)
         for (size_t i = 0; i < L; i++) {
             q[i] = db->distance(qid, pivotIds[i]);
             compDist++;
@@ -276,6 +366,10 @@ private:
 
             // Buckets candidatos → verificar objetos
             for (int id : b.ids) {
+                // Leer del RAF (marca página física tocada)
+                raf.read(id);
+
+                // Distancia real (cuenta en compDist)
                 double d = db->distance(qid, id);
                 compDist++;
                 if (d <= r)
@@ -288,10 +382,18 @@ private:
 
 public:
     // ========================================================================
-    // MRQ público (solo IDs, pero ya verificados)  // ***
+    // MRQ público (stats = delta de esta llamada)
     // ========================================================================
     vector<int> MRQ(int qid, double r) {
+        long long comp_before  = compDist;
+        long long pages_before = raf.get_pageReads();
+
         auto vec = MRQ_withDists(qid, r);
+
+        // Dejar los contadores como lo que gastó ESTA MRQ
+        compDist  = compDist  - comp_before;
+        pageReads = raf.get_pageReads() - pages_before;
+
         vector<int> out;
         out.reserve(vec.size());
         for (auto &p : vec) out.push_back(p.first);
@@ -299,38 +401,49 @@ public:
     }
 
     // ========================================================================
-    // MkNN (Chen 2022): usa MRQ_withDists para no recalcular distancias  // ***
+    // MkNN (Chen 2022-style): range iterativo hasta conseguir ≥ k resultados
     // ========================================================================
     vector<pair<int,double>> MkNN(int qid, size_t k) {
-        double R = rho;
-        vector<pair<int,double>> final;
+        // Snapshot antes de todo el proceso MkNN
+        long long comp_before  = compDist;
+        long long pages_before = raf.get_pageReads();
 
-        for (int iter = 0; iter < 5; iter++) {
-            auto vec = MRQ_withDists(qid, R);  // ya trae distancias y compDist
+        double R = rho;                     // radio inicial (paper: r_0)
+        vector<pair<int,double>> best;      // mejores candidatos actuales
 
-            sort(vec.begin(), vec.end(),
+        const int MAX_ITERS = 10;           // límite de refinamientos
+
+        for (int iter = 0; iter < MAX_ITERS; ++iter) {
+            auto cand = MRQ_withDists(qid, R);  // ya suma compDist y RAF pages
+
+            if (cand.empty()) {
+                // nada dentro de R: agrandamos el radio agresivamente
+                R *= 2.0;
+                continue;
+            }
+
+            // Ordenamos por distancia
+            sort(cand.begin(), cand.end(),
                  [](auto &a, auto &b){ return a.second < b.second; });
 
-            if (vec.size() >= k) {
-                double dk = vec[k-1].second;
-
-                if (dk > R + 1e-12) {
-                    R = dk;
-                    final.assign(vec.begin(),
-                                 vec.begin()+min(k, vec.size()));
-                } else {
-                    final.assign(vec.begin(), vec.begin()+k);
-                    break;
-                }
+            if (cand.size() >= k) {
+                // Ya tenemos al menos k vecinos dentro de R
+                best.assign(cand.begin(), cand.begin() + k);
+                break;
             } else {
-                if (!vec.empty())
-                    R = max(R, vec.back().second * 2.0);
+                // Aún no llegamos a k: guardamos lo mejor y ampliamos el radio
+                best = cand;
 
-                final = vec;
+                double far = cand.back().second;
+                R = max(R * 2.0, far * 2.0);
             }
         }
 
-        return final;
+        // Stats = delta consumido solo en esta MkNN
+        compDist  = compDist  - comp_before;
+        pageReads = raf.get_pageReads() - pages_before;
+
+        return best;
     }
 
     // ========================================================================
@@ -340,7 +453,8 @@ public:
     long long get_pageReads() const { return pageReads; }
 
     void clear_counters() {
-        compDist = 0;
+        compDist  = 0;
         pageReads = 0;
+        raf.clear_pageReads();
     }
 };

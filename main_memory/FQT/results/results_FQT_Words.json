@@ -3,27 +3,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 4,
-=======
     "num_pivots": 3,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 200,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 4.49,
+    "radius": 6.2,
     "k": 5,
-    "compdists": 584.2,
-    "time_ms": 0.2,
-=======
-    "radius": 3.89,
-    "k": 5,
-    "compdists": 875.12,
-    "time_ms": 0.45,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1780.22,
+    "time_ms": 0.55,
     "n_queries": 100,
     "run_id": "FQT_Words_b200_a4_k5"
   },
@@ -31,27 +20,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 4,
-=======
     "num_pivots": 3,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 200,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 4.94,
+    "radius": 6.69,
     "k": 10,
-    "compdists": 683.24,
-    "time_ms": 0.22,
-=======
-    "radius": 4.43,
-    "k": 10,
-    "compdists": 1015.16,
-    "time_ms": 0.54,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1827.86,
+    "time_ms": 0.55,
     "n_queries": 100,
     "run_id": "FQT_Words_b200_a4_k10"
   },
@@ -59,27 +37,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 4,
-=======
     "num_pivots": 3,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 200,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 5.37,
+    "radius": 7.13,
     "k": 20,
-    "compdists": 792.96,
-    "time_ms": 0.29,
-=======
-    "radius": 4.92,
-    "k": 20,
-    "compdists": 1207.95,
-    "time_ms": 0.68,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1868.66,
+    "time_ms": 0.65,
     "n_queries": 100,
     "run_id": "FQT_Words_b200_a4_k20"
   },
@@ -87,27 +54,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 4,
-=======
     "num_pivots": 3,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 200,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 6,
+    "radius": 7.67,
     "k": 50,
-    "compdists": 1016.76,
-    "time_ms": 0.53,
-=======
-    "radius": 5.61,
-    "k": 50,
-    "compdists": 1343.19,
-    "time_ms": 1.41,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1909.99,
+    "time_ms": 0.95,
     "n_queries": 100,
     "run_id": "FQT_Words_b200_a4_k50"
   },
@@ -115,27 +71,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 4,
-=======
     "num_pivots": 3,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 200,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 6.35,
+    "radius": 8.14,
     "k": 100,
-    "compdists": 1243.79,
-    "time_ms": 1.14,
-=======
-    "radius": 6.06,
-    "k": 100,
-    "compdists": 1424.21,
-    "time_ms": 2.47,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1947.17,
+    "time_ms": 1.76,
     "n_queries": 100,
     "run_id": "FQT_Words_b200_a4_k100"
   },
@@ -143,25 +88,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 4,
-=======
     "num_pivots": 3,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 200,
     "query_type": "MRQ",
     "selectivity": 0.32,
-    "radius": 7.74,
+    "radius": 9.75,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1740.63,
-    "time_ms": 0.48,
-=======
-    "compdists": 1753.91,
-    "time_ms": 0.74,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1987.76,
+    "time_ms": 0.56,
     "n_queries": 100,
     "run_id": "FQT_Words_b200_a4_sel0.32"
   },
@@ -169,25 +105,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 4,
-=======
     "num_pivots": 3,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 200,
     "query_type": "MRQ",
     "selectivity": 0.16,
-    "radius": 7,
+    "radius": 9.02,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1714.57,
-    "time_ms": 0.45,
-=======
-    "compdists": 1712.94,
-    "time_ms": 0.71,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1967.35,
+    "time_ms": 0.55,
     "n_queries": 100,
     "run_id": "FQT_Words_b200_a4_sel0.16"
   },
@@ -195,25 +122,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 4,
-=======
     "num_pivots": 3,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 200,
     "query_type": "MRQ",
     "selectivity": 0.08,
-    "radius": 6.4,
+    "radius": 8.4,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1561.52,
-    "time_ms": 0.4,
-=======
-    "compdists": 1622.36,
-    "time_ms": 0.66,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1959.78,
+    "time_ms": 0.55,
     "n_queries": 100,
     "run_id": "FQT_Words_b200_a4_sel0.08"
   },
@@ -221,25 +139,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 4,
-=======
     "num_pivots": 3,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 200,
     "query_type": "MRQ",
     "selectivity": 0.04,
-    "radius": 5.93,
+    "radius": 7.98,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1482.54,
-    "time_ms": 0.38,
-=======
-    "compdists": 1571.07,
-    "time_ms": 0.66,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1956.17,
+    "time_ms": 0.54,
     "n_queries": 100,
     "run_id": "FQT_Words_b200_a4_sel0.04"
   },
@@ -247,25 +156,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 4,
-=======
     "num_pivots": 3,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 200,
     "query_type": "MRQ",
     "selectivity": 0.02,
-    "radius": 5.39,
+    "radius": 7.59,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1422.78,
-    "time_ms": 0.36,
-=======
-    "compdists": 1496.34,
-    "time_ms": 0.63,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1939.8,
+    "time_ms": 0.54,
     "n_queries": 100,
     "run_id": "FQT_Words_b200_a4_sel0.02"
   },
@@ -273,27 +173,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 5,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 100,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 4.15,
+    "radius": 6.2,
     "k": 5,
-    "compdists": 746.81,
-    "time_ms": 0.23,
-=======
-    "radius": 3.8,
-    "k": 5,
-    "compdists": 936.1,
-    "time_ms": 0.44,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1794.14,
+    "time_ms": 0.54,
     "n_queries": 100,
     "run_id": "FQT_Words_b100_a4_k5"
   },
@@ -301,27 +190,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 5,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 100,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 4.58,
+    "radius": 6.68,
     "k": 10,
-    "compdists": 888.88,
-    "time_ms": 0.27,
-=======
-    "radius": 4.38,
-    "k": 10,
-    "compdists": 1111.62,
-    "time_ms": 0.52,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1853.41,
+    "time_ms": 0.57,
     "n_queries": 100,
     "run_id": "FQT_Words_b100_a4_k10"
   },
@@ -329,27 +207,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 5,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 100,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 5.05,
+    "radius": 7.11,
     "k": 20,
-    "compdists": 1067.21,
-    "time_ms": 0.38,
-=======
-    "radius": 4.88,
-    "k": 20,
-    "compdists": 1262.71,
-    "time_ms": 0.69,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1899.66,
+    "time_ms": 0.66,
     "n_queries": 100,
     "run_id": "FQT_Words_b100_a4_k20"
   },
@@ -357,27 +224,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 5,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 100,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 5.72,
+    "radius": 7.67,
     "k": 50,
-    "compdists": 1290.93,
-    "time_ms": 0.65,
-=======
-    "radius": 5.61,
-    "k": 50,
-    "compdists": 1492.52,
-    "time_ms": 1.18,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1929.32,
+    "time_ms": 0.97,
     "n_queries": 100,
     "run_id": "FQT_Words_b100_a4_k50"
   },
@@ -385,27 +241,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 5,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 100,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 6.07,
+    "radius": 8.14,
     "k": 100,
-    "compdists": 1504.03,
-    "time_ms": 1.36,
-=======
-    "radius": 6.03,
-    "k": 100,
-    "compdists": 1573.21,
-    "time_ms": 2.5,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1960.8,
+    "time_ms": 1.77,
     "n_queries": 100,
     "run_id": "FQT_Words_b100_a4_k100"
   },
@@ -413,25 +258,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 5,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 100,
     "query_type": "MRQ",
     "selectivity": 0.32,
-    "radius": 7.74,
+    "radius": 9.75,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1837.48,
-    "time_ms": 0.5,
-=======
-    "compdists": 1855.1,
-    "time_ms": 0.82,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1968.16,
+    "time_ms": 0.55,
     "n_queries": 100,
     "run_id": "FQT_Words_b100_a4_sel0.32"
   },
@@ -439,25 +275,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 5,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 100,
     "query_type": "MRQ",
     "selectivity": 0.16,
-    "radius": 7,
+    "radius": 9.02,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1803.34,
-    "time_ms": 0.49,
-=======
-    "compdists": 1815.71,
-    "time_ms": 0.83,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1956.31,
+    "time_ms": 0.54,
     "n_queries": 100,
     "run_id": "FQT_Words_b100_a4_sel0.16"
   },
@@ -465,25 +292,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 5,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 100,
     "query_type": "MRQ",
     "selectivity": 0.08,
-    "radius": 6.4,
+    "radius": 8.4,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1737.45,
-    "time_ms": 0.46,
-=======
-    "compdists": 1731.7,
-    "time_ms": 0.75,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1934.16,
+    "time_ms": 0.53,
     "n_queries": 100,
     "run_id": "FQT_Words_b100_a4_sel0.08"
   },
@@ -491,25 +309,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 5,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 100,
     "query_type": "MRQ",
     "selectivity": 0.04,
-    "radius": 5.93,
+    "radius": 7.98,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1718.66,
-    "time_ms": 0.45,
-=======
-    "compdists": 1630.67,
-    "time_ms": 0.78,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1917.72,
+    "time_ms": 0.52,
     "n_queries": 100,
     "run_id": "FQT_Words_b100_a4_sel0.04"
   },
@@ -517,25 +326,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 5,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 100,
     "query_type": "MRQ",
     "selectivity": 0.02,
-    "radius": 5.39,
+    "radius": 7.59,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1653.85,
-    "time_ms": 0.43,
-=======
-    "compdists": 1566.35,
-    "time_ms": 0.63,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1914.8,
+    "time_ms": 0.52,
     "n_queries": 100,
     "run_id": "FQT_Words_b100_a4_sel0.02"
   },
@@ -543,27 +343,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 10,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 50,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 3.92,
+    "radius": 6.23,
     "k": 5,
-    "compdists": 831.88,
-    "time_ms": 0.26,
-=======
-    "radius": 3.82,
-    "k": 5,
-    "compdists": 839.99,
-    "time_ms": 0.4,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1587.48,
+    "time_ms": 0.48,
     "n_queries": 100,
     "run_id": "FQT_Words_b50_a4_k5"
   },
@@ -571,27 +360,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 10,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 50,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 4.49,
+    "radius": 6.68,
     "k": 10,
-    "compdists": 1039.88,
-    "time_ms": 0.32,
-=======
-    "radius": 4.36,
-    "k": 10,
-    "compdists": 1048.24,
-    "time_ms": 0.5,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1672.04,
+    "time_ms": 0.51,
     "n_queries": 100,
     "run_id": "FQT_Words_b50_a4_k10"
   },
@@ -599,25 +377,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 10,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 50,
     "query_type": "MkNN",
     "selectivity": null,
-    "radius": 4.89,
+    "radius": 7.13,
     "k": 20,
-<<<<<<< HEAD
-    "compdists": 1225.52,
-    "time_ms": 0.42,
-=======
-    "compdists": 1221.67,
-    "time_ms": 0.66,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1776.74,
+    "time_ms": 0.62,
     "n_queries": 100,
     "run_id": "FQT_Words_b50_a4_k20"
   },
@@ -625,27 +394,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 10,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 50,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 5.63,
+    "radius": 7.67,
     "k": 50,
-    "compdists": 1481.55,
-    "time_ms": 0.74,
-=======
-    "radius": 5.61,
-    "k": 50,
-    "compdists": 1449.3,
-    "time_ms": 1.17,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1827.61,
+    "time_ms": 0.92,
     "n_queries": 100,
     "run_id": "FQT_Words_b50_a4_k50"
   },
@@ -653,25 +411,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 10,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 50,
     "query_type": "MkNN",
     "selectivity": null,
-    "radius": 6.03,
+    "radius": 8.14,
     "k": 100,
-<<<<<<< HEAD
-    "compdists": 1604.26,
-    "time_ms": 1.44,
-=======
-    "compdists": 1550.76,
-    "time_ms": 2.17,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1879.38,
+    "time_ms": 1.71,
     "n_queries": 100,
     "run_id": "FQT_Words_b50_a4_k100"
   },
@@ -679,25 +428,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 10,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 50,
     "query_type": "MRQ",
     "selectivity": 0.32,
-    "radius": 7.74,
+    "radius": 9.75,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1800.54,
-    "time_ms": 0.46,
-=======
-    "compdists": 1834.05,
-    "time_ms": 0.77,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1983.89,
+    "time_ms": 0.56,
     "n_queries": 100,
     "run_id": "FQT_Words_b50_a4_sel0.32"
   },
@@ -705,25 +445,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 10,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 50,
     "query_type": "MRQ",
     "selectivity": 0.16,
-    "radius": 7,
+    "radius": 9.02,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1738.99,
-    "time_ms": 0.44,
-=======
-    "compdists": 1797.78,
-    "time_ms": 0.73,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1958.27,
+    "time_ms": 0.54,
     "n_queries": 100,
     "run_id": "FQT_Words_b50_a4_sel0.16"
   },
@@ -731,25 +462,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 10,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 50,
     "query_type": "MRQ",
     "selectivity": 0.08,
-    "radius": 6.4,
+    "radius": 8.4,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1638.53,
-    "time_ms": 0.41,
-=======
-    "compdists": 1694.61,
-    "time_ms": 0.73,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1936.83,
+    "time_ms": 0.54,
     "n_queries": 100,
     "run_id": "FQT_Words_b50_a4_sel0.08"
   },
@@ -757,25 +479,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 10,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 50,
     "query_type": "MRQ",
     "selectivity": 0.04,
-    "radius": 5.93,
+    "radius": 7.98,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1594.47,
-    "time_ms": 0.39,
-=======
-    "compdists": 1590.68,
-    "time_ms": 0.75,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1923.1,
+    "time_ms": 0.53,
     "n_queries": 100,
     "run_id": "FQT_Words_b50_a4_sel0.04"
   },
@@ -783,25 +496,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 10,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 50,
     "query_type": "MRQ",
     "selectivity": 0.02,
-    "radius": 5.39,
+    "radius": 7.59,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1499.38,
-    "time_ms": 0.36,
-=======
-    "compdists": 1538.35,
-    "time_ms": 0.56,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1915.48,
+    "time_ms": 0.52,
     "n_queries": 100,
     "run_id": "FQT_Words_b50_a4_sel0.02"
   },
@@ -809,27 +513,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 15,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 20,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 4.13,
+    "radius": 6.21,
     "k": 5,
-    "compdists": 623.18,
-    "time_ms": 0.18,
-=======
-    "radius": 3.77,
-    "k": 5,
-    "compdists": 740.01,
-    "time_ms": 0.39,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1535.78,
+    "time_ms": 0.47,
     "n_queries": 100,
     "run_id": "FQT_Words_b20_a4_k5"
   },
@@ -837,27 +530,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 15,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 20,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 4.59,
+    "radius": 6.68,
     "k": 10,
-    "compdists": 741.37,
-    "time_ms": 0.22,
-=======
-    "radius": 4.4,
-    "k": 10,
-    "compdists": 936.02,
-    "time_ms": 0.45,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1653.57,
+    "time_ms": 0.51,
     "n_queries": 100,
     "run_id": "FQT_Words_b20_a4_k10"
   },
@@ -865,27 +547,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 15,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 20,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 5.04,
+    "radius": 7.11,
     "k": 20,
-    "compdists": 840.18,
-    "time_ms": 0.29,
-=======
-    "radius": 4.88,
-    "k": 20,
-    "compdists": 1097.43,
-    "time_ms": 0.6,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1756.06,
+    "time_ms": 0.62,
     "n_queries": 100,
     "run_id": "FQT_Words_b20_a4_k20"
   },
@@ -893,27 +564,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 15,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 20,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 5.72,
+    "radius": 7.67,
     "k": 50,
-    "compdists": 1063.43,
-    "time_ms": 0.52,
-=======
-    "radius": 5.6,
-    "k": 50,
-    "compdists": 1376.01,
-    "time_ms": 1.21,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1807.83,
+    "time_ms": 0.92,
     "n_queries": 100,
     "run_id": "FQT_Words_b20_a4_k50"
   },
@@ -921,27 +581,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 15,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 20,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 6.13,
+    "radius": 8.14,
     "k": 100,
-    "compdists": 1211.31,
-    "time_ms": 1.13,
-=======
-    "radius": 6.03,
-    "k": 100,
-    "compdists": 1513.7,
-    "time_ms": 2.07,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1851.05,
+    "time_ms": 1.68,
     "n_queries": 100,
     "run_id": "FQT_Words_b20_a4_k100"
   },
@@ -949,25 +598,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 15,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 20,
     "query_type": "MRQ",
     "selectivity": 0.32,
-    "radius": 7.74,
+    "radius": 9.75,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1650.46,
-    "time_ms": 0.42,
-=======
-    "compdists": 1826.41,
-    "time_ms": 0.75,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 2000.5,
+    "time_ms": 0.56,
     "n_queries": 100,
     "run_id": "FQT_Words_b20_a4_sel0.32"
   },
@@ -975,25 +615,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 15,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 20,
     "query_type": "MRQ",
     "selectivity": 0.16,
-    "radius": 7,
+    "radius": 9.02,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1599.46,
-    "time_ms": 0.41,
-=======
-    "compdists": 1787.59,
-    "time_ms": 0.72,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1987.34,
+    "time_ms": 0.55,
     "n_queries": 100,
     "run_id": "FQT_Words_b20_a4_sel0.16"
   },
@@ -1001,25 +632,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 15,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 20,
     "query_type": "MRQ",
     "selectivity": 0.08,
-    "radius": 6.4,
+    "radius": 8.4,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1479.58,
-    "time_ms": 0.37,
-=======
-    "compdists": 1693.25,
-    "time_ms": 0.65,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1946.18,
+    "time_ms": 0.53,
     "n_queries": 100,
     "run_id": "FQT_Words_b20_a4_sel0.08"
   },
@@ -1027,25 +649,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 15,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 20,
     "query_type": "MRQ",
     "selectivity": 0.04,
-    "radius": 5.93,
+    "radius": 7.98,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1395.53,
-    "time_ms": 0.35,
-=======
-    "compdists": 1608.51,
-    "time_ms": 0.62,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1901.25,
+    "time_ms": 0.51,
     "n_queries": 100,
     "run_id": "FQT_Words_b20_a4_sel0.04"
   },
@@ -1053,25 +666,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 15,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 20,
     "query_type": "MRQ",
     "selectivity": 0.02,
-    "radius": 5.39,
+    "radius": 7.59,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1312.66,
-    "time_ms": 0.32,
-=======
-    "compdists": 1511.44,
-    "time_ms": 0.6,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1898.03,
+    "time_ms": 0.51,
     "n_queries": 100,
     "run_id": "FQT_Words_b20_a4_sel0.02"
   },
@@ -1079,27 +683,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 11,
-=======
     "num_pivots": 20,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 10,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 3.99,
+    "radius": 6.2,
     "k": 5,
-    "compdists": 765.88,
-    "time_ms": 0.27,
-=======
-    "radius": 3.81,
-    "k": 5,
-    "compdists": 760.17,
-    "time_ms": 0.4,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1572.21,
+    "time_ms": 0.5,
     "n_queries": 100,
     "run_id": "FQT_Words_b10_a4_k5"
   },
@@ -1107,27 +700,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 11,
-=======
     "num_pivots": 20,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 10,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 4.53,
+    "radius": 6.69,
     "k": 10,
-    "compdists": 934.85,
-    "time_ms": 0.33,
-=======
-    "radius": 4.4,
-    "k": 10,
-    "compdists": 913.49,
-    "time_ms": 0.47,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1691.49,
+    "time_ms": 0.55,
     "n_queries": 100,
     "run_id": "FQT_Words_b10_a4_k10"
   },
@@ -1135,27 +717,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 11,
-=======
     "num_pivots": 20,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 10,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 4.99,
+    "radius": 7.11,
     "k": 20,
-    "compdists": 1102.49,
-    "time_ms": 0.43,
-=======
-    "radius": 4.89,
-    "k": 20,
-    "compdists": 1064.13,
+    "compdists": 1769.94,
     "time_ms": 0.64,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "n_queries": 100,
     "run_id": "FQT_Words_b10_a4_k20"
   },
@@ -1163,27 +734,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 11,
-=======
     "num_pivots": 20,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 10,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 5.7,
+    "radius": 7.68,
     "k": 50,
-    "compdists": 1309.84,
-    "time_ms": 0.7,
-=======
-    "radius": 5.63,
-    "k": 50,
-    "compdists": 1307.68,
-    "time_ms": 1.1,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1845.12,
+    "time_ms": 0.94,
     "n_queries": 100,
     "run_id": "FQT_Words_b10_a4_k50"
   },
@@ -1191,27 +751,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 11,
-=======
     "num_pivots": 20,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 10,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 6.13,
+    "radius": 8.14,
     "k": 100,
-    "compdists": 1394.12,
-    "time_ms": 1.27,
-=======
-    "radius": 6.03,
-    "k": 100,
-    "compdists": 1406.46,
-    "time_ms": 1.93,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1893.29,
+    "time_ms": 1.72,
     "n_queries": 100,
     "run_id": "FQT_Words_b10_a4_k100"
   },
@@ -1219,25 +768,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 11,
-=======
     "num_pivots": 20,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 10,
     "query_type": "MRQ",
     "selectivity": 0.32,
-    "radius": 7.74,
+    "radius": 9.75,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 2028.11,
-    "time_ms": 0.55,
-=======
-    "compdists": 1864.36,
-    "time_ms": 0.79,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 2102.69,
+    "time_ms": 0.59,
     "n_queries": 100,
     "run_id": "FQT_Words_b10_a4_sel0.32"
   },
@@ -1245,25 +785,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 11,
-=======
     "num_pivots": 20,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 10,
     "query_type": "MRQ",
     "selectivity": 0.16,
-    "radius": 7,
+    "radius": 9.02,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1989.69,
-    "time_ms": 0.57,
-=======
-    "compdists": 1813.4,
-    "time_ms": 0.77,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 2080.68,
+    "time_ms": 0.58,
     "n_queries": 100,
     "run_id": "FQT_Words_b10_a4_sel0.16"
   },
@@ -1271,25 +802,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 11,
-=======
     "num_pivots": 20,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 10,
     "query_type": "MRQ",
     "selectivity": 0.08,
-    "radius": 6.4,
+    "radius": 8.4,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1894.65,
-    "time_ms": 0.52,
-=======
-    "compdists": 1696.88,
-    "time_ms": 0.72,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 2036.11,
+    "time_ms": 0.56,
     "n_queries": 100,
     "run_id": "FQT_Words_b10_a4_sel0.08"
   },
@@ -1297,25 +819,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 11,
-=======
     "num_pivots": 20,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 10,
     "query_type": "MRQ",
     "selectivity": 0.04,
-    "radius": 5.93,
+    "radius": 7.98,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1830.67,
-    "time_ms": 0.49,
-=======
-    "compdists": 1602.36,
-    "time_ms": 0.6,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1999.64,
+    "time_ms": 0.55,
     "n_queries": 100,
     "run_id": "FQT_Words_b10_a4_sel0.04"
   },
@@ -1323,25 +836,16 @@
     "index": "FQT",
     "dataset": "Words",
     "category": "strings",
-<<<<<<< HEAD
-    "num_pivots": 11,
-=======
     "num_pivots": 20,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 4,
     "bucket_size": 10,
     "query_type": "MRQ",
     "selectivity": 0.02,
-    "radius": 5.39,
+    "radius": 7.59,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1752.08,
-    "time_ms": 0.47,
-=======
-    "compdists": 1527.12,
-    "time_ms": 0.58,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1994.62,
+    "time_ms": 0.55,
     "n_queries": 100,
     "run_id": "FQT_Words_b10_a4_sel0.02"
   }

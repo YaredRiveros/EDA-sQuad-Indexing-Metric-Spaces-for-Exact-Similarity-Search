@@ -3,27 +3,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 4,
-=======
     "num_pivots": 3,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 100,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 3010.33,
+    "radius": 3008.72,
     "k": 5,
-    "compdists": 1574.95,
-    "time_ms": 0.35,
-=======
-    "radius": 4.78,
-    "k": 5,
-    "compdists": 252.34,
-    "time_ms": 0,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1123.12,
+    "time_ms": 0.23,
     "n_queries": 100,
     "run_id": "FQT_Color_b100_a5_k5"
   },
@@ -31,27 +20,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 4,
-=======
     "num_pivots": 3,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 100,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 3207.57,
+    "radius": 3229.7,
     "k": 10,
-    "compdists": 1658.92,
-    "time_ms": 0.38,
-=======
-    "radius": 5.74,
-    "k": 10,
-    "compdists": 307.45,
-    "time_ms": 0.01,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1235.26,
+    "time_ms": 0.3,
     "n_queries": 100,
     "run_id": "FQT_Color_b100_a5_k10"
   },
@@ -59,27 +37,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 4,
-=======
     "num_pivots": 3,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 100,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 3437.79,
+    "radius": 3457.15,
     "k": 20,
-    "compdists": 1741.75,
-    "time_ms": 0.43,
-=======
-    "radius": 7.01,
-    "k": 20,
-    "compdists": 401.87,
-    "time_ms": 0.03,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1339.48,
+    "time_ms": 0.35,
     "n_queries": 100,
     "run_id": "FQT_Color_b100_a5_k20"
   },
@@ -87,27 +54,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 4,
-=======
     "num_pivots": 3,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 100,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 3795.28,
+    "radius": 3837.76,
     "k": 50,
-    "compdists": 1846.91,
-    "time_ms": 0.67,
-=======
-    "radius": 9.16,
-    "k": 50,
-    "compdists": 538.98,
-    "time_ms": 0.24,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1519.54,
+    "time_ms": 0.57,
     "n_queries": 100,
     "run_id": "FQT_Color_b100_a5_k50"
   },
@@ -115,27 +71,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 4,
-=======
     "num_pivots": 3,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 100,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 4146.04,
+    "radius": 4238.99,
     "k": 100,
-    "compdists": 1906.29,
-    "time_ms": 1.64,
-=======
-    "radius": 11.33,
-    "k": 100,
-    "compdists": 742.34,
-    "time_ms": 0.81,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1663.42,
+    "time_ms": 1.11,
     "n_queries": 100,
     "run_id": "FQT_Color_b100_a5_k100"
   },
@@ -143,25 +88,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 4,
-=======
     "num_pivots": 3,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 100,
     "query_type": "MRQ",
     "selectivity": 0.32,
-    "radius": 5613.52,
+    "radius": 5702.49,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1999.73,
-    "time_ms": 0.53,
-=======
-    "compdists": 2011,
-    "time_ms": 0.01,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1985.19,
+    "time_ms": 0.38,
     "n_queries": 100,
     "run_id": "FQT_Color_b100_a5_sel0.32"
   },
@@ -169,25 +105,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 4,
-=======
     "num_pivots": 3,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 100,
     "query_type": "MRQ",
     "selectivity": 0.16,
-    "radius": 4995.01,
+    "radius": 5018.28,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1995.2,
-    "time_ms": 0.45,
-=======
-    "compdists": 2011,
-    "time_ms": 0.01,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1954.71,
+    "time_ms": 0.38,
     "n_queries": 100,
     "run_id": "FQT_Color_b100_a5_sel0.16"
   },
@@ -195,25 +122,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 4,
-=======
     "num_pivots": 3,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 100,
     "query_type": "MRQ",
     "selectivity": 0.08,
-    "radius": 4462.2,
+    "radius": 4519.71,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1979.97,
-    "time_ms": 0.41,
-=======
-    "compdists": 2011,
-    "time_ms": 0,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1915.25,
+    "time_ms": 0.36,
     "n_queries": 100,
     "run_id": "FQT_Color_b100_a5_sel0.08"
   },
@@ -221,25 +139,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 4,
-=======
     "num_pivots": 3,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 100,
     "query_type": "MRQ",
     "selectivity": 0.04,
-    "radius": 4024.33,
+    "radius": 4110.87,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1966.04,
-    "time_ms": 0.39,
-=======
-    "compdists": 2011,
-    "time_ms": 0.01,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1882.07,
+    "time_ms": 0.36,
     "n_queries": 100,
     "run_id": "FQT_Color_b100_a5_sel0.04"
   },
@@ -247,25 +156,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 4,
-=======
     "num_pivots": 3,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 100,
     "query_type": "MRQ",
     "selectivity": 0.02,
-    "radius": 3709.62,
+    "radius": 3729.37,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1947.48,
-    "time_ms": 0.39,
-=======
-    "compdists": 2011,
-    "time_ms": 0.01,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1811.52,
+    "time_ms": 0.34,
     "n_queries": 100,
     "run_id": "FQT_Color_b100_a5_sel0.02"
   },
@@ -279,17 +179,10 @@
     "bucket_size": 50,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 3013.73,
+    "radius": 3008.83,
     "k": 5,
-    "compdists": 1381.34,
-    "time_ms": 0.3,
-=======
-    "radius": 5.34,
-    "k": 5,
-    "compdists": 70.71,
-    "time_ms": 0,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 940.83,
+    "time_ms": 0.2,
     "n_queries": 100,
     "run_id": "FQT_Color_b50_a5_k5"
   },
@@ -303,17 +196,10 @@
     "bucket_size": 50,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 3210.58,
+    "radius": 3225.14,
     "k": 10,
-    "compdists": 1474.54,
-    "time_ms": 0.32,
-=======
-    "radius": 5.98,
-    "k": 10,
-    "compdists": 99.96,
-    "time_ms": 0,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1070.64,
+    "time_ms": 0.24,
     "n_queries": 100,
     "run_id": "FQT_Color_b50_a5_k10"
   },
@@ -327,17 +213,10 @@
     "bucket_size": 50,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 3442.25,
+    "radius": 3457.06,
     "k": 20,
-    "compdists": 1587.58,
-    "time_ms": 0.39,
-=======
-    "radius": 7.42,
-    "k": 20,
-    "compdists": 139.06,
-    "time_ms": 0.02,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1177.25,
+    "time_ms": 0.3,
     "n_queries": 100,
     "run_id": "FQT_Color_b50_a5_k20"
   },
@@ -351,17 +230,10 @@
     "bucket_size": 50,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 3796.11,
+    "radius": 3839.11,
     "k": 50,
-    "compdists": 1708.36,
-    "time_ms": 0.63,
-=======
-    "radius": 9.54,
-    "k": 50,
-    "compdists": 222.89,
-    "time_ms": 0.1,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1329.85,
+    "time_ms": 0.5,
     "n_queries": 100,
     "run_id": "FQT_Color_b50_a5_k50"
   },
@@ -375,17 +247,10 @@
     "bucket_size": 50,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 4147.83,
+    "radius": 4243.33,
     "k": 100,
-    "compdists": 1805.54,
-    "time_ms": 1.16,
-=======
-    "radius": 11.86,
-    "k": 100,
-    "compdists": 341.62,
-    "time_ms": 0.44,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1528.89,
+    "time_ms": 1.02,
     "n_queries": 100,
     "run_id": "FQT_Color_b50_a5_k100"
   },
@@ -399,15 +264,10 @@
     "bucket_size": 50,
     "query_type": "MRQ",
     "selectivity": 0.32,
-    "radius": 5613.52,
+    "radius": 5702.49,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 2014.8,
-    "time_ms": 0.45,
-=======
-    "compdists": 2036,
-    "time_ms": 0.02,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1996.77,
+    "time_ms": 0.38,
     "n_queries": 100,
     "run_id": "FQT_Color_b50_a5_sel0.32"
   },
@@ -421,15 +281,10 @@
     "bucket_size": 50,
     "query_type": "MRQ",
     "selectivity": 0.16,
-    "radius": 4995.01,
+    "radius": 5018.28,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1997.78,
-    "time_ms": 0.51,
-=======
-    "compdists": 2036,
-    "time_ms": 0.03,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1945.1,
+    "time_ms": 0.37,
     "n_queries": 100,
     "run_id": "FQT_Color_b50_a5_sel0.16"
   },
@@ -443,15 +298,10 @@
     "bucket_size": 50,
     "query_type": "MRQ",
     "selectivity": 0.08,
-    "radius": 4462.2,
+    "radius": 4519.71,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1964.17,
-    "time_ms": 0.53,
-=======
-    "compdists": 2036,
-    "time_ms": 0,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1877.75,
+    "time_ms": 0.36,
     "n_queries": 100,
     "run_id": "FQT_Color_b50_a5_sel0.08"
   },
@@ -465,15 +315,10 @@
     "bucket_size": 50,
     "query_type": "MRQ",
     "selectivity": 0.04,
-    "radius": 4024.33,
+    "radius": 4110.87,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1913.2,
-    "time_ms": 0.49,
-=======
-    "compdists": 2036,
-    "time_ms": 0.01,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1817,
+    "time_ms": 0.36,
     "n_queries": 100,
     "run_id": "FQT_Color_b50_a5_sel0.04"
   },
@@ -487,15 +332,10 @@
     "bucket_size": 50,
     "query_type": "MRQ",
     "selectivity": 0.02,
-    "radius": 3709.62,
+    "radius": 3729.37,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1854.1,
-    "time_ms": 0.48,
-=======
-    "compdists": 2036,
-    "time_ms": 0.01,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1725.77,
+    "time_ms": 0.33,
     "n_queries": 100,
     "run_id": "FQT_Color_b50_a5_sel0.02"
   },
@@ -503,27 +343,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 6,
-=======
     "num_pivots": 10,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 20,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 3014.8,
+    "radius": 3020.99,
     "k": 5,
-    "compdists": 1446.13,
-    "time_ms": 0.39,
-=======
-    "radius": 5.02,
-    "k": 5,
-    "compdists": 60.35,
-    "time_ms": 0,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 824.98,
+    "time_ms": 0.17,
     "n_queries": 100,
     "run_id": "FQT_Color_b20_a5_k5"
   },
@@ -531,27 +360,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 6,
-=======
     "num_pivots": 10,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 20,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 3218.39,
+    "radius": 3239.02,
     "k": 10,
-    "compdists": 1513.75,
-    "time_ms": 0.42,
-=======
-    "radius": 6.11,
-    "k": 10,
-    "compdists": 86.31,
-    "time_ms": 0,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 928.02,
+    "time_ms": 0.21,
     "n_queries": 100,
     "run_id": "FQT_Color_b20_a5_k10"
   },
@@ -559,27 +377,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 6,
-=======
     "num_pivots": 10,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 20,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 3440.97,
+    "radius": 3461.94,
     "k": 20,
-    "compdists": 1615.51,
-    "time_ms": 0.51,
-=======
-    "radius": 7.45,
-    "k": 20,
-    "compdists": 125.29,
-    "time_ms": 0.02,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1028.08,
+    "time_ms": 0.27,
     "n_queries": 100,
     "run_id": "FQT_Color_b20_a5_k20"
   },
@@ -587,27 +394,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 6,
-=======
     "num_pivots": 10,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 20,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 3797.11,
+    "radius": 3839.63,
     "k": 50,
-    "compdists": 1739.07,
-    "time_ms": 0.89,
-=======
-    "radius": 9.45,
-    "k": 50,
-    "compdists": 227.27,
-    "time_ms": 0.11,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1175.28,
+    "time_ms": 0.44,
     "n_queries": 100,
     "run_id": "FQT_Color_b20_a5_k50"
   },
@@ -615,27 +411,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 6,
-=======
     "num_pivots": 10,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 20,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 4146.04,
+    "radius": 4241.74,
     "k": 100,
-    "compdists": 1820.62,
-    "time_ms": 1.5,
-=======
-    "radius": 11.53,
-    "k": 100,
-    "compdists": 357.31,
-    "time_ms": 0.41,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1358.49,
+    "time_ms": 0.91,
     "n_queries": 100,
     "run_id": "FQT_Color_b20_a5_k100"
   },
@@ -643,25 +428,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 6,
-=======
     "num_pivots": 10,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 20,
     "query_type": "MRQ",
     "selectivity": 0.32,
-    "radius": 5613.52,
+    "radius": 5702.49,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 2039.81,
-    "time_ms": 0.44,
-=======
-    "compdists": 2085,
-    "time_ms": 0.01,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1960.01,
+    "time_ms": 0.38,
     "n_queries": 100,
     "run_id": "FQT_Color_b20_a5_sel0.32"
   },
@@ -669,25 +445,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 6,
-=======
     "num_pivots": 10,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 20,
     "query_type": "MRQ",
     "selectivity": 0.16,
-    "radius": 4995.01,
+    "radius": 5018.28,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 2022.84,
-    "time_ms": 0.41,
-=======
-    "compdists": 2085,
-    "time_ms": 0.01,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1894.59,
+    "time_ms": 0.37,
     "n_queries": 100,
     "run_id": "FQT_Color_b20_a5_sel0.16"
   },
@@ -695,25 +462,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 6,
-=======
     "num_pivots": 10,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 20,
     "query_type": "MRQ",
     "selectivity": 0.08,
-    "radius": 4462.2,
+    "radius": 4519.71,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1985.06,
-    "time_ms": 0.4,
-=======
-    "compdists": 2085,
-    "time_ms": 0.01,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1818.09,
+    "time_ms": 0.35,
     "n_queries": 100,
     "run_id": "FQT_Color_b20_a5_sel0.08"
   },
@@ -721,25 +479,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 6,
-=======
     "num_pivots": 10,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 20,
     "query_type": "MRQ",
     "selectivity": 0.04,
-    "radius": 4024.33,
+    "radius": 4110.87,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1949.41,
-    "time_ms": 0.38,
-=======
-    "compdists": 2085,
-    "time_ms": 0.01,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1756.75,
+    "time_ms": 0.34,
     "n_queries": 100,
     "run_id": "FQT_Color_b20_a5_sel0.04"
   },
@@ -747,25 +496,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 6,
-=======
     "num_pivots": 10,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 20,
     "query_type": "MRQ",
     "selectivity": 0.02,
-    "radius": 3709.62,
+    "radius": 3729.37,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 1906.2,
-    "time_ms": 0.42,
-=======
-    "compdists": 2085,
-    "time_ms": 0.01,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1648.82,
+    "time_ms": 0.32,
     "n_queries": 100,
     "run_id": "FQT_Color_b20_a5_sel0.02"
   },
@@ -773,27 +513,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 15,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 10,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 3019.11,
+    "radius": 3006.79,
     "k": 5,
-    "compdists": 1465.97,
-    "time_ms": 0.36,
-=======
-    "radius": 5.51,
-    "k": 5,
-    "compdists": 57.18,
-    "time_ms": 0,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 981.38,
+    "time_ms": 0.22,
     "n_queries": 100,
     "run_id": "FQT_Color_b10_a5_k5"
   },
@@ -801,27 +530,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 15,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 10,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 3211.14,
+    "radius": 3231.97,
     "k": 10,
-    "compdists": 1574.8,
-    "time_ms": 0.39,
-=======
-    "radius": 6.6,
-    "k": 10,
-    "compdists": 74.43,
-    "time_ms": 0,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1100.95,
+    "time_ms": 0.28,
     "n_queries": 100,
     "run_id": "FQT_Color_b10_a5_k10"
   },
@@ -829,27 +547,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 15,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 10,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 3441.06,
+    "radius": 3456.12,
     "k": 20,
-    "compdists": 1654.53,
-    "time_ms": 0.43,
-=======
-    "radius": 7.84,
-    "k": 20,
-    "compdists": 103,
-    "time_ms": 0.02,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1217.28,
+    "time_ms": 0.33,
     "n_queries": 100,
     "run_id": "FQT_Color_b10_a5_k20"
   },
@@ -857,27 +564,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 15,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 10,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 3797.22,
+    "radius": 3838.58,
     "k": 50,
-    "compdists": 1770.53,
-    "time_ms": 0.68,
-=======
-    "radius": 9.92,
-    "k": 50,
-    "compdists": 169.27,
-    "time_ms": 0.08,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1389.92,
+    "time_ms": 0.54,
     "n_queries": 100,
     "run_id": "FQT_Color_b10_a5_k50"
   },
@@ -885,27 +581,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 15,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 10,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 4145.91,
+    "radius": 4239.49,
     "k": 100,
-    "compdists": 1873.05,
-    "time_ms": 1.23,
-=======
-    "radius": 12.23,
-    "k": 100,
-    "compdists": 258.98,
-    "time_ms": 0.32,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1587.17,
+    "time_ms": 1.07,
     "n_queries": 100,
     "run_id": "FQT_Color_b10_a5_k100"
   },
@@ -913,25 +598,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 15,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 10,
     "query_type": "MRQ",
     "selectivity": 0.32,
-    "radius": 5613.52,
+    "radius": 5702.49,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 2093.04,
-    "time_ms": 0.4,
-=======
-    "compdists": 2154,
-    "time_ms": 0.01,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 2079.08,
+    "time_ms": 0.41,
     "n_queries": 100,
     "run_id": "FQT_Color_b10_a5_sel0.32"
   },
@@ -939,25 +615,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 15,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 10,
     "query_type": "MRQ",
     "selectivity": 0.16,
-    "radius": 4995.01,
+    "radius": 5018.28,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 2074.78,
+    "compdists": 2022.77,
     "time_ms": 0.39,
-=======
-    "compdists": 2154,
-    "time_ms": 0.01,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "n_queries": 100,
     "run_id": "FQT_Color_b10_a5_sel0.16"
   },
@@ -965,25 +632,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 15,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 10,
     "query_type": "MRQ",
     "selectivity": 0.08,
-    "radius": 4462.2,
+    "radius": 4519.71,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 2053.18,
+    "compdists": 1951.55,
     "time_ms": 0.38,
-=======
-    "compdists": 2154,
-    "time_ms": 0.01,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "n_queries": 100,
     "run_id": "FQT_Color_b10_a5_sel0.08"
   },
@@ -991,25 +649,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 15,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 10,
     "query_type": "MRQ",
     "selectivity": 0.04,
-    "radius": 4024.33,
+    "radius": 4110.87,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 2032.68,
-    "time_ms": 0.38,
-=======
-    "compdists": 2154,
-    "time_ms": 0.01,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1870.89,
+    "time_ms": 0.37,
     "n_queries": 100,
     "run_id": "FQT_Color_b10_a5_sel0.04"
   },
@@ -1017,25 +666,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 7,
-=======
     "num_pivots": 15,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 10,
     "query_type": "MRQ",
     "selectivity": 0.02,
-    "radius": 3709.62,
+    "radius": 3729.37,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 2004.87,
-    "time_ms": 0.37,
-=======
-    "compdists": 2154,
-    "time_ms": 0.02,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1758.55,
+    "time_ms": 0.34,
     "n_queries": 100,
     "run_id": "FQT_Color_b10_a5_sel0.02"
   },
@@ -1043,27 +683,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 8,
-=======
     "num_pivots": 20,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 5,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 3015.34,
+    "radius": 3006.67,
     "k": 5,
-    "compdists": 1491.53,
-    "time_ms": 0.36,
-=======
-    "radius": 5.15,
-    "k": 5,
-    "compdists": 68.51,
-    "time_ms": 0,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 958.4,
+    "time_ms": 0.23,
     "n_queries": 100,
     "run_id": "FQT_Color_b5_a5_k5"
   },
@@ -1071,27 +700,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 8,
-=======
     "num_pivots": 20,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 5,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 3216.91,
+    "radius": 3223.51,
     "k": 10,
-    "compdists": 1578.32,
-    "time_ms": 0.39,
-=======
-    "radius": 6.07,
-    "k": 10,
-    "compdists": 91.97,
-    "time_ms": 0.01,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1051.05,
+    "time_ms": 0.26,
     "n_queries": 100,
     "run_id": "FQT_Color_b5_a5_k10"
   },
@@ -1099,27 +717,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 8,
-=======
     "num_pivots": 20,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 5,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 3443.43,
+    "radius": 3453.79,
     "k": 20,
-    "compdists": 1662.42,
-    "time_ms": 0.45,
-=======
-    "radius": 7.43,
-    "k": 20,
-    "compdists": 133.37,
-    "time_ms": 0.02,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1133.93,
+    "time_ms": 0.32,
     "n_queries": 100,
     "run_id": "FQT_Color_b5_a5_k20"
   },
@@ -1127,27 +734,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 8,
-=======
     "num_pivots": 20,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 5,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 3799.99,
+    "radius": 3839.9,
     "k": 50,
-    "compdists": 1795.47,
-    "time_ms": 0.7,
-=======
-    "radius": 9.55,
-    "k": 50,
-    "compdists": 228.99,
-    "time_ms": 0.1,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1258.16,
+    "time_ms": 0.51,
     "n_queries": 100,
     "run_id": "FQT_Color_b5_a5_k50"
   },
@@ -1155,27 +751,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 8,
-=======
     "num_pivots": 20,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 5,
     "query_type": "MkNN",
     "selectivity": null,
-<<<<<<< HEAD
-    "radius": 4146.3,
+    "radius": 4240.94,
     "k": 100,
-    "compdists": 1883.01,
-    "time_ms": 1.27,
-=======
-    "radius": 11.51,
-    "k": 100,
-    "compdists": 360.55,
-    "time_ms": 0.55,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1425.64,
+    "time_ms": 0.98,
     "n_queries": 100,
     "run_id": "FQT_Color_b5_a5_k100"
   },
@@ -1183,25 +768,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 8,
-=======
     "num_pivots": 20,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 5,
     "query_type": "MRQ",
     "selectivity": 0.32,
-    "radius": 5613.52,
+    "radius": 5702.49,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 2227.73,
-    "time_ms": 0.43,
-=======
-    "compdists": 2344,
-    "time_ms": 0.02,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 2124.01,
+    "time_ms": 0.41,
     "n_queries": 100,
     "run_id": "FQT_Color_b5_a5_sel0.32"
   },
@@ -1209,25 +785,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 8,
-=======
     "num_pivots": 20,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 5,
     "query_type": "MRQ",
     "selectivity": 0.16,
-    "radius": 4995.01,
+    "radius": 5018.28,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 2213.77,
-    "time_ms": 0.42,
-=======
-    "compdists": 2344,
-    "time_ms": 0.03,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 2033.52,
+    "time_ms": 0.39,
     "n_queries": 100,
     "run_id": "FQT_Color_b5_a5_sel0.16"
   },
@@ -1235,25 +802,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 8,
-=======
     "num_pivots": 20,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 5,
     "query_type": "MRQ",
     "selectivity": 0.08,
-    "radius": 4462.2,
+    "radius": 4519.71,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 2189.67,
-    "time_ms": 0.41,
-=======
-    "compdists": 2344,
-    "time_ms": 0.03,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1964.12,
+    "time_ms": 0.38,
     "n_queries": 100,
     "run_id": "FQT_Color_b5_a5_sel0.08"
   },
@@ -1261,25 +819,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 8,
-=======
     "num_pivots": 20,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 5,
     "query_type": "MRQ",
     "selectivity": 0.04,
-    "radius": 4024.33,
+    "radius": 4110.87,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 2157.26,
-    "time_ms": 0.42,
-=======
-    "compdists": 2344,
-    "time_ms": 0.04,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1883.06,
+    "time_ms": 0.37,
     "n_queries": 100,
     "run_id": "FQT_Color_b5_a5_sel0.04"
   },
@@ -1287,25 +836,16 @@
     "index": "FQT",
     "dataset": "Color",
     "category": "vectors",
-<<<<<<< HEAD
-    "num_pivots": 8,
-=======
     "num_pivots": 20,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
     "num_centers_path": null,
     "arity": 5,
     "bucket_size": 5,
     "query_type": "MRQ",
     "selectivity": 0.02,
-    "radius": 3709.62,
+    "radius": 3729.37,
     "k": null,
-<<<<<<< HEAD
-    "compdists": 2123.03,
-    "time_ms": 0.4,
-=======
-    "compdists": 2344,
-    "time_ms": 0.03,
->>>>>>> 4bae1756da3ddadc9a6cf57a8ea247314926e16e
+    "compdists": 1777.56,
+    "time_ms": 0.35,
     "n_queries": 100,
     "run_id": "FQT_Color_b5_a5_sel0.02"
   }

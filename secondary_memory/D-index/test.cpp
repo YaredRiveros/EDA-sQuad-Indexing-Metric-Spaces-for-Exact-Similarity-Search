@@ -34,7 +34,6 @@ int main(int argc, char** argv) {
         datasets = DATASETS;
     }
 
-
     std::filesystem::create_directories("results");
     std::filesystem::create_directories("dindex_indexes");
 
@@ -77,11 +76,11 @@ int main(int argc, char** argv) {
         J << "[\n";
         bool firstOutput = true;
 
-        const int    numLevels = 5;
+        const int    numLevels = 5;   // l=5 para índices en disco, como en Chen
         const double rho       = 5.0;
 
         cerr << "[BUILD] Construyendo D-index (l=" << numLevels
-             << ", rho=" << rho << ") con pivotes HFI...\n";
+             << ", rho=" << rho << ") con pivotes HFI.\n";
 
         string rafFile = "dindex_indexes/" + dataset + "_raf.bin";
         string hfiFile = path_pivots(dataset, numLevels);
@@ -91,19 +90,19 @@ int main(int argc, char** argv) {
         vector<DataObject> allObjects;
         allObjects.reserve(db->size());
 
-        cerr << "[BUILD] Cargando " << db->size() << " objetos...\n";
+        cerr << "[BUILD] Cargando " << db->size() << " objetos.\n";
         for (int i = 0; i < db->size(); i++) {
             DataObject obj;
             obj.id = i;       // 0-based
             allObjects.push_back(obj);
         }
 
-        cerr << "[BUILD] Iniciando construcción de D-index...\n";
+        cerr << "[BUILD] Iniciando construcción de D-index.\n";
         dindex.build(allObjects, 42, hfiFile);
         cerr << "[BUILD] OK.\n";
 
         // ============================ MRQ ===================================
-        cerr << "\n[MRQ] Ejecutando selectividades...\n";
+        cerr << "\n[MRQ] Ejecutando selectividades.\n";
 
         for (double sel : SELECTIVITIES) {
             if (!radii.count(sel)) continue;
@@ -112,28 +111,30 @@ int main(int argc, char** argv) {
             cerr << "  [MRQ] sel=" << sel << "  R=" << R << "\n";
 
             long long totalD = 0;
-            long long totalT = 0;
             long long totalP = 0;
+
+            // Medimos el TIEMPO del lote completo de queries
+            auto start_all = chrono::high_resolution_clock::now();
 
             for (int q : queries) {
                 dindex.clear_counters();
 
-                auto start = chrono::high_resolution_clock::now();
                 auto results = dindex.MRQ(q, R);   // ya verificado dentro
-                auto end   = chrono::high_resolution_clock::now();
-
-                long long elapsed =
-                    chrono::duration_cast<chrono::microseconds>(end - start).count();
-
                 (void)results; // no hace falta usarlos aquí
 
                 totalD += dindex.get_compDist();
-                totalT += elapsed;
-                totalP += dindex.get_pageReads(); // seguirá en 0 mientras no modelemos páginas
+                totalP += dindex.get_pageReads();
             }
 
+            auto end_all = chrono::high_resolution_clock::now();
+
+            // Tiempo total en ms
+            double total_ms =
+                chrono::duration<double, std::milli>(end_all - start_all).count();
+
+            // Promedio por consulta
             double avgD   = double(totalD) / queries.size();
-            double avgTms = double(totalT) / (1000.0 * queries.size());
+            double avgTms = total_ms / double(queries.size());
             double avgPg  = double(totalP) / queries.size();
 
             if (!firstOutput) J << ",\n";
@@ -159,34 +160,33 @@ int main(int argc, char** argv) {
         }
 
         // ============================ MkNN ==================================
-        cerr << "\n[MkNN] Ejecutando valores de k...\n";
+        cerr << "\n[MkNN] Ejecutando valores de k.\n";
 
         for (int k : K_VALUES) {
             cerr << "  [MkNN] k=" << k << "\n";
 
             long long totalD = 0;
-            long long totalT = 0;
             long long totalP = 0;
+
+            auto start_all = chrono::high_resolution_clock::now();
 
             for (int q : queries) {
                 dindex.clear_counters();
 
-                auto start = chrono::high_resolution_clock::now();
-                auto knn   = dindex.MkNN(q, k);
-                auto end   = chrono::high_resolution_clock::now();
-
-                long long elapsed =
-                    chrono::duration_cast<chrono::microseconds>(end - start).count();
-
+                auto knn = dindex.MkNN(q, k);
                 (void)knn;
 
                 totalD += dindex.get_compDist();
-                totalT += elapsed;
                 totalP += dindex.get_pageReads();
             }
 
+            auto end_all = chrono::high_resolution_clock::now();
+
+            double total_ms =
+                chrono::duration<double, std::milli>(end_all - start_all).count();
+
             double avgD   = double(totalD) / queries.size();
-            double avgTms = double(totalT) / (1000.0 * queries.size());
+            double avgTms = total_ms / double(queries.size());
             double avgPg  = double(totalP) / queries.size();
 
             if (!firstOutput) J << ",\n";

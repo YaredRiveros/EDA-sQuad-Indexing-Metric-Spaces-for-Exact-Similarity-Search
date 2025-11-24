@@ -7,6 +7,7 @@ using namespace std;
 #include <set>
 #include <cassert>
 #include <cfloat>
+#include <random>
 using namespace chrono;
 
 // GNAT (Geometric Near-neighbor Access Tree) es una generalización m-aria del GHT (Generalized Hyperplane Tree)
@@ -25,14 +26,20 @@ GNAT_t::GNAT_t(db_t* db, size_t avg_pivot_cnt) :
 // Este método inicializa la construcción recursiva del árbol m-ario
 void GNAT_t::build()
 {
-	vector<int> objects;
-	for (int i = 0; i < (int)db->size(); ++i) {
-		objects.push_back(i);
-	}
-	random_shuffle(objects.begin(), objects.end());
-	cout << "database size: " << objects.size() << endl;
-	_build(&root, objects, avg_pivot_cnt,1);
+    vector<int> objects;
+    objects.reserve(db->size());
+    for (int i = 0; i < (int)db->size(); ++i) {
+        objects.push_back(i);
+    }
+
+    // Reemplazo de random_shuffle (C++11+)
+    std::mt19937 rng(42); // semilla fija para resultados reproducibles
+    std::shuffle(objects.begin(), objects.end(), rng);
+
+    cout << "database size: " << objects.size() << endl;
+    _build(&root, objects, avg_pivot_cnt, 1);
 }
+
 
 // Selección de los m centros (pivotes) para cada nodo
 // Paper: "m centers c_i (1 ≤ i ≤ m) are selected each time"

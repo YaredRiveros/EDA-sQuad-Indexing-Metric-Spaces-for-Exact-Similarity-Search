@@ -9,9 +9,9 @@ import numpy as np
 # =============================================================================
 
 DATASET_PATHS = {
-    # "LA": "../LA_2k.txt",
-    # "Words": "../Words_2k.txt",
-    # "Synthetic": "../Synthetic_2k.txt",
+    "LA": "../LA_2k.txt",
+    "Words": "../Words_2k.txt",
+    "Synthetic": "../Synthetic_2k.txt",
     "Color": "../Color_2k.txt"
 }
 
