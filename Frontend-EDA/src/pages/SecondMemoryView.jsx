@@ -43,12 +43,6 @@ export default function SecondMemoryView() {
           <QueryTypeSelector value={query} onChange={setQuery} />
           <DatasetSelector value={dataset} onChange={setDataset} />
 
-          <button
-            onClick={() => setShowRankings(!showRankings)}
-            className="px-4 py-2 rounded-lg text-sm font-medium bg-purple-600 hover:bg-purple-500 text-white"
-          >
-            {showRankings ? "Ver Gráficos" : "Ver Rankings"}
-          </button>
 
           <button
             onClick={handleRun}
