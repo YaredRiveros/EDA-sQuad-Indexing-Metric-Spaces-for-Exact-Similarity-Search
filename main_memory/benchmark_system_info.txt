@@ -14,10 +14,10 @@ Núcleo(s) por «socket»:                  8
 «Socket(s)»                              1
 Revisión:                                1
 Frequency boost:                         enabled
-CPU(s) scaling MHz:                      40%
+CPU(s) scaling MHz:                      29%
 CPU MHz máx.:                            4830,0000
 CPU MHz mín.:                            400,0000
-BogoMIPS:                                6388,19
+BogoMIPS:                                6387,70
 Indicadores:                             fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid extd_apicid aperfmperf rapl pni pclmulqdq monitor ssse3 fma cx16 sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand lahf_lm cmp_legacy svm extapic cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw ibs skinit wdt tce topoext perfctr_core perfctr_nb bpext perfctr_llc mwaitx cpb cat_l3 cdp_l3 hw_pstate ssbd mba ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid cqm rdt_a rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local user_shstk clzero irperf xsaveerptr rdpru wbnoinvd cppc arat npt lbrv svm_lock nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold avic v_vmsave_vmload vgif v_spec_ctrl umip pku ospke vaes vpclmulqdq rdpid overflow_recov succor smca fsrm debug_swap
 Virtualización:                          AMD-V
 Caché L1d:                               256 KiB (8 instances)
@@ -45,7 +45,7 @@ Vulnerability Tsa:                       Vulnerable: Clear CPU buffers attempted
 Vulnerability Tsx async abort:           Not affected
 Vulnerability Vmscape:                   Mitigation; IBPB before exit to userspace
 
-Start time: lun 24 nov 2025 19:37:34 -05
-Dataset: Color
+Start time: jue 27 nov 2025 17:53:05 -05
+Dataset: LA
 
-End time: lun 24 nov 2025 19:38:08 -05
+End time: jue 27 nov 2025 17:53:29 -05

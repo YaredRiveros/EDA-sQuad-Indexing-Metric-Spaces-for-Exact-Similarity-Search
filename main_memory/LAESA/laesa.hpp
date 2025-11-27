@@ -27,13 +27,21 @@ class LAESA {
 
 public:
     LAESA(ObjectDB *db, int nPivots);
-
+    
     void overridePivots(const vector<int>& newPivots) {
-        if ((int)newPivots.size() != nPivots) {
-            cerr << "[ERROR] overridePivots: tamaño inválido\n";
-            return;
-        }
+        if ((int)newPivots.size() != nPivots) return;
+
         pivots = newPivots;
+
+        int n = db->size();
+        distMatrix.assign(n, vector<double>(nPivots));
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < nPivots; j++) {
+                distMatrix[i][j] = db->distance(i, pivots[j]);
+                compdistsBuild++;
+            }
+        }
     }
 
     void rangeSearch(int queryId, double radius, vector<int> &result) const;

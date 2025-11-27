@@ -43,14 +43,9 @@ public:
     GNAT_t(const ObjectDB* db, size_t avg_pivot_cnt);
 
     void build();
-
-    // Ejecuta MRQ para todas las queries
     void rangeSearch(const vector<int>& queries, double range, int& result_size);
-
-    // Ejecuta MkNN para todas las queries, acumulando el radio medio
     void knnSearch(const vector<int>& queries, int k, double& ave_r);
 
-    // Métricas
     long long get_compDist() const { return dist_call_cnt; }
     void reset_compDist() { dist_call_cnt = 0; }
 };

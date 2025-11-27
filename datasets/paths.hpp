@@ -112,5 +112,4 @@ static unordered_map<double,double> load_radii_file(const string& path) {
 
     return R;
 }
-
 #endif 

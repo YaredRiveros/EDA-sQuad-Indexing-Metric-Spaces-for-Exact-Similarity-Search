@@ -17,9 +17,6 @@ struct SATResultElem
 
 class SAT
 {
-    // ------------------------
-    //  Estructuras internas
-    // ------------------------
     struct Node
     {
         int center;                // id del objeto centro
@@ -55,30 +52,22 @@ class SAT
         }
     };
 
-    // ------------------------
-    //  Miembros
-    // ------------------------
     const ObjectDB *db;
 
     std::vector<Node> nodes;                         // nodos del SAT
     std::vector<std::vector<BuildQueueElem>> queues; // colas por nodo (solo build)
     int rootId;                                      // índice del nodo raíz
 
-    // Contadores para el benchmark
     mutable long long compDist = 0;   // #distance computations (solo en queries)
     mutable long long queryTime = 0;  // tiempo acumulado en μs
 
     using Clock = std::chrono::high_resolution_clock;
 
 public:
-    // ------------------------
-    //  API pública
-    // ------------------------
 
-    explicit SAT(const ObjectDB *db_)
+    SAT(const ObjectDB *db_)
         : db(db_), rootId(-1) {}
 
-    // Construye el SAT con TODOS los objetos de la base [0 .. db->size()-1]
     void build()
     {
         if (!db) return;
@@ -89,42 +78,31 @@ public:
         queues.clear();
         nodes.reserve(n);
         queues.reserve(n);
-
-        // raíz = objeto 0 (como en el código C, obj0 = 1)
         rootId = newNode(0);
 
-        // Inicializar cola de la raíz con el resto de objetos
         for (int i = 1; i < n; ++i)
         {
             double d = distBuild(0, i);
             queues[rootId].push_back({i, d, -1});
         }
 
-        // Distribución recursiva (algoritmo SAT original)
         distribute(rootId);
     }
 
-    // Altura del árbol (igual idea que en BKT::get_height)
     int get_height() const
     {
         if (rootId < 0) return 0;
         return heightRec(rootId);
     }
-
-    // Número de “pivots/centers” → aquí todos los nodos son centros
     int get_num_pivots() const
     {
         return static_cast<int>(nodes.size());
     }
 
-    // Counters API (mismo estilo que BKT)
     void clear_counters() const { compDist = 0; queryTime = 0; }
     long long get_compDist() const { return compDist; }
     long long get_queryTime() const { return queryTime; }
 
-    // ------------------------
-    //  RANGE SEARCH (MRQ)
-    // ------------------------
     void rangeSearch(int qId, double r, std::vector<int> &res) const
     {
         if (rootId < 0 || !db) return;
@@ -141,10 +119,6 @@ public:
                          Clock::now() - start)
                          .count();
     }
-
-    // ------------------------
-    //  kNN (MkNN)
-    // ------------------------
 
     // Versión que devuelve pares (dist, id) por comodidad (similar a BKT::knnQuery)
     std::vector<std::pair<double, int>> knnQuery(int qId, int k) const
@@ -250,9 +224,6 @@ public:
     }
 
 private:
-    // ------------------------
-    //  Distancias
-    // ------------------------
 
     // Para construcción: NO incrementa contador
     double distBuild(int a, int b) const
@@ -266,10 +237,6 @@ private:
         compDist++;
         return db->distance(a, b);
     }
-
-    // ------------------------
-    //  Construcción (SAT original)
-    // ------------------------
 
     int newNode(int objId)
     {
@@ -290,7 +257,7 @@ private:
             return;
         }
 
-        // Ordenar cola por distancia creciente (sort de sat.c)
+        // Ordenar cola por distancia creciente 
         std::sort(Q.begin(), Q.end(),
                   [](const BuildQueueElem &a, const BuildQueueElem &b)
                   { return a.dist < b.dist; });
@@ -359,9 +326,6 @@ private:
             distribute(childId);
     }
 
-    // ------------------------
-    //  Búsqueda de rango (recursiva, con ancestros)
-    // ------------------------
     void searchRangeRec(int nodeId, int qId, double r,
                         double d0, double mind, double s,
                         std::vector<int> &res) const

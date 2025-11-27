@@ -29,12 +29,11 @@ private:
     int height;
     long long compdists;
     
-    std::vector<int> pivots;  // pivotes por nivel (uno por nivel)
+    std::vector<int> pivots;  // one pivot per level
     std::vector<int> external_pivots; // pivotes provistos externamente (desde test)
     bool use_external_pivots = false;
     std::unique_ptr<FQTNode> root;
 
-    // Construcción recursiva del árbol
     std::unique_ptr<FQTNode> buildRecursive(std::vector<int>& objects, int depth) {
         auto node = std::make_unique<FQTNode>();
         
@@ -119,8 +118,7 @@ private:
             return count;
         }
         
-        // Nodo interno: calcular distancia al pivote del nivel
-        double d_pivot = db->distance(query, pivots[depth]);
+        double d_pivot = db->distance(query, pivots[depth]); // d(q,p)
         compdists++;
         
         int count = 0;
@@ -138,8 +136,8 @@ private:
             double lower = child.dist_threshold;
             double upper = has_next ? next_it->dist_threshold : d_pivot + radius + 1;
             
-            // Poda por desigualdad triangular
-            if (d_pivot + radius < lower || d_pivot - radius > upper) {
+            
+            if (d_pivot + radius < lower || d_pivot - radius > upper) { // LEMMA 4.1
                 may_contain = false;
             }
             

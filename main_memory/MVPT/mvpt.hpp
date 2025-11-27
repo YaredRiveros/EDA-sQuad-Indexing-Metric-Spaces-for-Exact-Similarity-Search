@@ -46,12 +46,10 @@ class MVPT {
     int bucketSize;
     int arity;
 
-    // New fields to support Chen-style experiments
-    int configuredHeight;               // if >0, force tree height = configuredHeight (num pivots)
+    int configuredHeight;   // if >0, force tree height = configuredHeight (num pivots)
     vector<int> pivotsPerLevel;         // if non-empty, pivotsPerLevel[level-1] is pivot for that level (1-based)
 
 public:
-    // Constructor: optionally set configuredHeight and precomputed pivots (per-level list)
     MVPT(ObjectDB *db, int bucketSize = 10, int arity = 2, int configuredHeight = 0, const vector<int>& pivotsPerLevel = {});
     ~MVPT() { delete root; }
 
@@ -59,7 +57,6 @@ public:
     void rangeSearch(int queryId, double radius, vector<int> &result) const;
     void knnSearch(int queryId, int k, vector<ResultElem> &out) const;
 
-    // Reporting helpers
     // Returns the configured number of pivots (if configured >0, returns it; otherwise returns actual tree height)
     int getConfiguredNumPivots() const { return (configuredHeight > 0 ? configuredHeight : getTreeHeight()); }
     // number of unique pivot IDs actually stored (diagnostic)
@@ -104,7 +101,7 @@ VPNode* MVPT::build(vector<int> ids, int depth)
 {
     VPNode *node = new VPNode();
 
-    // Respect configuredHeight: stop splitting when depth >= configuredHeight (so height == configuredHeight)
+    // stop splitting when depth >= configuredHeight (so height == configuredHeight)
     if (configuredHeight > 0 && depth >= configuredHeight) {
         node->isLeaf = true;
         node->bucket = ids;

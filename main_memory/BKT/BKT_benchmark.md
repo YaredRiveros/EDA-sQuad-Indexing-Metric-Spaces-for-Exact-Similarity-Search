@@ -14,7 +14,7 @@ This module runs the full experimental pipeline to evaluate the **Burkhard–Kel
 
 ## Why BKT is different
 
-The BKT *is not* a pivot-based index.   It belongs to the **FQ family**, and:
+The BKT
 
 - does **not** use global pivots (HFI),
 - selects **local pivots randomly** during construction,

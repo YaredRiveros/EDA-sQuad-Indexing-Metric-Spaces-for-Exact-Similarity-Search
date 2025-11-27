@@ -103,11 +103,6 @@ int main(int argc, char** argv)
 
         for (int nPivots : PIVOT_COUNTS)
         {
-            cerr << "\n------------------------------------------\n";
-            cerr << "[INFO] Construyendo LAESA con " << nPivots << " pivots...\n";
-            cerr << "------------------------------------------\n";
-
-            // cargar pivotes desde JSON
             string pivFile = path_pivots(dataset, nPivots);
             vector<int> pivots = load_pivots_json(pivFile);
 
@@ -116,7 +111,6 @@ int main(int argc, char** argv)
                 continue;
             }
 
-            // construir índice
             LAESA laesa(db.get(), nPivots);
             laesa.overridePivots(pivots);
 

@@ -7,9 +7,6 @@
 
 using namespace std;
 
-// ============================================================
-// CONFIG (igual al paper Chen2022)
-// ============================================================
 
 // Selectividades para MRQ
 static const vector<double> SELECTIVITIES = {0.02, 0.04, 0.08, 0.16, 0.32};

@@ -23,7 +23,7 @@ struct ResultElem {
     bool operator<(const ResultElem &o) const { return dist < o.dist; }
 };
 
-// hyperplane: 2 centers + ball partition: each center + radius
+// ball + GHP partition
 class BST {
     ObjectDB *db;
     Node *root;
@@ -95,18 +95,9 @@ Node* BST::build(const vector<int> &ids, int h)
         return node;
     }
 
-    // farthest-point
-    int i = ids[rand() % ids.size()];
-    int j = i;
-    double maxDist = -1;
-    for (int id : ids) 
-    {
-        double d = db->distance(i, id); 
-        if (d > maxDist) { maxDist = d; j = id; }
-    }
-
-    node->pl = i;
-    node->pr = j;
+    int i = ids[rand() % ids.size()], j = ids[rand() % ids.size()];
+    while (j == i) j = ids[rand() % ids.size()];
+    node->pl = i; node->pr = j;
 
     vector<int> left, right;
     double maxL=0, maxR=0;

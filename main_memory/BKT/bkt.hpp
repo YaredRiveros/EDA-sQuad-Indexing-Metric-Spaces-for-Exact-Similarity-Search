@@ -47,15 +47,13 @@ public:
     int get_height() const { return height(root); }
     int get_num_pivots() const { return countPivots(root); }
 
-    // Counters API (mismo estilo que BST)
     void clear_counters() const { compDist = 0; queryTime = 0; }
     long long get_compDist() const { return compDist; }
     long long get_queryTime() const { return queryTime; }
 
-    // Util para debug
     void printPivotsInfo() const;
 
-    // Queries
+
     void rangeSearch(int qId, double r, std::vector<int> &res) const;
     std::vector<std::pair<double,int>> knnQuery(int qId, int k) const;
     void knnSearch(int qId, int k, std::vector<ResultElem> &out) const;
@@ -71,8 +69,8 @@ private:
     void searchKNN(BKNode *node, int qId, int k,
                    std::priority_queue<std::pair<double,int>> &pq) const;
 
-    // Wrapper de distancia que incrementa compDist
-    double dist(int a, int b) const {
+    
+    double dist(int a, int b) const { // wrapper
         compDist++;
         return db->distance(a, b);
     }
@@ -112,7 +110,7 @@ int BKT::height(const BKNode *node) const
 int BKT::countPivots(const BKNode *node) const 
 {
     if (!node || node->isLeaf) return 0;
-    int total = 1; // este nodo tiene un pivot
+    int total = 1; // if is not leaf, then has a pivot
     for (const auto &p : node->children)
         total += countPivots(p.second);
     return total;
@@ -142,7 +140,7 @@ void BKT::searchRange(BKNode *node, int qId, double r, std::vector<int> &res) co
     {
         for (int id : node->bucket)
         {
-            if (dist(id, qId) <= r)
+            if (dist(id, qId) <= r) // 
                 res.push_back(id);
         }
         return;
@@ -158,7 +156,7 @@ void BKT::searchRange(BKNode *node, int qId, double r, std::vector<int> &res) co
     {
         // si el anillo {o: ringDist <= d(p,o) < ringDist+step} puede contener objetos
         // dentro de B(q,r), entonces exploramos
-        if (ringDist + step > dqp - r && ringDist <= dqp + r)
+        if (ringDist + step > dqp - r && ringDist <= dqp + r) // LEMMA 4.1
             searchRange(child, qId, r, res);
     }
 }
@@ -243,9 +241,7 @@ void BKT::addBKT(BKNode *node, int objId)
 {
     if (node->isLeaf)
     {
-        // Hay espacio en el bucket
-        if ((int)node->bucket.size() < bucketSize)
-        {
+        if ((int)node->bucket.size() < bucketSize) {
             node->bucket.push_back(objId);
             return;
         }
@@ -254,47 +250,41 @@ void BKT::addBKT(BKNode *node, int objId)
         node->bucket.clear();
         node->isLeaf = false;
 
-        // Primer objeto del bucket - pivot = query
-        node->pivot = oldBucket[0];
+        // random element as pivot
+        int randomIndex = rand() % oldBucket.size(); 
+        node->pivot = oldBucket[randomIndex];
 
-        // Los demás se reinsertan
-        for (size_t i = 1; i < oldBucket.size(); i++)
+        for (int i = 0; i < (int)oldBucket.size(); i++) {
+            if (i == randomIndex) continue;
             addBKT(node, oldBucket[i]);
+        }
 
-        // Insertamos el objeto nuevo
-        addBKT(node, objId);
+        addBKT(node, objId); // insert the new object
+
         return;
     }
 
-    double d = dist(objId, node->pivot);  // distancia al pivot
-
+    double d = dist(objId, node->pivot); // d(o,p)
     BKNode *child = nullptr;
 
-    for (auto &pr : node->children)
-    {
+    for (auto &pr : node->children) 
+    { 
         double ringDist = pr.first;
-
-        if (ringDist <= d && d < ringDist + step)
+        if (ringDist <= d && d < ringDist + step) // find the correct child
         {
             child = pr.second;
             break;
         }
     }
 
-
-    if (!child)
+    if (!child) // if    the corresponding child doesn't exists -> create one
     {
-        // ringDist = floor(d/step) * step   (igual al original)
         double ringDist = std::floor(d / step) * step;
-
-        // crear hijo
         BKNode *newChild = new BKNode();
-
         node->children.push_back({ringDist, newChild});
         child = newChild;
     }
 
     addBKT(child, objId);
 }
-
 #endif

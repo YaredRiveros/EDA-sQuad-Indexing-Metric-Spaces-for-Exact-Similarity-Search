@@ -21,22 +21,19 @@ private:
     const std::vector<Object>& objects;
     Distance dist;
 
-    size_t l;          // number of pivots (GLOBAL, shared by all objects)
+    size_t l;          // global number of pivots
     size_t cp_scale;   // PSA candidate pivot set size
 
     struct PivotEntry {
-        size_t pivot_id;   // índice global del pivot en 'objects'
+        size_t pivot_id;   
         dist_t distance;   // d(o, pivot_id)
     };
 
-    // Conjunto de candidatos (PSA, paso 1)
     std::vector<size_t> candidate_pivots;
-
-    // Pivotes globales definitivos (PSA, paso 2)
     std::vector<size_t> global_pivots;
 
-    // Tabla: para cada objeto oid, sus distancias a los l pivotes globales
-    // table[oid][j] => distancia a global_pivots[j]
+
+    // table[oid][j] => distance(o, p[j])
     std::vector<std::vector<PivotEntry>> table;
 
 
@@ -46,7 +43,7 @@ public:
         const std::vector<Object>& objs,
         Distance dist_fn,
         size_t l_pivots = 5,
-        size_t cp_scale_val = 40
+        size_t cp_scale_val = 40 // this value is set to 40, because of a previous work of Chen
     )
         : objects(objs),
           dist(dist_fn),
@@ -61,30 +58,24 @@ public:
         size_t n = objects.size();
         if (n == 0) return;
 
-        // ---------------------------------------------------------------------
+        
         // PSA paso 1: elegir candidatos a pivote desde una muestra S
-        // ---------------------------------------------------------------------
         std::vector<size_t> S = sample_indices(std::min(n, cp_scale * 4));
         candidate_pivots = HF_candidates(S);   // CP en el paper
 
         if (candidate_pivots.empty()) return;
 
-        // Por seguridad, ajustar l si hay menos candidatos que pivotes deseados
         if (candidate_pivots.size() < l)
             l = candidate_pivots.size();
 
-        // ---------------------------------------------------------------------
-        // PSA paso 2: seleccionar l pivotes globales bien dispersos (greedy)
-        // ---------------------------------------------------------------------
+
         global_pivots = select_global_pivots_PSA(candidate_pivots);
 
-        // Aseguramos coherencia: global_pivots.size() == l
         if (global_pivots.size() < l)
             l = global_pivots.size();
 
-        // ---------------------------------------------------------------------
-        // Construir tabla: para cada objeto, distancias a TODOS los pivotes globales
-        // ---------------------------------------------------------------------
+
+        // table for each object to the other pivots
         table.assign(n, std::vector<PivotEntry>());
         for (size_t oid = 0; oid < n; oid++)
         {
@@ -114,7 +105,7 @@ public:
 
         for (size_t oid = 0; oid < n; oid++)
         {
-            // Lemma 1 — pivot filtering
+            // LEMMA 1 — pivot filtering
             bool prune = false;
             for (size_t j = 0; j < l; j++) {
                 // table[oid][j].distance = d(o, p_j global)
@@ -125,7 +116,7 @@ public:
             }
             if (prune) continue;
 
-            // Lemma 4 — pivot validation
+            // LEMMA 4 — pivot validation
             bool valid = false;
             for (size_t j = 0; j < l; j++) {
                 if (table[oid][j].distance <= r - q_dists[j]) {
@@ -138,7 +129,6 @@ public:
                 continue;
             }
 
-            // Verificación final con distancia real
             if (dist(q, objects[oid]) <= r)
                 count++;
         }
@@ -155,7 +145,7 @@ public:
         size_t n = objects.size();
         if (n == 0 || l == 0 || table.empty() || k == 0) return 0.0;
 
-        // Precompute q->pivots GLOBALes
+        // Precompute q->pivots 
         std::vector<dist_t> q_dists(l);
         for (size_t i = 0; i < l; i++) {
             size_t pid = table[0][i].pivot_id;
@@ -200,13 +190,7 @@ public:
 
 
 private:
-    // -------------------------------------------------------------------------
-    // HF_candidates: PSA paso 1 — genera un conjunto de candidatos CP desde S
-    //
-    // S = muestra de índices del dataset.
-    // Para cada s ∈ S, calcula excentricidad = media de distancias a S.
-    // Devuelve los cp_scale más excéntricos como candidatos a pivote.
-    // -------------------------------------------------------------------------
+
     std::vector<size_t> HF_candidates(const std::vector<size_t>& S)
     {
         size_t s = S.size();
@@ -232,12 +216,11 @@ private:
         for (size_t i = 0; i < take; i++)
             CP.push_back(S[idx[i]]);
 
-        return CP; // CP = candidate pivots
+        return CP; // candidate pivots
     }
 
-    // -------------------------------------------------------------------------
-    // PSA paso 2: selección greedy de l pivotes globales desde CP
-    //
+    
+    // PSA: greedy selection of l pivots
     //  - Primer pivot: el de mayor excentricidad (media de distancias a CP).
     //  - Siguientes: farthest-first, maximizando la distancia mínima a pivotes ya elegidos.
     // -------------------------------------------------------------------------

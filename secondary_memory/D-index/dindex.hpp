@@ -381,9 +381,7 @@ private:
     }
 
 public:
-    // ========================================================================
-    // MRQ público (stats = delta de esta llamada)
-    // ========================================================================
+    
     vector<int> MRQ(int qid, double r) {
         long long comp_before  = compDist;
         long long pages_before = raf.get_pageReads();
@@ -400,9 +398,7 @@ public:
         return out;
     }
 
-    // ========================================================================
-    // MkNN (Chen 2022-style): range iterativo hasta conseguir ≥ k resultados
-    // ========================================================================
+    
     vector<pair<int,double>> MkNN(int qid, size_t k) {
         // Snapshot antes de todo el proceso MkNN
         long long comp_before  = compDist;
