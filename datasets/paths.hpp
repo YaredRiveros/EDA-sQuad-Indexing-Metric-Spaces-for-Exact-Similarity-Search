@@ -5,17 +5,13 @@
 #include <sys/stat.h>
 using namespace std;
 
-// ------------------------------------------------------------
-// Check if file exists
-// ------------------------------------------------------------
+
 inline bool file_exists(const string &path) {
     struct stat buffer;
     return (stat(path.c_str(), &buffer) == 0);
 }
 
-// ------------------------------------------------------------
-// Try resolve relative paths in multiple common locations
-// ------------------------------------------------------------
+
 inline string resolve_path(const string &rel) {
     vector<string> candidates = {
         rel,
@@ -31,10 +27,7 @@ inline string resolve_path(const string &rel) {
     return "";
 }
 
-// ------------------------------------------------------------
-// Base prepared_experiment directory
-// ------------------------------------------------------------
-// root from each struct
+
 static const string BASE_EXPERIMENT_DIR =
     "../../datasets/dataset_processing/prepared_experiment/";
 
@@ -43,10 +36,8 @@ static const string QUERIES_DIR = BASE_EXPERIMENT_DIR + string("queries2k/");
 static const string RADII_DIR   = BASE_EXPERIMENT_DIR + string("radii2k/");
 static const string PIVOTS_DIR  = BASE_EXPERIMENT_DIR + string("pivots2k/");
 
-// ------------------------------------------------------------
+
 // DATASETS DIRECTORY (for LA.txt, Words.txt, etc.)
-// ------------------------------------------------------------
-// root from each struct
 static const string DATASET_DIR = "../../datasets/";
 
 // dataset file = datasets/<dataset>.txt
@@ -58,9 +49,8 @@ inline string path_dataset(const string &dataset) {
     return p;
 }
 
-// ------------------------------------------------------------
+
 // Build paths (return empty string if missing)
-// ------------------------------------------------------------
 inline string path_queries(const string &dataset) {
     return resolve_path(QUERIES_DIR + dataset + "_queries.json");
 }
@@ -74,9 +64,7 @@ inline string path_pivots(const string &dataset, int centers) {
                         "_pivots_" + to_string(centers) + ".json");
 }
 
-// ------------------------------------------------------------
-// JSON Loaders (safe)
-// ------------------------------------------------------------
+
 static vector<int> load_queries_file(const string& path) {
     vector<int> Q;
 
@@ -125,4 +113,4 @@ static unordered_map<double,double> load_radii_file(const string& path) {
     return R;
 }
 
-#endif // CONFIG_PATHS_HPP
+#endif 
