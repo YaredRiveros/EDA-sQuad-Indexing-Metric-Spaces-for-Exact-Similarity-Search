@@ -15,25 +15,13 @@
 #include <map>
 #include <iostream>
 
-// ============================================================
-// PMTree: Pivoting Metric Tree (disk-based structure loaded
-// from an existing M-tree index file, plus global pivots).
-//
-// This follows the description in Chen et al. (2022):
-//  - M-tree is used to cluster objects on disk.
-//  - Each leaf entry stores the mapped vector (distances to pivots).
-//  - Each non-leaf entry stores an MBB that contains all mapped
-//    vectors in its child leaf entries.
-//  - MRQ and MkNN traverse the M-tree as usual, but also apply
-//    Lemma 4.1 (pivot lower bounds) for additional pruning.
-// ============================================================
 class PMTree {
 public:
     // Metrics (queries)
     mutable long long compDistQuery  = 0;  // distances during queries
     mutable long long compDistBuild  = 0;  // distances to build pivot table
     mutable long long pageReads      = 0;  // logical page/node reads
-    mutable long long queryTime      = 0;  // accumulated time in µs
+    mutable long long queryTime      = 0;  // accumulated time
 
     explicit PMTree(const ObjectDB* db_, int nPivots_)
         : db(db_),
@@ -48,11 +36,6 @@ public:
         if (nPivots > n) nPivots = n;
     }
 
-    // ------------------------------------------------------------
-    // Override global pivots (HFI pivots from JSON).
-    // This does not build anything by itself; once both pivots and
-    // the M-tree structure are available, we call recomputePivotData().
-    // ------------------------------------------------------------
     void overridePivots(const std::vector<int>& newPivots) {
         if (!db) return;
         if ((int)newPivots.size() != nPivots) {
@@ -74,12 +57,6 @@ public:
 
     int get_num_pivots() const { return nPivots; }
 
-    // ------------------------------------------------------------
-    // Load tree structure from an existing M-tree index file.
-    // basePath: same base used by MTree_Disk (basePath.mtree_index)
-    // We read all nodes into RAM and reconstruct the topology, so
-    // that we can use pivot-based pruning on top of the same tree.
-    // ------------------------------------------------------------
     void buildFromMTree(const std::string& basePath) {
         nodes.clear();
         rootIndex = -1;
@@ -217,9 +194,7 @@ public:
         recomputePivotData();
     }
 
-    // ------------------------------------------------------------
     // Metrics API
-    // ------------------------------------------------------------
     void clear_counters() const {
         compDistQuery = 0;
         pageReads     = 0;
@@ -231,12 +206,7 @@ public:
     long long get_pageReads()     const { return pageReads;      }
     long long get_queryTime()     const { return queryTime;      }
 
-    // ------------------------------------------------------------
     // MRQ: Range Query
-    //  - same traversal strategy as M-tree (DFS),
-    //  - but entries can also be pruned using pivot-based lower
-    //    bounds (Lemma 4.1) thanks to the MBB in pivot space.
-    // ------------------------------------------------------------
     void rangeSearch(int queryId, double radius,
                      std::vector<int>& result) const
     {
@@ -305,13 +275,7 @@ public:
         queryTime += std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
     }
 
-    // ------------------------------------------------------------
     // MkNN: k Nearest Neighbor Query
-    //  - best-first search over nodes, ordered by a lower bound
-    //    combining:
-    //      * ball-based lower bound (M-tree),
-    //      * pivot-based lower bound using MBB (PM-tree).
-    // ------------------------------------------------------------
     void knnSearch(int queryId, int k,
                    std::vector<std::pair<double,int>>& out) const
     {
@@ -448,18 +412,11 @@ private:
     std::vector<Node> nodes;
     int rootIndex;  // index of root node in 'nodes'
 
-    // ------------------------------------------------------------
-    // Recompute all pivot-related data:
-    //  - full distMatrix[obj][pivot]
-    //  - minPiv/maxPiv for each entry (MBB in pivot space)
-    // ------------------------------------------------------------
 void recomputePivotData() {
     if (!db || n == 0 || nPivots == 0 || nodes.empty() || rootIndex < 0)
         return;
 
-    // *** IMPORTANTE: solo si ya tenemos pivots configurados ***
     if ((int)pivots.size() != nPivots) {
-        // Aún no se llamaron a overridePivots, o hay inconsistencia.
         return;
     }
 
@@ -478,7 +435,6 @@ void recomputePivotData() {
     computeEntryBounds(rootIndex, visited);
 }
 
-    // Returns min/max pivot distances for all entries in subtree rooted at nodeIdx.
     void computeEntryBounds(int nodeIdx, std::vector<bool>& visited) {
         if (nodeIdx < 0 || nodeIdx >= (int)nodes.size()) return;
         if (visited[nodeIdx]) return;
@@ -487,7 +443,6 @@ void recomputePivotData() {
         Node& node = nodes[nodeIdx];
 
         if (node.isLeaf) {
-            // Leaf: each entry is an object; its min/max are its own distances.
             for (Entry& e : node.entries) {
                 int objId = e.objId;
                 e.minPiv.resize(nPivots);
@@ -505,10 +460,8 @@ void recomputePivotData() {
                     computeEntryBounds(e.child, visited);
                 }
             }
-            // Then aggregate child entries into this entry's min/max
             for (Entry& e : node.entries) {
                 if (e.child < 0) {
-                    // No child; treat as empty subtree
                     e.minPiv.assign(nPivots, std::numeric_limits<double>::infinity());
                     e.maxPiv.assign(nPivots, 0.0);
                     continue;
@@ -528,18 +481,6 @@ void recomputePivotData() {
         }
     }
 
-    // ------------------------------------------------------------
-    // Pivot-based lower bound for a subtree entry (MBB vs query pivots).
-    // For each pivot p:
-    //   we know d(p, o) ∈ [minPiv[p], maxPiv[p]] for all o in the subtree.
-    // By triangle inequality:
-    //   d(q, o) >= |d(q,p) - d(p,o)|
-    // Therefore, the minimum over that interval is:
-    //   0           if d(q,p) ∈ [a,b]
-    //   a - d(q,p)  if d(q,p) < a
-    //   d(q,p) - b  if d(q,p) > b
-    // We then take max over all pivots.
-    // ------------------------------------------------------------
     double lowerBoundEntry(const std::vector<double>& qPiv, const Entry& e) const {
         double lb = 0.0;
         for (int j = 0; j < nPivots; ++j) {
@@ -559,10 +500,6 @@ void recomputePivotData() {
         return lb;
     }
 
-    // ------------------------------------------------------------
-    // Pivot-based lower bound for a single object (using full distMatrix).
-    //   d(q,o) >= max_j | d(q,p_j) - d(o,p_j) |
-    // ------------------------------------------------------------
     double lowerBoundObject(const std::vector<double>& qPiv, int objId) const {
         double lb = 0.0;
         const std::vector<double>& v = distMatrix[objId];

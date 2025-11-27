@@ -1,7 +1,3 @@
-// omnirtree.hpp - OmniR-tree adaptado para ObjectDB y benchmarking
-// Basado en Omni-family (Chen et al. 2022)
-// Implementa pivot mapping + R-tree indexing con RAF (memoria secundaria)
-
 #pragma once
 #include "../../objectdb.hpp"
 #include <bits/stdc++.h>
@@ -71,9 +67,7 @@ public:
     }
 };
 
-/*** -----------------------------
-    MBB (Minimum Bounding Box)
-    ----------------------------- ***/
+// MBB (Minimum Bounding Box)
 struct MBB {
     vector<double> low;
     vector<double> high;
@@ -121,7 +115,7 @@ struct MBB {
         return true;
     }
 
-    // Lower bound al hiper-rectángulo centrado en qMap (∞-norm)
+    // Lower bound al hiper-rectángulo centrado en qMap
     double lowerBoundToQuery(const vector<double>& qMap) const {
         double lb = 0.0;
         for (size_t i = 0; i < qMap.size(); i++) {
@@ -147,9 +141,7 @@ struct MBB {
     }
 };
 
-/*** -----------------------------
-    R-tree Node & Entry
-    ----------------------------- ***/
+// R-tree Node & Entry
 struct RTreeNode;
 
 struct RTreeEntry {
@@ -173,9 +165,7 @@ struct RTreeNode {
     RTreeNode(bool leaf = false) : isLeaf(leaf) {}
 };
 
-/*** -----------------------------
-    R-tree implementation
-    ----------------------------- ***/
+// R-tree implementation
 class RTree {
     size_t maxEntries;
     size_t minEntries;
@@ -442,9 +432,7 @@ public:
     }
 };
 
-/*** -----------------------------
-    OmniRTree wrapper
-    ----------------------------- ***/
+// OmniRTree wrapper
 class OmniRTree {
     ObjectDB* db;
     int num_pivots;
@@ -494,20 +482,13 @@ public:
           compDist(0),
           pageReads(0) {}
 
-    // Carga pivotes desde archivo HFI y construye el índice sobre *todos* los objetos [0..N-1]
-    //
-    // Formato esperado del archivo de pivotes:
-    //   - enteros separados por espacios o saltos de línea
-    //   - se toman los primeros num_pivots IDs que se encuentren
     void build(const string& pivotsFile) {
         raf.clear();
         pivots.clear();
         mappedCache.clear();
         objPage.clear();
 
-        // -----------------------------
         // 1) Leer pivotes desde archivo HFI
-        // -----------------------------
         ifstream in(pivotsFile);
         if (!in.is_open()) {
             throw runtime_error("OmniRTree::build - no se pudo abrir pivotsFile: " + pivotsFile);
@@ -540,26 +521,19 @@ public:
         cerr << "[BUILD][OmniRTree] Pivotes HFI cargados: " << pivots.size() << "\n";
         cerr << "[BUILD][OmniRTree] Indexando " << db->size() << " objetos...\n";
 
-        // -----------------------------
         // 2) Construir índice: mapear cada objeto e insertarlo en el R-tree
         //    y escribir el vector pivotado en RAF (memoria secundaria)
-        // -----------------------------
         for (int objId = 0; objId < db->size(); objId++) {
-            // Vector pivotado (distancias a pivotes)
             vector<double> mapped = mapObject(objId);
 
-            // (Opcional) mantener una caché en RAM
             mappedCache[objId] = mapped;
 
-            // Escribir el vector pivotado en RAF: un registro por objeto
             streampos pos = raf.append(objId, mapped);
 
-            // Calcular página lógica en la que cae este registro
             long long offset = (long long)pos;
             int pageId = (int)(offset / (long long)OMNI_PAGE_SIZE);
             objPage[objId] = pageId;
 
-            // Insertar en R-tree (índice en memoria principal)
             rtree.insert(mapped, objId);
 
             if ((objId + 1) % 100000 == 0 || objId == 0) {
@@ -580,12 +554,6 @@ public:
         return mapped;
     }
 
-    // MRQ (rangeSearch) como operación de índice completo:
-    //  - Aplica filtro en espacio pivotado via R-tree
-    //  - Verifica EXACTAMENTE (d(q, o) <= radius)
-    //  - compDist incluye las distancias de verificación
-    //  - pageReads cuenta páginas de datos distintas tocadas
-    //  - AHORA: lee desde RAF para cada candidato verificado (E/S real)
     void rangeSearch(int queryId, double radius, vector<int>& result) {
         result.clear();
         startQuery();
@@ -597,7 +565,7 @@ public:
             compDist++; // distancias a pivotes de la query
         }
 
-        // Obtener candidatos del R-tree (filtro OMNI)
+        // Obtener candidatos del R-tree
         vector<int> candidates = rtree.rangeQuery(qMap, radius);
 
         // Verificación exacta + acceso a RAF
@@ -619,11 +587,6 @@ public:
         }
     }
 
-    // MkNN con poda basada en lower bounds en el espacio pivotado
-    //
-    //  - compDist incluye las distancias reales calculadas en verifyFunc
-    //  - pageReads cuenta páginas de datos distintas tocadas
-    //  - AHORA: verifyFunc también lee desde RAF
     void knnSearch(int queryId, int k, vector<pair<double, int>>& result) {
         result.clear();
         startQuery();
@@ -635,10 +598,6 @@ public:
             compDist++; // distancias a pivotes de la query
         }
 
-        // Función de verificación que:
-        //   - registra acceso a página de datos
-        //   - lee desde RAF (memoria secundaria)
-        //   - cuenta la distancia real
         auto verifyFunc = [this, queryId](int oid) -> double {
             // 1) registrar acceso a página lógica
             this->registerPageAccess(oid);

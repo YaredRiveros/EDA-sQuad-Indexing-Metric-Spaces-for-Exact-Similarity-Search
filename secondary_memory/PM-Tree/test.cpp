@@ -1,5 +1,3 @@
-// pm_test.cpp - Benchmark de PM-tree (memoria secundaria, estilo Chen)
-
 #include <bits/stdc++.h>
 #include "pm_tree.hpp"
 #include "../../datasets/paths.hpp"
@@ -7,26 +5,17 @@
 
 using namespace std;
 
-// ============================================================
-// CONFIG (igual al paper Chen2022)
-// ============================================================
-
 // Selectividades para MRQ
 static const vector<double> SELECTIVITIES = {0.02, 0.04, 0.08, 0.16, 0.32};
 
-// Valores de k para MkNN
 static const vector<int> K_VALUES = {5, 10, 20, 50, 100};
 
-// Cantidad de pivots l evaluados (para memoria secundaria, Chen fija l=5)
 static const vector<int> L_VALUES = {5};
 
 // Datasets evaluados
 // static const vector<string> DATASETS = {"LA", "Color", "Synthetic", "Words"};
 static const vector<string> DATASETS = {"LA"};
 
-// ============================================================
-// CARGAR PIVOTS (JSON) HFI
-// ============================================================
 vector<int> load_pivots_json(const string& path) {
     vector<int> piv;
 
@@ -50,9 +39,6 @@ vector<int> load_pivots_json(const string& path) {
     return piv;
 }
 
-// ============================================================
-// pm_test — ejecución completa
-// ============================================================
 int main(int argc, char** argv) {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
@@ -60,7 +46,6 @@ int main(int argc, char** argv) {
     vector<string> datasets;
 
     if (argc > 1) {
-        // Los argumentos [1..argc-1] son nombres de dataset
         for (int i = 1; i < argc; ++i) {    
             datasets.push_back(argv[i]);
         }
@@ -74,18 +59,14 @@ int main(int argc, char** argv) {
 
     for (const string& dataset : datasets) {
 
-        // -----------------------------------------
         // 1. Resolver dataset físico
-        // -----------------------------------------
         string dbfile = path_dataset(dataset);
         if (dbfile.empty() || !file_exists(dbfile)) {
             cerr << "[WARN] Dataset not found: " << dataset << "\n";
             continue;
         }
 
-        // -----------------------------------------
         // 2. Cargar dataset con la métrica correcta
-        // -----------------------------------------
         unique_ptr<ObjectDB> db;
 
         if (dataset == "LA") {
@@ -93,7 +74,7 @@ int main(int argc, char** argv) {
         } else if (dataset == "Color") {
             db = make_unique<VectorDB>(dbfile, 1);       // L1
         } else if (dataset == "Synthetic") {
-            db = make_unique<VectorDB>(dbfile, 999999);  // L∞
+            db = make_unique<VectorDB>(dbfile, 999999);  // Linf
         } else if (dataset == "Words") {
             db = make_unique<StringDB>(dbfile);          // Levenshtein
         } else {
@@ -112,9 +93,7 @@ int main(int argc, char** argv) {
             continue;
         }
 
-        // -----------------------------------------
         // 3. Cargar queries (IDs) y radios
-        // -----------------------------------------
         vector<int> queries = load_queries_file(path_queries(dataset));
         auto radii          = load_radii_file(path_radii(dataset));
 
@@ -127,9 +106,7 @@ int main(int argc, char** argv) {
         cerr << "[QUERIES] Radii para " << radii.size()
              << " selectividades\n";
 
-        // -----------------------------------------
         // 4. Archivo JSON de salida
-        // -----------------------------------------
         string jsonOut = "results/results_PMTREE_" + dataset + ".json";
         ofstream J(jsonOut);
         if (!J.is_open()) {
@@ -140,9 +117,7 @@ int main(int argc, char** argv) {
         J << "[\n";
         bool first = true;
 
-        // -----------------------------------------
         // 5. Loop sobre número de pivots l
-        // -----------------------------------------
         for (int l : L_VALUES) {
 
             string pivfile = path_pivots(dataset, l);
@@ -160,14 +135,12 @@ int main(int argc, char** argv) {
 
             // Construir PM-tree a partir del índice M-tree en disco
             PMTree pmt(db.get(), l);
-            pmt.buildFromMTree(dataset);   // lee <dataset>.mtree_index
+            pmt.buildFromMTree(dataset);
             pmt.overridePivots(pivots);    // HFI pivots
 
             using clock = std::chrono::high_resolution_clock;
 
-            // ====================================================
             // MRQ
-            // ====================================================
             cerr << "\n[MRQ] Ejecutando selectividades...\n";
             for (double sel : SELECTIVITIES) {
                 if (!radii.count(sel)) continue;
@@ -223,9 +196,7 @@ int main(int argc, char** argv) {
                      << " compdists, " << avgPages << " páginas)\n";
             }
 
-            // ====================================================
             // MkNN
-            // ====================================================
             cerr << "\n[MkNN] Ejecutando valores de k...\n";
             for (int k : K_VALUES) {
                 long long totalD = 0;

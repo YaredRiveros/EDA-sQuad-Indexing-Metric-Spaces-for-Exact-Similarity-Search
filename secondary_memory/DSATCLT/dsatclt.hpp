@@ -13,9 +13,6 @@ struct DSACLTResultElem {
 };
 
 class DSACLT {
-    // ------------------------
-    //  Nodo interno DSACL-tree
-    // ------------------------
     struct Node {
         int center;                   // id del centro (objeto de ObjectDB)
         double R;                     // covering radius del subárbol
@@ -37,10 +34,6 @@ class DSACLT {
     long long compDist;        // contador de distancias
     long long pageReads;       // contador aproximado de accesos de página
     vector<int> objTimestamp;  // timestamp de objetos (si luego lo necesitas)
-
-    // ------------------------
-    //  Utilidades internas
-    // ------------------------
 
     double dist_obj(int a, int b) {
         compDist++;
@@ -88,9 +81,6 @@ class DSACLT {
         return bestIdx;
     }
 
-    // ----------------------------------------------------
-    // InsertCl (Algorithm 3) versión ITERATIVA
-    // ----------------------------------------------------
     void insertCl(int startIdx, int xId) {
         int aIdx = startIdx;
         int obj  = xId;
@@ -115,7 +105,7 @@ class DSACLT {
 
                     // repetir el proceso con y en el mismo nodo a
                     obj = yId;
-                    continue;  // volvemos al while con mismo aIdx, obj=y
+                    continue; 
                 }
                 // no hay overflow de cluster -> terminamos inserción
                 break;
@@ -149,9 +139,6 @@ class DSACLT {
         }
     }
 
-    // ----------------------------------------------------
-    // RangeSearchCl (Algorithm 4)
-    // ----------------------------------------------------
     void rangeSearchCl(
         int aIdx,
         int qId,
@@ -247,7 +234,7 @@ public:
     void build() {
         nodes.clear();
         int n = db->size();
-        nodes.reserve(n);          // ⚠️ IMPORTANTE: evita realocaciones
+        nodes.reserve(n);
         rootIdx = -1;
         currentTime = 0;
         compDist = 0;

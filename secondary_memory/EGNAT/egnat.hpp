@@ -14,25 +14,6 @@
 #include <stdexcept>
 #include <algorithm>
 
-/*
- ======================================================================
-              EGNAT-Disk (versión estática para Chen et al.)
- ======================================================================
-
-  ✔ Árbol GNAT multinivel (build top-down)
-  ✔ Pivotes por nivel (m = 5 por defecto)
-  ✔ Hoja: objetos con dist-to-parent (Lemma 4.2)
-  ✔ Nodo interno: rangos min/max (Lemma 4.1)
-  ✔ DFS Range con poda GNAT exacta
-  ✔ DFS kNN con radio dinámico (segundo enfoque de Chen)
-  ✔ pageBytes = {4096, 40960} según dataset
-  ✔ Métricas: compdist, pageReads, pageWrites, queryTime
-  ✔ Archivos:
-         base.egn_leaf  (store leaf entries)
-         base.egn_index (store the index tree)
- ======================================================================
-*/
-
 class EGNAT_Disk {
 public:
     static constexpr int MAX_M = 16;
@@ -121,9 +102,6 @@ private:
     }
 
 public:
-    // =====================================================
-    //                      BUILD
-    // =====================================================
     void build(const std::string& base) {
         using clock = std::chrono::high_resolution_clock;
         auto t0 = clock::now();
@@ -153,7 +131,6 @@ public:
         }
         pageWrites += (long long)leaves.size() * pagesPerNode;
 
-        // --- escribir índice (todos los nodos) ---
         {
             std::ofstream out(idxPath, std::ios::binary | std::ios::trunc);
             if (!out) throw std::runtime_error("cannot write index file");
@@ -195,9 +172,6 @@ public:
     }
 
 private:
-    // =====================================================
-    //            BUILD RECURSIVO MULTINIVEL
-    // =====================================================
     int buildNode(const std::vector<int>& objs, int parentPivot) {
         if ((int)objs.size() <= leafCap) {
             LeafInfo L;
@@ -297,9 +271,6 @@ private:
     }
 
 public:
-    // =====================================================
-    //                        RANGE SEARCH
-    // =====================================================
     void rangeSearch(int qId, double R, std::vector<int>& out) const {
         using clock=std::chrono::high_resolution_clock;
         auto t0=clock::now();
@@ -368,9 +339,6 @@ private:
     }
 
 public:
-    // =====================================================
-    //                        KNN SEARCH
-    // =====================================================
     void knnSearch(int q, int k, std::vector<std::pair<double,int>>& out) const {
         using clock=std::chrono::high_resolution_clock;
         auto t0=clock::now();

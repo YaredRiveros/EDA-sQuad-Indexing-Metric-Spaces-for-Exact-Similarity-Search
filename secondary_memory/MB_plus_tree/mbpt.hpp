@@ -1,8 +1,3 @@
-// mbpt.hpp
-// MB+-tree - Implementación completa según Chen et al.
-// Hash partitioning con ρ-split functions, B+-tree ordenado, y RAF
-// Cumple con Definition 4.3 y todas las características del paper
-
 #ifndef MBPT_DISK_HPP
 #define MBPT_DISK_HPP
 
@@ -20,20 +15,6 @@
 #include <map>
 #include <set>
 #include <iostream>
-
-/*
- ======================================================================
-                    MB+-tree (Chen et al.)
- ======================================================================
-  ✔ Hash partitioning con ρ-split function (Definition 4.3)
-  ✔ Block tree: almacena center c y medium distance dmed
-  ✔ B+-tree ordenado: indexa keys compuestas (pk || dk)
-  ✔ RAF: Random Access File para objetos
-  ✔ MRQ: Usa Lemma 4.7 y búsqueda por rango de distance keys
-  ✔ MkNNQ: Estrategia 3 - encuentra k candidatos por keys, luego MRQ
-  ✔ Métricas: compDist, pageReads, pageWrites, queryTime
- ======================================================================
-*/
 
 class MBPT_Disk {
 public:
@@ -55,8 +36,8 @@ public:
         double dmed = 0.0;        // medium distance
         double rho = 0.0;         // ρ parameter para ρ-split
         double maxDist = 0.0;     // max distance to center (para normalización)
-        int left = -1;            // child for d(o,c) ∈ [0, dmed-ρ]
-        int right = -1;           // child for d(o,c) ∈ (dmed-ρ, ∞)
+        int left = -1;            // child for d(o,c) in [0, dmed-ρ]
+        int right = -1;           // child for d(o,c) in (dmed-ρ, ∞)
         std::vector<int> objects; // temporal durante construcción
         int leafIdx = -1;
     };
@@ -73,7 +54,7 @@ private:
     int pageBytes;
     int leafCap;
     int pagesPerNode;
-    double rho;  // ρ global para todas las ρ-split functions
+    double rho;  // p global para todas las ρ-split functions
 
     // Estructuras de datos
     std::vector<BlockNode> blockNodes;
@@ -81,7 +62,6 @@ private:
     std::vector<RAFEntry> rafEntries;  // RAF in-memory (sorted by key)
     
     // B+-tree: map ordenado key -> object ids
-    // IMPORTANTE: Usamos multimap porque múltiples objetos pueden compartir la misma key
     std::multimap<uint64_t, int32_t> btreeIndex;
 
     // Archivos
@@ -158,9 +138,7 @@ private:
     }
 
 public:
-    // =================================================
     // BUILD
-    // =================================================
     void build(const std::string& base) {
         using clock = std::chrono::high_resolution_clock;
         auto t0 = clock::now();
@@ -270,10 +248,8 @@ public:
     }
 
 private:
-    // Construcción recursiva del block tree con ρ-split
+    // Construcción recursiva del block tree con p-split
     void buildBlockTree(int nodeIdx) {
-        // IMPORTANTE: NO usar referencias a blockNodes[nodeIdx] porque
-        // push_back puede realocar el vector e invalidar referencias
         
         if ((int)blockNodes[nodeIdx].objects.size() <= leafCap) {
             blockNodes[nodeIdx].isLeaf = true;
@@ -304,9 +280,6 @@ private:
         blockNodes[nodeIdx].dmed = dmed;
         blockNodes[nodeIdx].maxDist = maxD;
 
-        // ρ-split: dividir según Definition 4.3
-        // Bucket 0: d(o,c) ∈ [0, dmed-ρ]
-        // Bucket 1: d(o,c) ∈ (dmed-ρ, ∞)
         std::vector<int> leftObjs, rightObjs;
         double threshold = dmed - rho;
         
@@ -388,9 +361,7 @@ private:
     }
 
 public:
-    // =================================================
     // RANGE SEARCH (MRQ)
-    // =================================================
     void rangeSearch(int qId, double R, std::vector<int>& out) const {
         using clock = std::chrono::high_resolution_clock;
         auto t0 = clock::now();
@@ -451,9 +422,7 @@ public:
         queryTime += std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
     }
 
-    // =================================================
-    // KNN SEARCH (MkNNQ) - Estrategia 3 del paper
-    // =================================================
+    // KNN SEARCH (MkNNQ)
     void knnSearch(int qId, int k, std::vector<std::pair<double, int>>& out) const {
         using clock = std::chrono::high_resolution_clock;
         auto t0 = clock::now();
@@ -519,13 +488,7 @@ private:
         double dqc = distObj(qId, B.center);
         double threshold = B.dmed - B.rho;
 
-        // Lemma 4.7: decidir qué subtrees visitar
-        // Left: d(o,c) ∈ [0, dmed-ρ]
-        // Right: d(o,c) ∈ (dmed-ρ, ∞)
-        
-        // Para que la esfera B(q,R) intersecte con Left: dqc - R <= dmed - ρ
-        // Para que la esfera B(q,R) intersecte con Right: dqc + R > dmed - ρ
-        
+        // Lemma 4.7: decidir qué subtrees visitar        
         bool visitLeft = (dqc - R <= threshold);
         bool visitRight = (dqc + R > threshold);
 

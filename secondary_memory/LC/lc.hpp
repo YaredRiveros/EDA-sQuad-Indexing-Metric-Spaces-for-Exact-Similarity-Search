@@ -14,18 +14,6 @@
 #include <cstdint>
 #include <cstdio>
 
-/**
- * List of Clusters (LC) en memoria secundaria.
- *
- * - Construye clusters en RAM (O(n^2) como en el paper).
- * - Escribe los clusters en disco:
- *      base.lc_index  : lista de ClusterInfoDisk
- *      base.lc_node   : IDs de objetos concatenados por cluster
- * - Las queries leen los miembros desde base.lc_node usando fseek/fread.
- * - pageReads cuenta cuántas páginas de 4KB se "tocan" (como PA del paper).
- *
- *  NO usa pivotes → num_pivots = 0.
- */
 class LC_Disk {
 public:
     // Info de cluster en RAM
@@ -47,8 +35,8 @@ public:
 private:
     const ObjectDB* db;
     int             n;              // número de objetos
-    int             pageBytes;      // tamaño lógico de cluster (ej: 4096, 40960)
-    int             bucketSize;     // capacidad máx de miembros por cluster (≈ pageBytes / sizeof(int))
+    int             pageBytes;      // tamaño lógico de cluster
+    int             bucketSize;     // capacidad máx de miembros por cluster
     int             pagesPerCluster;// pageBytes / 4096, usado para PA
 
     std::vector<ClusterInfo> clusters;
@@ -57,7 +45,7 @@ private:
     mutable long long compDist   = 0;  // # distancias
     mutable long long pageReads  = 0;  // Páginas de 4KB leídas en queries
     mutable long long pageWrites = 0;  // Páginas de 4KB escritas en build
-    mutable long long queryTime  = 0;  // tiempo acumulado en µs (solo queries)
+    mutable long long queryTime  = 0;  // tiempo acumulado
 
     // Archivos de disco
     std::string indexPath;
@@ -74,7 +62,6 @@ public:
         int approxObjBytes = sizeof(int32_t);   // guardamos solo IDs
         bucketSize = std::max(1, pageBytes / approxObjBytes);
 
-        // Páginas de 4KB equivalentes (para PA):
         pagesPerCluster = std::max(1, pageBytes / 4096);
 
         std::cerr << "[LC_Disk] n=" << n
@@ -90,7 +77,6 @@ public:
         }
     }
 
-    // ========= Métricas =========
     void clear_counters() const {
         compDist   = 0;
         pageReads  = 0;
@@ -106,7 +92,6 @@ public:
     int get_pageBytes()    const { return pageBytes; }
     int get_bucketSize()   const { return bucketSize; }
 
-    // ========= Build: construye LC y escribe a disco =========
     void build(const std::string& basePath) {
         std::cerr << "[LC_Disk] Build start...\n";
         clusters.clear();
@@ -128,7 +113,6 @@ public:
             throw std::runtime_error("[LC_Disk] No se pudo crear " + nodePath);
         }
 
-        // Estructura auxiliar para la heurística O(n^2)
         struct ObjInfo {
             int  id;
             double tdist; // suma de distancias a centros previos
@@ -138,7 +122,6 @@ public:
         for (int i = 0; i < n; ++i)
             rem[i] = {i, 0.0};
 
-        // offset actual en base.lc_node (en unidades de int)
         int64_t currentOffset = 0;
 
         while (!rem.empty()) {
@@ -182,7 +165,7 @@ public:
             }
             currentOffset += K;
 
-            // 4) escribir cluster info en idxOut
+            // 4) escribir cluster info
             ClusterInfoDisk cDisk;
             cDisk.centerId = c.centerId;
             cDisk.radius   = c.radius;
@@ -219,7 +202,6 @@ public:
                   << "  (pageWrites≈" << pageWrites << " páginas de 4KB)\n";
     }
 
-    // ========= Restore: cargar índice desde disco y abrir nodo =========
     void restore(const std::string& basePath) {
         indexPath = basePath + ".lc_index";
         nodePath  = basePath + ".lc_node";
@@ -257,7 +239,6 @@ public:
                   << "  nodeFile=" << nodePath << "\n";
     }
 
-    // ========= MRQ: Range Search =========
     void rangeSearch(int qId, double R, std::vector<int>& out) const {
         using clock = std::chrono::high_resolution_clock;
         auto t0 = clock::now();
@@ -276,7 +257,7 @@ public:
             if (dqc > c.radius + R)
                 continue;
 
-            // accedemos el cluster → cuenta como pagesPerCluster páginas (paper)
+            // accedemos el cluster -> cuenta como pagesPerCluster páginas (paper)
             pageReads += pagesPerCluster;
 
             // centro
@@ -310,7 +291,6 @@ public:
         queryTime += std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
     }
 
-    // ========= MkNN =========
     void knnSearch(int qId, int k, std::vector<std::pair<double,int>>& out) const {
         using clock = std::chrono::high_resolution_clock;
         auto t0 = clock::now();
@@ -333,7 +313,7 @@ public:
             if (pq.size() >= (size_t)k && dqc - c.radius >= rk)
                 continue;
 
-            // tocamos cluster → sumamos pagesPerCluster páginas
+            // tocamos cluster -> sumamos pagesPerCluster páginas
             pageReads += pagesPerCluster;
 
             // centro

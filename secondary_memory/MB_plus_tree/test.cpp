@@ -1,7 +1,3 @@
-// test_mbpt.cpp - MB+-tree benchmark (escenario memoria secundaria, estilo Chen)
-// - Usa los mismos datasets, selectividades y Ks que los otros índices
-// - Formato JSON compatible con DIndex / OmniR-tree / EGNAT
-
 #include "mbpt.hpp"
 #include "../../objectdb.hpp"
 #include "../../datasets/paths.hpp"
@@ -11,7 +7,7 @@
 
 using namespace std;
 
-// Selectividades del paper (Chen 2022)
+// Selectividades del paper
 static const vector<double> SELECTIVITIES = {0.02, 0.04, 0.08, 0.16, 0.32};
 
 // Ks para MkNN
@@ -44,9 +40,7 @@ int main(int argc, char** argv) {
 
     for (const string& dataset : datasets) {
 
-        // ---------------------------------------------------------------
         // Cargar dataset
-        // ---------------------------------------------------------------
         string dbfile = path_dataset(dataset);
         if (dbfile == "") {
             cerr << "[WARN] Dataset no encontrado: " << dataset << "\n";
@@ -73,9 +67,7 @@ int main(int argc, char** argv) {
              << "   N=" << db->size() << "\n";
         cerr << "==========================================\n";
 
-        // ---------------------------------------------------------------
         // Cargar queries y radios
-        // ---------------------------------------------------------------
         vector<int> queries = load_queries_file(path_queries(dataset));
         auto radii          = load_radii_file(path_radii(dataset));
 
@@ -87,9 +79,7 @@ int main(int argc, char** argv) {
         cerr << "[QUERIES] " << queries.size() << " queries cargadas\n";
         cerr << "[QUERIES] Radii para " << radii.size() << " selectividades\n";
 
-        // ---------------------------------------------------------------
         // Construir MB+-tree (memoria secundaria)
-        // ---------------------------------------------------------------
         cerr << "\n[BUILD] Construyendo MB+-tree con rho=" << MBPT_RHO << "...\n";
 
         MBPT_Disk mbpt(db.get(), MBPT_RHO);
@@ -102,17 +92,13 @@ int main(int argc, char** argv) {
 
         cerr << "[BUILD] Tiempo: " << buildTime << " ms\n";
 
-        // ---------------------------------------------------------------
         // Archivo JSON de salida
-        // ---------------------------------------------------------------
         string jsonOut = "results/results_MBPT_" + dataset + ".json";
         ofstream J(jsonOut);
         J << "[\n";
         bool firstOutput = true;
 
-        // ===========================================================
         // EXPERIMENTO 1: Variar selectividad en MRQ
-        // ===========================================================
         cerr << "\n========================================\n";
         cerr << "[EXP 1] Variando SELECTIVIDAD en MRQ\n";
         cerr << "========================================\n";
@@ -175,9 +161,7 @@ int main(int argc, char** argv) {
                  << " compdists, " << avgPA << " páginas)\n";
         }
 
-        // ===========================================================
         // EXPERIMENTO 2: Variar k en MkNN
-        // ===========================================================
         cerr << "\n========================================\n";
         cerr << "[EXP 2] Variando K en MkNN\n";
         cerr << "========================================\n";

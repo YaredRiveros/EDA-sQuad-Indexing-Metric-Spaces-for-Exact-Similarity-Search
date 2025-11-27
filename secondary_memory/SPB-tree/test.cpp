@@ -5,10 +5,6 @@
 
 using namespace std;
 
-// ============================================================
-// Parámetros de experimento (Chen 2022)
-// ============================================================
-
 // Selectividades del paper (2%, 4%, 8%, 16%, 32%)
 static const vector<double> SELECTIVITIES = {
     0.02, 0.04, 0.08, 0.16, 0.32
@@ -26,18 +22,12 @@ static const vector<int> K_VALUES = {
 
 static const vector<string> DATASETS = {"LA"};
 
-// Número de pivotes (Chen: l = 5)
 static const int NUM_PIVOTS = 5;
 
 // Parámetros del B+ tree
 static const size_t LEAF_CAPACITY = 128;
 static const size_t FANOUT        = 64;
 
-// ============================================================
-// Helpers
-// ============================================================
-
-// Autodetección 0-based / 1-based para IDs de queries/pivotes
 vector<int> auto_fix_ids(const vector<int> &ids, int nObjects) {
     if (ids.empty()) return ids;
 
@@ -49,12 +39,10 @@ vector<int> auto_fix_ids(const vector<int> &ids, int nObjects) {
         if (v >= nObjects) hasOutOfRange = true;
     }
 
-    // Caso A: ya son 0-based
     if (hasZero && !hasOutOfRange) {
         return ids;
     }
 
-    // Caso B: parecen 1-based → convertir completo
     if (!hasZero) {
         vector<int> fixed;
         fixed.reserve(ids.size());
@@ -62,7 +50,6 @@ vector<int> auto_fix_ids(const vector<int> &ids, int nObjects) {
         return fixed;
     }
 
-    // Caso C: mezcla rara → corregir sólo lo que esté en 1..N
     vector<int> fixed;
     fixed.reserve(ids.size());
     for (int v : ids) {
@@ -72,7 +59,7 @@ vector<int> auto_fix_ids(const vector<int> &ids, int nObjects) {
     return fixed;
 }
 
-// Construir vector<DataObject> para SPB-tree (IDs 0..N-1)
+// Construir vector<DataObject>
 vector<DataObject> build_dataset_for_spb(size_t nObjects) {
     vector<DataObject> dataset;
     dataset.reserve(nObjects);
@@ -107,9 +94,7 @@ int main(int argc, char** argv) {
 
     for (const string &dataset : datasets) {
 
-        // --------------------------------------------------------------------
         // Cargar dataset
-        // --------------------------------------------------------------------
         string dbfile = path_dataset(dataset);
         if (dbfile == "") {
             cerr << "[WARN] Dataset no encontrado: " << dataset << "\n";
@@ -156,13 +141,11 @@ int main(int argc, char** argv) {
             hfiPivots = auto_fix_ids(hfiPivots, db->size());
         }
 
-        // Factor lógico de páginas (Chen: 40KB = 10×4KB para Color/Synthetic)
+        // Factor lógico de páginas
         size_t logicalPageFactor =
             (dataset == "Color" || dataset == "Synthetic") ? 10 : 1;
 
-        // --------------------------------------------------------------------
         // Archivo JSON de salida
-        // --------------------------------------------------------------------
         string jsonOut = "results/results_SPB_" + dataset + ".json";
         ofstream J(jsonOut);
         J << "[\n";
@@ -190,9 +173,7 @@ int main(int argc, char** argv) {
         spb.build(allObjects, hfiPivots);
         cerr << "[BUILD] OK.\n";
 
-        // ====================================================================
         // MRQ (Range Queries) – RQA (Algorithm 3)
-        // ====================================================================
         cerr << "\n[MRQ] Ejecutando selectividades...\n";
 
         for (double sel : SELECTIVITIES) {
@@ -202,7 +183,7 @@ int main(int argc, char** argv) {
             cerr << "  [MRQ] sel=" << sel << "  R=" << R << "\n";
 
             long long totalD = 0;   // distancias totales (pivot + verificación)
-            long long totalT = 0;   // tiempo (µs)
+            long long totalT = 0;   // tiempo
             long long totalP = 0;   // page reads lógicos en RAF
 
             for (int q : queries) {
@@ -215,9 +196,6 @@ int main(int argc, char** argv) {
                 long long elapsed =
                     chrono::duration_cast<chrono::microseconds>(end - start).count();
 
-                // SPBTree::MRQ ya:
-                //  - cuenta distancias a pivotes (φ(q), φ(o))
-                //  - cuenta distancias reales d(q,o) en VerifyRQ
                 totalD += spb.get_compDist();
                 totalT += elapsed;
                 totalP += spb.get_pageReads();
@@ -226,7 +204,7 @@ int main(int argc, char** argv) {
             }
 
             double avgD   = double(totalD) / queries.size();
-            double avgTms = double(totalT) / (1000.0 * queries.size()); // µs → ms
+            double avgTms = double(totalT) / (1000.0 * queries.size());
             double avgPg  = double(totalP) / queries.size();
 
             if (!firstOutput) J << ",\n";
@@ -250,9 +228,7 @@ int main(int argc, char** argv) {
               << "}";
         }
 
-        // ====================================================================
         // MkNN – NNA (Algorithm 4)
-        // ====================================================================
         cerr << "\n[MkNN] Ejecutando valores de k...\n";
 
         for (int k : K_VALUES) {

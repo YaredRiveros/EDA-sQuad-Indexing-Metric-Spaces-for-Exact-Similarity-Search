@@ -7,16 +7,10 @@
 using namespace std;
 namespace fs = std::filesystem;
 
-// ============================================================================
-// --- DataObject mínimo ------------------------------------------------------
-// ============================================================================
 struct DataObject {
     int id;   // índice 0..N-1 dentro de ObjectDB
 };
 
-// ============================================================================
-// --- RAF: acceso real a disco para objetos ---------------------------------
-// ============================================================================
 class DIndexRAF {
     static constexpr size_t PAGE_SIZE = 4096; // 4KB físicos
 
@@ -41,8 +35,6 @@ public:
         ofstream ofs(filename, ios::binary | ios::trunc);
     }
 
-    // Escribe un registro mínimo (sólo id). No necesitamos payload real,
-    // sólo offsets y páginas físicas.
     streampos append(int id) {
         ofstream ofs(filename, ios::binary | ios::app);
         streampos pos = ofs.tellp();
@@ -74,7 +66,6 @@ public:
         ifs.seekg(it->second);
         int32_t tmp;
         ifs.read(reinterpret_cast<char*>(&tmp), sizeof(tmp));
-        // No usamos el valor, lo importante es el acceso físico
     }
 
     long long get_pageReads() const {
@@ -86,9 +77,6 @@ public:
     }
 };
 
-// ============================================================================
-// --- Utilidades HFIPivots ---------------------------------------------------
-// ============================================================================
 inline vector<int> loadHFIPivots(const string &path) {
     vector<int> pivs;
 
@@ -129,25 +117,18 @@ inline double lbInterval(double q, const pair<double,double>& I) {
     return 0.0;
 }
 
-// ============================================================================
-// --- Bucket ------------------------------------------------------------------
-// ============================================================================
 struct Bucket {
     vector<pair<double,double>> intervals; // Intervalos por nivel
     vector<int> ids;                       // IDs de objetos (0..N-1)
 };
 
-// ============================================================================
-// --- DIndex Class ------------------------------------------------------------
-// ============================================================================
 class DIndex {
 private:
     ObjectDB* db;
     int N;
-    size_t L;      // nº de pivotes / niveles (hash functions en el paper)
+    size_t L;      // nro de pivotes / niveles
     double rho;
 
-    // RAF real para “datos” (aunque sólo guardemos ids)
     DIndexRAF raf;
 
     vector<int>    pivotIds;
@@ -159,7 +140,7 @@ private:
     unordered_map<uint32_t,size_t> bucketIndex;
 
     long long compDist  = 0;
-    long long pageReads = 0;   // páginas lógicas (4KB) leídas en la ÚLTIMA consulta
+    long long pageReads = 0;
 
 public:
     DIndex(const string& rafFile,
@@ -178,9 +159,7 @@ public:
         distMatrix.resize(static_cast<size_t>(N) * L);
     }
 
-    // ========================================================================
     //  BUILD
-    // ========================================================================
     void build(const vector<DataObject>& objects,
                uint64_t seed,
                const string& pivfile)
@@ -207,7 +186,6 @@ public:
         cerr << "[DIndex] Building buckets...\n";
         buildBuckets();
 
-        // Escribir TODOS los objetos en el RAF (un registro por id)
         cerr << "[DIndex] Writing objects to RAF...\n";
         for (const auto& o : objects) {
             raf.append(o.id);
@@ -340,13 +318,10 @@ public:
     }
 
 private:
-    // ========================================================================
-    // MRQ interno con distancias (Chen 2022) + acceso RAF real
-    // ========================================================================
     vector<pair<int,double>> MRQ_withDists(int qid, double r) {
         vector<double> q(L);
 
-        // Distancias query → pivotes (cuentan en compDist)
+        // Distancias query -> pivotes (cuentan en compDist)
         for (size_t i = 0; i < L; i++) {
             q[i] = db->distance(qid, pivotIds[i]);
             compDist++;
@@ -364,9 +339,9 @@ private:
 
             if (LB > r) continue;
 
-            // Buckets candidatos → verificar objetos
+            // Buckets candidatos -> verificar objetos
             for (int id : b.ids) {
-                // Leer del RAF (marca página física tocada)
+                // Leer del RAF
                 raf.read(id);
 
                 // Distancia real (cuenta en compDist)
@@ -381,9 +356,7 @@ private:
     }
 
 public:
-    // ========================================================================
     // MRQ público (stats = delta de esta llamada)
-    // ========================================================================
     vector<int> MRQ(int qid, double r) {
         long long comp_before  = compDist;
         long long pages_before = raf.get_pageReads();
@@ -400,9 +373,6 @@ public:
         return out;
     }
 
-    // ========================================================================
-    // MkNN (Chen 2022-style): range iterativo hasta conseguir ≥ k resultados
-    // ========================================================================
     vector<pair<int,double>> MkNN(int qid, size_t k) {
         // Snapshot antes de todo el proceso MkNN
         long long comp_before  = compDist;
@@ -446,9 +416,6 @@ public:
         return best;
     }
 
-    // ========================================================================
-    // Stats
-    // ========================================================================
     long long get_compDist() const { return compDist; }
     long long get_pageReads() const { return pageReads; }
 

@@ -1,8 +1,3 @@
-// test.cpp - OmniR-tree benchmark (escenario memoria secundaria de Chen)
-// - l = 5 pivotes fijos
-// - page size lógico = 4KB (definido en omnirtree.hpp)
-// - formato JSON compatible con DIndex / EGNAT
-
 #include <bits/stdc++.h>
 #include <filesystem>
 #include "omnirtree.hpp"
@@ -11,7 +6,6 @@
 
 using namespace std;
 
-// Selectividades del paper (Chen 2022)
 static const vector<double> SELECTIVITIES = {0.02, 0.04, 0.08, 0.16, 0.32};
 
 // Ks para MkNN
@@ -42,9 +36,7 @@ int main(int argc, char** argv) {
 
     for (const string &dataset : datasets) {
 
-        // ---------------------------------------------------------------
         // Cargar dataset
-        // ---------------------------------------------------------------
         string dbfile = path_dataset(dataset);
         if (dbfile == "") {
             cerr << "[WARN] Dataset no encontrado: " << dataset << "\n";
@@ -71,9 +63,7 @@ int main(int argc, char** argv) {
              << "   N=" << db->size() << "\n";
         cerr << "==========================================\n";
 
-        // ---------------------------------------------------------------
         // Cargar queries y radios precomputados
-        // ---------------------------------------------------------------
         vector<int> queries = load_queries_file(path_queries(dataset));
         auto radii          = load_radii_file(path_radii(dataset));
 
@@ -82,19 +72,12 @@ int main(int argc, char** argv) {
             continue;
         }
 
-        // ---------------------------------------------------------------
         // Archivo JSON de salida
-        // ---------------------------------------------------------------
         string jsonOut = "results/results_OmniRTree_" + dataset + ".json";
         ofstream J(jsonOut);
         J << "[\n";
         bool firstOutput = true;
 
-        // ===============================================================
-        // Configuración fija de memoria secundaria (Chen 2022):
-        //   - l = 5 pivotes
-        //   - mismos pivotes HFI para todos los métodos pivot-based
-        // ===============================================================
         const int num_pivots     = 5;
         const int rtree_node_cap = 32;   // capacidad de nodo del R-tree
 
@@ -130,9 +113,7 @@ int main(int argc, char** argv) {
 
         cerr << "[BUILD] Completado en " << buildTimeMs << " ms\n";
 
-        // ===============================================================
         // MRQ - Variar selectividad (escenario de memoria secundaria)
-        // ===============================================================
         cerr << "\n[MRQ] Ejecutando queries de rango (l="
              << num_pivots << ")...\n";
 
@@ -194,9 +175,7 @@ int main(int argc, char** argv) {
                  << " compdists, " << avgPA << " páginas)\n";
         }
 
-        // ===============================================================
         // MkNN - Variar k (escenario de memoria secundaria)
-        // ===============================================================
         cerr << "\n[MkNN] Ejecutando queries k-NN (l="
              << num_pivots << ")...\n";
 

@@ -67,23 +67,18 @@ int main(int argc, char** argv) {
         J << "[\n";
         bool firstOutput = true;
 
-        // ========= PAGE SIZE según el paper =========
         int pageBytes = (dataset == "Color" || dataset == "Synthetic") ?
                         40960 : 4096;
 
-        // ========= Crear LC Disk =========
         LC_Disk lc(db.get(), pageBytes);
 
-        // ========= Construir índice físico =========
         string base = "lc_indexes/" + dataset;
         lc.build(base);      // escribe en disco: base.lc_index y base.lc_node
         lc.restore(base);    // abre base.lc_node y carga base.lc_index
 
         int numClusters = lc.get_num_clusters();
 
-        // ===================================================================
         // MRQ
-        // ===================================================================
         for (double sel : SELECTIVITIES) {
             if (!radii.count(sel)) continue;
 
@@ -127,9 +122,7 @@ int main(int argc, char** argv) {
               << "}";
         }
 
-        // ===================================================================
         // MkNN
-        // ===================================================================
         for (int k : K_VALUES) {
             long long totalD = 0, totalT = 0, totalPages = 0;
 

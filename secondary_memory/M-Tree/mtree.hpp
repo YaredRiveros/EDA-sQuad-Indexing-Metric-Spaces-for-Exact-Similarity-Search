@@ -24,7 +24,6 @@ public:
     mutable long long queryTime  = 0;  // tiempo acumulado en µs (solo queries)
 
 
-    // nodeCapacity ≈ m del M-tree (máx entradas por nodo)
     explicit MTree_Disk(const ObjectDB* db_, int nodeCapacity_ = 64)
         : db(db_), n(db_ ? db_->size() : 0),
           nodeCapacity(std::max(4, nodeCapacity_)),
@@ -73,7 +72,7 @@ public:
         std::vector<int> objs(n);
         for (int i = 0; i < n; ++i) objs[i] = i;
 
-        NodeRAM* rootRAM = build_recursive(objs, -1);  // -1 → root
+        NodeRAM* rootRAM = build_recursive(objs, -1);
 
         // post-order save
         rootOffset = writeNodeRec(rootRAM);
@@ -148,7 +147,7 @@ public:
             double lb;              // lower bound a la región (bola)
             int64_t offset;         // offset del nodo hijo
             int    parentCenterId;  // id del routing object padre
-            double distParentQ;     // δ(P,Q)
+            double distParentQ;
         };
         struct CmpCand {
             bool operator()(const NodeCand& a, const NodeCand& b) const 
@@ -168,8 +167,8 @@ public:
 
         for (const auto& e : root.entries) 
         {
-            double dQR = dist(qId, e.objId);          // δ(Q,R)
-            double lb   = std::max(0.0, dQR - e.radius); // LB = max(0, δ(Q,R) - r)
+            double dQR = dist(qId, e.objId);          
+            double lb   = std::max(0.0, dQR - e.radius);
 
             if (root.isLeaf) 
                 insertBest(best, k, dQR, e.objId);
@@ -227,8 +226,6 @@ public:
     }
 
 private:
-    
-
     const ObjectDB* db;
     int n;
     int nodeCapacity;  // m (máx entradas por nodo)
@@ -244,7 +241,7 @@ private:
         struct EntryRAM {
             int objId;        // objeto o routing object
             double radius;    // r_R (solo si no es hoja)
-            double parentDist;// δ(R, Par(R)) o δ(D, Par(R))
+            double parentDist;
             NodeRAM* child;   // nullptr en hoja
         };
         std::vector<EntryRAM> entries;
@@ -289,13 +286,12 @@ NodeRAM* build_recursive(const std::vector<int>& objs, int parentCenterId) {
             if (parentCenterId < 0)
                 e.parentDist = 0.0; // raíz
             else
-                e.parentDist = dist(oid, parentCenterId); // δ(D, Par(D))
+                e.parentDist = dist(oid, parentCenterId);
             node->entries.push_back(e);
         }
         return node;
     }
 
-    // ---- Nodo interno: seleccionar centros y crear subárboles ----
     node = new NodeRAM(false);
 
     // 1) Elegir hasta nodeCapacity centros por farthest-first con caching y muestreo
@@ -400,7 +396,6 @@ NodeRAM* build_recursive(const std::vector<int>& objs, int parentCenterId) {
 
         int centerId = centers[i];
 
-        // radio de cobertura r_R = max δ(R, D) para D en grupo
         double rad = 0.0;
         for (int oid : groups[i]) {
             double d = dist(centerId, oid);
@@ -416,7 +411,7 @@ NodeRAM* build_recursive(const std::vector<int>& objs, int parentCenterId) {
         if (parentCenterId < 0)
             e.parentDist = 0.0; // entrada de raíz
         else
-            e.parentDist = dist(centerId, parentCenterId); // δ(R, Par(R))
+            e.parentDist = dist(centerId, parentCenterId);
         node->entries.push_back(e);
     }
 
@@ -424,7 +419,6 @@ NodeRAM* build_recursive(const std::vector<int>& objs, int parentCenterId) {
 }
 
 
-    // ========= Serialización a disco: post-order =========
     int64_t writeNodeRec(NodeRAM* node) {
         if (!node) return -1;
 
@@ -467,7 +461,6 @@ NodeRAM* build_recursive(const std::vector<int>& objs, int parentCenterId) {
         return offset;
     }
 
-    // ========= Liberar árbol RAM =========
     void freeTree(NodeRAM* node) {
         if (!node) return;
         if (!node->isLeaf) {
@@ -523,16 +516,15 @@ NodeRAM* build_recursive(const std::vector<int>& objs, int parentCenterId) {
         for (const auto& e : node.entries) {
             // --- Parent filtering (si hay padre) ---
             if (parentCenterId >= 0) {
-                double dPQ = distParentQ;   // δ(P,Q)
-                double dPR = e.parentDist;  // δ(P,R)
+                double dPQ = distParentQ;  
+                double dPR = e.parentDist; 
                 if (std::fabs(dPQ - dPR) > R + e.radius) {
                     // la bola (R,r) no intersecta B(Q,R)
                     continue;
                 }
             }
 
-            // --- Basic filtering: δ(Q,R) ---
-            double dQR = dist(qId, e.objId); // δ(Q,R)
+            double dQR = dist(qId, e.objId);
 
             if (dQR > R + e.radius)
                 continue; // bola (R,r) no intersecta B(Q,R)

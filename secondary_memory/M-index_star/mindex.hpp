@@ -115,9 +115,7 @@ public:
         if (rafIn.is_open()) rafIn.close();
     }
 
-    // --------------------------------------------------
     // API de métricas
-    // --------------------------------------------------
     void clear_counters() const {
         compDist   = 0;
         pageReads  = 0;
@@ -132,9 +130,7 @@ public:
 
     int get_num_pivots() const { return P; }
 
-    // --------------------------------------------------
     // overridePivots: usar pivotes HFI externos
-    // --------------------------------------------------
     void overridePivots(const std::vector<int>& external) {
         if (!db) throw std::runtime_error("overridePivots: DB null");
         if ((int)external.size() != P) {
@@ -154,9 +150,7 @@ public:
         pivotsFixed = true;
     }
 
-    // ------------------------------
     // Build: M-index* con B+-tree + RAF en disco
-    // ------------------------------
     void build(const std::string& base) {
         using clock = std::chrono::high_resolution_clock;
         auto t0 = clock::now();
@@ -252,9 +246,7 @@ public:
     }
 
 private:
-    // --------------------------------------------------
-    // Construir "cluster tree" (aquí: un nodo por pivote)
-    // --------------------------------------------------
+    // Construir "cluster tree"
     void buildClusterTree(const std::vector<RAFEntry>& entries) {
         nodes.clear();
 
@@ -299,10 +291,8 @@ private:
         }
     }
 
-    // --------------------------------------------------
     // Escribir RAF con id, distancias a pivotes y key
     // y registrar offsets por id
-    // --------------------------------------------------
     void writeRAF(const std::vector<RAFEntry>& entries) {
         rafOffsets.clear();
 
@@ -326,9 +316,7 @@ private:
     }
 
 public:
-    // ------------------------------
     // Range Search con B+-tree y Lemmas 4.1, 4.3, 4.5
-    // ------------------------------
     void rangeSearch(int qId, double R, std::vector<int>& out) const {
         using clock = std::chrono::high_resolution_clock;
         auto t0 = clock::now();
@@ -342,7 +330,7 @@ public:
 
         rafPagesVisited.clear();
 
-        // Distancias q → pivotes (cuentan en compDist)
+        // Distancias q -> pivotes (cuentan en compDist)
         std::vector<double> dq(P);
         for (int j = 0; j < P; ++j) {
             dq[j] = distObj(qId, pivots[j]);
@@ -350,7 +338,6 @@ public:
 
         // Recorremos clusters
         for (const auto& node : nodes) {
-            // --- PODA DE CLUSTER (LB conservador tipo Lemma 4.1) ---
             double clusterLB = 0.0;
             for (int j = 0; j < P; ++j) {
                 if (dq[j] < node.minDist[j]) {
@@ -406,9 +393,7 @@ public:
         queryTime += std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
     }
 
-    // ------------------------------
     // k-NN Search con Best-First Traversal
-    // ------------------------------
     void knnSearch(int qId, int k,
                    std::vector<std::pair<double,int>>& out) const {
         using clock = std::chrono::high_resolution_clock;

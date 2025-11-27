@@ -13,9 +13,6 @@
 #include <cstdio>
 #include <iostream>
 
-// ============================================================
-//  Result element for kNN
-// ============================================================
 struct CPTResultElem {
     int id;
     double dist;
@@ -26,29 +23,14 @@ struct CPTResultElem {
     }
 };
 
-// ============================================================
-//  CPT — Clustered Pivot Table (CPT-SF style)
-//  - Pivot table in main memory (like LAESA).
-//  - Data objects grouped into pages, clustered using the M-tree index
-//    written by MTree_Disk (basePath.mtree_index).
-//  - MRQ / MkNN scan pages in physical order and use pivots only to
-//    prune pages and objects (I/O-friendly).
-// ============================================================
+
 class CPT {
 public:
-    // ============================
-    //  Metrics
-    // ============================
     mutable long long compDistQuery  = 0;  // # distance computations in queries
     mutable long long compDistBuild  = 0;  // # distance computations to build pivot table
     mutable long long pageReads      = 0;  // # data pages read
     mutable long long queryTime      = 0;  // accumulated time in µs (only queries)
 
-    // ============================
-    //  Constructor
-    //  db_      : dataset
-    //  nPivots_ : number of pivots (same l as in LAESA / Chen2022)
-// ============================
     explicit CPT(const ObjectDB* db_, int nPivots_)
         : db(db_),
           n(db_ ? db_->size() : 0),
@@ -63,20 +45,16 @@ public:
         pivots.resize(nPivots);
         isPivot.assign(n, false);
 
-        // Default: first nPivots objects as pivots
         for (int i = 0; i < nPivots; ++i) {
             pivots[i] = i;
             isPivot[i] = true;
         }
 
-        // Default layout: single page with all objects (can be overridden).
         buildDefaultPages();
 
         buildDistanceTable();
     }
 
-    // Override pivot set (e.g. HFI pivots loaded from JSON).
-    // Call this BEFORE running queries.
     void overridePivots(const std::vector<int>& newPivots) {
         if (!db) return;
         if ((int)newPivots.size() != nPivots) {
@@ -101,21 +79,6 @@ public:
 
     int get_num_pivots() const { return nPivots; }
 
-    // ============================
-    //  Build pages from M-tree on disk (CPT-SF style)
-    //
-    //  basePath: same base used to build MTree_Disk (basePath.mtree_index)
-    //
-    //  It reads the index file written by your MTree_Disk implementation:
-    //    [int64 rootOffset][nodes...]
-    //  Each node is:
-    //    bool   isLeaf;
-    //    int32  count;
-    //    count * { int32 objId, double radius,
-    //              double parentDist, int64 childOffset }
-    //
-    //  For every leaf node, we create one CPT "page" with its objIds.
-// ============================
     void buildFromMTree(const std::string& basePath) {
         pages.clear();
 
@@ -127,7 +90,6 @@ public:
             return;
         }
 
-        // Read rootOffset (we don't need its value, just skip)
         int64_t rootOffset;
         if (std::fread(&rootOffset, sizeof(int64_t), 1, fp) != 1) {
             std::cerr << "[CPT] buildFromMTree: corrupted file (no rootOffset)\n";
@@ -194,17 +156,10 @@ public:
         }
     }
 
-    // ============================
-    //  Page layout helpers (optional)
-    // ============================
-
-    // Manual override of page layout (for experiments/debugging).
     void setPages(const std::vector<std::vector<int>>& newPages) {
         pages = newPages;
     }
 
-    // Sequential pages of fixed capacity (#objects per page).
-    // Does NOT use M-tree clustering, but is useful as a fallback.
     void buildSequentialPages(int objectsPerPage) {
         pages.clear();
         if (objectsPerPage <= 0 || n == 0) return;
@@ -222,9 +177,6 @@ public:
         if (!current.empty()) pages.push_back(current);
     }
 
-    // ============================
-    //  Metrics API
-    // ============================
     void clear_counters() const {
         compDistQuery = 0;
         pageReads     = 0;
@@ -236,14 +188,6 @@ public:
     long long get_pageReads()     const { return pageReads;      }
     long long get_queryTime()     const { return queryTime;      }
 
-    // ============================
-    //  MRQ (Range Query)
-    //
-    //  - Use pivots + triangle inequality (Lemma 4.1) to prune objects.
-    //  - Scan pages in physical order.
-    //  - Each page with at least one candidate counts as 1 page read;
-//    and d(q,obj) is only computed for those candidates.
-// ============================
     void rangeSearch(int queryId, double radius,
                      std::vector<int>& result) const
     {
@@ -285,11 +229,9 @@ public:
             }
 
             if (candidates.empty()) {
-                // Page fully pruned; no I/O.
                 continue;
             }
 
-            // This page must be read once.
             pageReads++;
 
             // Compute exact distances only for candidates.
@@ -306,20 +248,6 @@ public:
         queryTime += std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
     }
 
-    // ============================
-    //  MkNN (kNN Query)
-    //
-    //  I/O-friendly strategy inspired by CPT:
-    //   1. Pre-scan a small non-clustered prefix [0..N0) to get an
-    //      initial radius tau.
-    //   2. Scan clustered pages in physical order:
-    //      - prune objects in each page via lower bound (LB >= tau).
-    //      - if page has candidates -> pageReads++, compute d(q,obj)
-    //        only for those and update tau / k-NN heap.
-    //
-    //  No global reordering by LB (unlike pure LAESA), to preserve
-    //  locality of pages (I/O-friendly).
-// ============================
     void knnSearch(int queryId, int k,
                    std::vector<CPTResultElem>& out,
                    double preScanFraction = 0.02) const
@@ -345,7 +273,6 @@ public:
         }
 
         // 2. Pre-scan a small prefix of objects (non-clustered region)
-        //    to establish an initial tau.
         int N0 = std::max(1, (int)std::round(preScanFraction * n));
         if (N0 > n) N0 = n;
 
@@ -388,7 +315,6 @@ public:
                 continue;
             }
 
-            // We must read this page once.
             pageReads++;
 
             // Compute real distances only for candidates.
@@ -429,7 +355,6 @@ private:
     std::vector<bool> isPivot;                    // quick pivot check
     std::vector<std::vector<double>> distMatrix;  // [obj][pivot] = d(obj,pivot)
 
-    // Page layout: pages[i] = list of object IDs in that page.
     std::vector<std::vector<int>> pages;
 
     // Default: single page [0..n-1]
