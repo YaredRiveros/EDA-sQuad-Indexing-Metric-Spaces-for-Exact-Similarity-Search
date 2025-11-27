@@ -1,5 +1,5 @@
 #include <bits/stdc++.h>
-#include "mtree.hpp"          // <— tu implementación final del M-tree Disk
+#include "mtree.hpp"     
 #include "../../objectdb.hpp"
 #include "../../datasets/paths.hpp"
 
@@ -67,8 +67,6 @@ int main(int argc, char** argv) {
         J << "[\n";
         bool firstOutput = true;
 
-        // ========= Ajuste de pageBytes según Chen =========
-        // El M-tree usa nodos más grandes, igual que Color/Synthetic en Chen
         int pageBytes = (dataset == "Color" || dataset == "Synthetic") ?
                         40960 : 4096;
 
@@ -77,17 +75,13 @@ int main(int argc, char** argv) {
         int entryBytes = 4 + 8 + 8 + 8;
         int nodeCapacity = max(4, pageBytes / entryBytes);
 
-        // ========= Crear M-tree Disk =========
         MTree_Disk mt(db.get(), nodeCapacity);
 
-        // ========= Construcción física =========
         string base = "mtree_indexes/" + dataset;
         mt.build(base);       // escribe base.mtree_index
         mt.restore(base);     // vuelve a abrir para queries
 
-        // ===================================================================
         // MRQ
-        // ===================================================================
         cout << "Searching...\n";
         for (double sel : SELECTIVITIES) {
             if (!radii.count(sel)) continue;
@@ -132,9 +126,7 @@ int main(int argc, char** argv) {
               << "}";
         }
 
-        // ===================================================================
         // MkNN
-        // ===================================================================
         for (int k : K_VALUES) {
             long long totalD = 0, totalT = 0, totalPages = 0;
 

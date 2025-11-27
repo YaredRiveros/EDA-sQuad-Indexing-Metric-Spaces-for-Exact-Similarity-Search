@@ -1,0 +1,176 @@
+{
+  "MRQ": {
+    "pages": [],
+    "compdists": [
+      {
+        "index": "LAESA",
+        "value": 170.62900000000002,
+        "rank": 1
+      },
+      {
+        "index": "EPT*",
+        "value": 1007.7014999999999,
+        "rank": 2
+      },
+      {
+        "index": "GNAT",
+        "value": 1327.6729,
+        "rank": 3
+      },
+      {
+        "index": "BKT",
+        "value": 1394.36,
+        "rank": 4
+      },
+      {
+        "index": "SAT",
+        "value": 1410.6745,
+        "rank": 5
+      },
+      {
+        "index": "MVPT",
+        "value": 1417.6866,
+        "rank": 6
+      },
+      {
+        "index": "BST",
+        "value": 1471.3013,
+        "rank": 7
+      },
+      {
+        "index": "FQT",
+        "value": 1474.0894,
+        "rank": 8
+      }
+    ],
+    "time_ms": [
+      {
+        "index": "LAESA",
+        "value": 0.026503000000000002,
+        "rank": 1
+      },
+      {
+        "index": "EPT*",
+        "value": 0.21419999999999997,
+        "rank": 2
+      },
+      {
+        "index": "MVPT",
+        "value": 0.22372029999999998,
+        "rank": 3
+      },
+      {
+        "index": "FQT",
+        "value": 0.23220000000000002,
+        "rank": 4
+      },
+      {
+        "index": "BST",
+        "value": 0.2400388,
+        "rank": 5
+      },
+      {
+        "index": "BKT",
+        "value": 0.241665,
+        "rank": 6
+      },
+      {
+        "index": "SAT",
+        "value": 0.263278,
+        "rank": 7
+      },
+      {
+        "index": "GNAT",
+        "value": 0.2944,
+        "rank": 8
+      }
+    ]
+  },
+  "MkNN": {
+    "pages": [],
+    "compdists": [
+      {
+        "index": "LAESA",
+        "value": 232.0751,
+        "rank": 1
+      },
+      {
+        "index": "FQT",
+        "value": 826.9254,
+        "rank": 2
+      },
+      {
+        "index": "EPT*",
+        "value": 885.9355,
+        "rank": 3
+      },
+      {
+        "index": "MVPT",
+        "value": 1016.5345,
+        "rank": 4
+      },
+      {
+        "index": "SAT",
+        "value": 1100.414,
+        "rank": 5
+      },
+      {
+        "index": "GNAT",
+        "value": 1113.1845,
+        "rank": 6
+      },
+      {
+        "index": "BST",
+        "value": 1369.9821,
+        "rank": 7
+      },
+      {
+        "index": "BKT",
+        "value": 1709.3322,
+        "rank": 8
+      }
+    ],
+    "time_ms": [
+      {
+        "index": "LAESA",
+        "value": 0.1596555,
+        "rank": 1
+      },
+      {
+        "index": "EPT*",
+        "value": 0.2125,
+        "rank": 2
+      },
+      {
+        "index": "MVPT",
+        "value": 0.22242309999999998,
+        "rank": 3
+      },
+      {
+        "index": "BST",
+        "value": 0.2479844,
+        "rank": 4
+      },
+      {
+        "index": "BKT",
+        "value": 0.28880849999999997,
+        "rank": 5
+      },
+      {
+        "index": "SAT",
+        "value": 0.2919406,
+        "rank": 6
+      },
+      {
+        "index": "GNAT",
+        "value": 0.2964,
+        "rank": 7
+      },
+      {
+        "index": "FQT",
+        "value": 0.3604,
+        "rank": 8
+      }
+    ]
+  }
+}

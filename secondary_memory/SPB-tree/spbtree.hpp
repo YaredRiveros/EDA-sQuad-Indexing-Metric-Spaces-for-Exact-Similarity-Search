@@ -1,14 +1,3 @@
-// spbtree.hpp
-// Implementación del SPB-tree (Space-filling curve + Pivot + B+-tree)
-// siguiendo la descripción de Chen et al. (SPB-tree).
-//
-// - Los pivotes se asumen preseleccionados (HFI) y cargados externamente.
-// - Pivot mapping: φ(o) = <d(o, pi)> usando ObjectDB::distance.
-// - SFC mapping: Z-order (Morton). El paper permite Z-order o Hilbert.
-// - B+-tree con MBB en el espacio de pivotes.
-// - MRQ: Range Query Algorithm (RQA) basado en Lemma 1 y 2.
-// - MkNN: kNN Query Algorithm (NNA) basado en Lemma 3 y 4.
-
 #pragma once
 #include <bits/stdc++.h>
 #include "../../objectdb.hpp"
@@ -16,34 +5,27 @@
 
 using namespace std;
 
-/* -------------------------
-   Data object and RAF
-   ------------------------- */
 struct DataObject {
     uint64_t id;
-    vector<double> payload; // no se usa para distancias, solo para RAF si quieres
+    vector<double> payload;
 };
 
 class RAF {
-    static constexpr size_t PAGE_SIZE = 4096; // 4KB físicos
+    static constexpr size_t PAGE_SIZE = 4096;
 
     string filename;
 
-    // Fichero binario abierto persistentemente (lectura/escritura aleatoria)
+    // Fichero binario abierto persistentemente
     mutable fstream file;
 
-    // Mapa objeto -> offset físico
     unordered_map<uint64_t, streampos> offsets;
 
-    // Páginas físicas únicas tocadas en la query actual
     mutable unordered_set<uint64_t> pagesVisited;
 
-    // Factor lógico de páginas (Chen: 40KB = 10×4KB para Color/Synthetic)
     size_t logicalPageFactor;
 
     void ensureOpenForRW() const {
         if (!file.is_open()) {
-            // reabrir en modo lectura + escritura, sin truncar
             const_cast<RAF*>(this)->file.open(
                 filename,
                 ios::binary | ios::in | ios::out
@@ -92,7 +74,6 @@ public:
         file.seekp(0, ios::end);
         streampos pos = file.tellp();
 
-        // Escribir (id, len, payload)
         file.write(reinterpret_cast<const char*>(&o.id), sizeof(o.id));
         uint64_t len = o.payload.size();
         file.write(reinterpret_cast<const char*>(&len), sizeof(len));
@@ -106,7 +87,6 @@ public:
         return pos;
     }
 
-    // Lectura real desde disco + conteo de páginas físicas
     DataObject read(uint64_t id) const {
         ensureOpenForRW();
 
@@ -147,7 +127,6 @@ public:
         return o;
     }
 
-    // Páginas lógicas según Chen (ej. 10× para Color/Synthetic)
     long long get_pageReads() const {
         return static_cast<long long>(pagesVisited.size()) *
                static_cast<long long>(logicalPageFactor);
@@ -159,14 +138,14 @@ public:
 };
 
 struct PivotTable {
-    vector<DataObject> pivots; // solo usamos id
+    vector<DataObject> pivots;
     ObjectDB *db;
     mutable long long compDist = 0; // # de distancias (pivot + query-real)
 
     PivotTable() : db(nullptr) {}
     PivotTable(ObjectDB *database) : db(database) {}
 
-    // Pivotes aleatorios (fallback cuando no hay HFI precomputado)
+    // Pivotes aleatorios
     void selectRandomPivots(const vector<DataObject> &objs,
                             size_t l, uint64_t seed = 42)
     {
@@ -181,7 +160,7 @@ struct PivotTable {
             pivots.push_back(objs[idx[i]]);
     }
 
-    // Cargar pivotes desde ids precomputados (HFI), ids 0-based.
+    // Cargar pivotes desde ids precomputados
     void setPivotsFromIds(const vector<int> &pivotIds,
                           const vector<DataObject> &objs,
                           size_t l)
@@ -199,7 +178,6 @@ struct PivotTable {
         }
     }
 
-    // φ(o) = <d(o, pi)>
     vector<double> mapObject(uint64_t objId) const {
         vector<double> v;
         v.reserve(pivots.size());
@@ -215,9 +193,8 @@ struct PivotTable {
     void clear_compDist() { compDist = 0; }
 };
 
-/* -------------------------
-   SFC mapping: Morton (Z-order)
-   ------------------------- */
+// SFC mapping: Morton (Z-order)
+
 struct SFCMapper {
     size_t dims;
     unsigned bits_per_dim;
@@ -284,9 +261,7 @@ struct SFCMapper {
     }
 };
 
-/* -------------------------
-   MBB (bounding box) en espacio de pivotes
-   ------------------------- */
+// MBB (bounding box) en espacio de pivotes
 struct MBB {
     vector<double> minv, maxv;
 
@@ -320,7 +295,6 @@ struct MBB {
         }
     }
 
-    // L∞ lower bound entre φ(q) y este MBB
     double lowerBoundToQuery(const vector<double> &q) const {
         double lb = 0.0;
         for (size_t i = 0; i < q.size(); ++i) {
@@ -335,9 +309,7 @@ struct MBB {
     }
 };
 
-/* -------------------------
-   Region RR(r) en espacio de pivotes
-   ------------------------- */
+// Region RR(r) en espacio de pivotes
 struct RangeRegion {
     vector<double> minv, maxv; // por dimensión
 
@@ -382,9 +354,7 @@ struct RangeRegion {
     }
 };
 
-/* -------------------------
-   B+ tree en memoria sobre la SFC
-   ------------------------- */
+// B+ tree en memoria sobre la SFC
 struct BPlusEntry {
     bool isLeaf;
     vector<BPlusEntry *> children; // si no es hoja
@@ -486,9 +456,7 @@ public:
     }
 };
 
-/* -------------------------
-   SPB-tree wrapper (RQA + NNA)
-   ------------------------- */
+ // SPB-tree wrapper (RQA + NNA)
 class SPBTree {
     ObjectDB *db;
     RAF raf;
@@ -500,7 +468,6 @@ class SPBTree {
     bool useHfiPivots;
     vector<tuple<uint64_t, uint64_t, vector<double>>> records;
 
-    // ---------------- RQA helper ----------------
     void verifyRQ(const tuple<uint64_t, uint64_t, vector<double>> &rec,
                   uint64_t queryId,
                   const vector<double> &qmap,
@@ -511,11 +478,11 @@ class SPBTree {
         uint64_t objId = get<1>(rec);
         const vector<double> &mv = get<2>(rec);
 
-        // Lemma 1: si φ(o) no está en RR(r), descartar sin distancia real
+        // Lemma 1
         if (!rr.containsPoint(mv))
             return;
 
-        // Lemma 2: si ∃ pivot pi con d(o,pi) ≤ r - d(q,pi) -> seguro en RQ(q,r)
+        // Lemma 2
         bool sure = false;
         for (size_t i = 0; i < mv.size(); ++i) {
             double rhs = r - qmap[i];
@@ -583,7 +550,7 @@ public:
             cerr << "[WARN] SPB-tree: usando pivotes aleatorios (no HFI)\n";
         }
 
-        // Pivot mapping φ(o)
+        // Pivot mapping
         vector<vector<double>> mapped;
         mapped.reserve(dataset.size());
         for (auto &o : dataset) {
@@ -594,7 +561,7 @@ public:
         // Configurar SFC
         sfc.configure(mapped);
 
-        // Construir registros (key, id, φ(o))
+        // Construir registros
         records.clear();
         for (size_t i = 0; i < dataset.size(); ++i) {
             uint64_t id = dataset[i].id;
@@ -610,14 +577,13 @@ public:
         bplus.bulkLoad(records);
     }
 
-    // ---------------- MRQ usando RQA (Algorithm 3) ----------------
     vector<uint64_t> MRQ(uint64_t queryId, double r) {
         vector<uint64_t> result;
         BPlusEntry *root = bplus.getRoot();
         if (!root)
             return result;
 
-        vector<double> qmap = pt.mapObject(queryId); // φ(q)
+        vector<double> qmap = pt.mapObject(queryId);
         RangeRegion rr = RangeRegion::fromQuery(qmap, r);
 
         struct NodeItem {
@@ -661,7 +627,6 @@ public:
         return result;
     }
 
-    // ---------------- MkNN usando NNA (Algorithm 4) ----------------
     vector<pair<uint64_t, double>> MkNN(uint64_t queryId, size_t k) {
         vector<pair<uint64_t, double>> answers;
         if (k == 0)
@@ -670,7 +635,7 @@ public:
         if (!root)
             return answers;
 
-        vector<double> qmap = pt.mapObject(queryId); // φ(q)
+        vector<double> qmap = pt.mapObject(queryId);
 
         struct HeapItem {
             bool isLeafRec;      // false: nodo interno/hoja; true: entrada objeto

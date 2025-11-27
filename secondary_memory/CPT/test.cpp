@@ -5,10 +5,6 @@
 
 using namespace std;
 
-// ============================================================
-// CONFIGURACIÓN DEL PAPER
-// ============================================================
-
 // Selectividades (MRQ)
 static const vector<double> SELECTIVITIES = {0.02, 0.04, 0.08, 0.16, 0.32};
 
@@ -22,10 +18,6 @@ static const vector<int> L_VALUES = {5};
 // static const vector<string> DATASETS = {"LA", "Words", "Color", "Synthetic"};
 static const vector<string> DATASETS = {"LA"};
 
-
-// ============================================================
-// Cargar pivots desde JSON (precomputed by HFI)
-// ============================================================
 
 vector<int> load_pivots_json(const string& path) {
     vector<int> piv;
@@ -53,9 +45,6 @@ vector<int> load_pivots_json(const string& path) {
     return piv;
 }
 
-// ============================================================
-// MAIN — EXPERIMENTACIÓN COMPLETA PARA CPT (memoria secundaria)
-// ============================================================
 int main(int argc, char** argv) {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
@@ -68,26 +57,20 @@ int main(int argc, char** argv) {
             datasets.push_back(argv[i]);
         }
     } else {
-        // Si no se pasa nada, usa el set por defecto
         datasets = DATASETS;
     }
 
-    // Crear carpeta de resultados
     std::filesystem::create_directories("results");
 
     for (const string &dataset : datasets) {
-        // ------------------------------------------------------------
         // 1. Resolver dataset físico
-        // ------------------------------------------------------------
         string dbfile = path_dataset(dataset);
         if (dbfile == "") {
             cerr << "[WARN] Dataset no encontrado: " << dataset << "\n";
             continue;
         }
 
-        // ------------------------------------------------------------
         // 2. Cargar dataset con su métrica
-        // ------------------------------------------------------------
         unique_ptr<ObjectDB> db;
 
         if (dataset == "LA") {
@@ -113,9 +96,7 @@ int main(int argc, char** argv) {
              << "   N=" << nObjects << "\n";
         cerr << "==========================================\n";
 
-        // ------------------------------------------------------------
         // 3. Cargar queries + radios
-        // ------------------------------------------------------------
         vector<int> queries = load_queries_file(path_queries(dataset));
         auto radii = load_radii_file(path_radii(dataset));
 
@@ -124,9 +105,7 @@ int main(int argc, char** argv) {
             continue;
         }
 
-        // ------------------------------------------------------------
         // 4. JSON Output
-        // ------------------------------------------------------------
         string jsonOut = "results/results_CPT_" + dataset + ".json";
         ofstream J(jsonOut);
         if (!J.is_open()) {
@@ -137,9 +116,7 @@ int main(int argc, char** argv) {
         J << "[\n";
         bool firstOutput = true;
 
-        // ------------------------------------------------------------
         // 5. Bucle sobre números de pivotes l
-        // ------------------------------------------------------------
         for (int l : L_VALUES) {
             // Cargar pivots HFI para este dataset y l
             string pivfile = path_pivots(dataset, l);
@@ -163,13 +140,9 @@ int main(int argc, char** argv) {
             cpt.overridePivots(pivots);
 
             // Construir layout de páginas desde el índice M-tree en disco.
-            // Se asume que ya existe <dataset>.mtree_index en el directorio actual
-            // (generado por tu mtree_test).
             cpt.buildFromMTree(dataset);
 
-            // =======================
             //  MRQ (Metric Range Query)
-            // =======================
             for (double sel : SELECTIVITIES) {
                 if (radii.find(sel) == radii.end())
                     continue;
@@ -216,9 +189,7 @@ int main(int argc, char** argv) {
                   << "}";
             }
 
-            // =======================
             //  MkNN
-            // =======================
             for (int k : K_VALUES) {
                 long long totalD = 0;
                 long long totalT = 0;

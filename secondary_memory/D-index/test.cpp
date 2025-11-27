@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
         J << "[\n";
         bool firstOutput = true;
 
-        const int    numLevels = 5;   // l=5 para índices en disco, como en Chen
+        const int    numLevels = 5;   // l=5 para índices en disco
         const double rho       = 5.0;
 
         cerr << "[BUILD] Construyendo D-index (l=" << numLevels
@@ -101,7 +101,6 @@ int main(int argc, char** argv) {
         dindex.build(allObjects, 42, hfiFile);
         cerr << "[BUILD] OK.\n";
 
-        // ============================ MRQ ===================================
         cerr << "\n[MRQ] Ejecutando selectividades.\n";
 
         for (double sel : SELECTIVITIES) {
@@ -113,7 +112,6 @@ int main(int argc, char** argv) {
             long long totalD = 0;
             long long totalP = 0;
 
-            // Medimos el TIEMPO del lote completo de queries
             auto start_all = chrono::high_resolution_clock::now();
 
             for (int q : queries) {
@@ -159,7 +157,6 @@ int main(int argc, char** argv) {
               << "}";
         }
 
-        // ============================ MkNN ==================================
         cerr << "\n[MkNN] Ejecutando valores de k.\n";
 
         for (int k : K_VALUES) {

@@ -1,0 +1,348 @@
+{
+  "MRQ": {
+    "pages": [
+      {
+        "index": "DIndex",
+        "value": 1.4615,
+        "rank": 1
+      },
+      {
+        "index": "LC",
+        "value": 5.8715,
+        "rank": 2
+      },
+      {
+        "index": "MIndex*",
+        "value": 7.073,
+        "rank": 3
+      },
+      {
+        "index": "EGNAT",
+        "value": 16.3475,
+        "rank": 4
+      },
+      {
+        "index": "OmniR-tree",
+        "value": 25.534,
+        "rank": 5
+      },
+      {
+        "index": "SPBTree",
+        "value": 43.373000000000005,
+        "rank": 6
+      },
+      {
+        "index": "MB+-tree",
+        "value": 47.2275,
+        "rank": 7
+      },
+      {
+        "index": "MTREE",
+        "value": 258.707,
+        "rank": 8
+      },
+      {
+        "index": "PMTREE",
+        "value": 266.298,
+        "rank": 9
+      },
+      {
+        "index": "DSACLT",
+        "value": 364.6775,
+        "rank": 10
+      },
+      {
+        "index": "CPT",
+        "value": 623.956,
+        "rank": 11
+      }
+    ],
+    "compdists": [
+      {
+        "index": "CPT",
+        "value": 1150.818,
+        "rank": 1
+      },
+      {
+        "index": "OmniR-tree",
+        "value": 1151.328,
+        "rank": 2
+      },
+      {
+        "index": "MIndex*",
+        "value": 1159.8535,
+        "rank": 3
+      },
+      {
+        "index": "SPBTree",
+        "value": 1159.8535,
+        "rank": 4
+      },
+      {
+        "index": "DSACLT",
+        "value": 1236.51,
+        "rank": 5
+      },
+      {
+        "index": "PMTREE",
+        "value": 1296.4505,
+        "rank": 6
+      },
+      {
+        "index": "MB+-tree",
+        "value": 1424.007,
+        "rank": 7
+      },
+      {
+        "index": "DIndex",
+        "value": 1428.5315,
+        "rank": 8
+      },
+      {
+        "index": "EGNAT",
+        "value": 1618.8039999999999,
+        "rank": 9
+      },
+      {
+        "index": "MTREE",
+        "value": 1650.4525,
+        "rank": 10
+      },
+      {
+        "index": "LC",
+        "value": 1869.366,
+        "rank": 11
+      }
+    ],
+    "time_ms": [
+      {
+        "index": "EGNAT",
+        "value": 0.23423,
+        "rank": 1
+      },
+      {
+        "index": "DSACLT",
+        "value": 0.2347245,
+        "rank": 2
+      },
+      {
+        "index": "PMTREE",
+        "value": 0.239793,
+        "rank": 3
+      },
+      {
+        "index": "CPT",
+        "value": 0.2399805,
+        "rank": 4
+      },
+      {
+        "index": "LC",
+        "value": 0.2459025,
+        "rank": 5
+      },
+      {
+        "index": "MB+-tree",
+        "value": 0.2693685,
+        "rank": 6
+      },
+      {
+        "index": "MTREE",
+        "value": 0.3828605,
+        "rank": 7
+      },
+      {
+        "index": "MIndex*",
+        "value": 0.4858015,
+        "rank": 8
+      },
+      {
+        "index": "SPBTree",
+        "value": 1.4422595,
+        "rank": 9
+      },
+      {
+        "index": "OmniR-tree",
+        "value": 4.579555,
+        "rank": 10
+      },
+      {
+        "index": "DIndex",
+        "value": 5.22190225,
+        "rank": 11
+      }
+    ]
+  },
+  "MkNN": {
+    "pages": [
+      {
+        "index": "DIndex",
+        "value": 1.31,
+        "rank": 1
+      },
+      {
+        "index": "MIndex*",
+        "value": 4.111,
+        "rank": 2
+      },
+      {
+        "index": "LC",
+        "value": 5.9575000000000005,
+        "rank": 3
+      },
+      {
+        "index": "SPBTree",
+        "value": 6.445,
+        "rank": 4
+      },
+      {
+        "index": "OmniR-tree",
+        "value": 14.839500000000001,
+        "rank": 5
+      },
+      {
+        "index": "EGNAT",
+        "value": 18.040499999999998,
+        "rank": 6
+      },
+      {
+        "index": "MB+-tree",
+        "value": 39.562,
+        "rank": 7
+      },
+      {
+        "index": "MTREE",
+        "value": 71.0095,
+        "rank": 8
+      },
+      {
+        "index": "PMTREE",
+        "value": 81.1935,
+        "rank": 9
+      },
+      {
+        "index": "DSACLT",
+        "value": 159.0915,
+        "rank": 10
+      },
+      {
+        "index": "CPT",
+        "value": 431.9955,
+        "rank": 11
+      }
+    ],
+    "compdists": [
+      {
+        "index": "OmniR-tree",
+        "value": 42.0,
+        "rank": 1
+      },
+      {
+        "index": "SPBTree",
+        "value": 179.232,
+        "rank": 2
+      },
+      {
+        "index": "CPT",
+        "value": 879.03,
+        "rank": 3
+      },
+      {
+        "index": "MIndex*",
+        "value": 921.5975000000001,
+        "rank": 4
+      },
+      {
+        "index": "DSACLT",
+        "value": 984.359,
+        "rank": 5
+      },
+      {
+        "index": "PMTREE",
+        "value": 1267.116,
+        "rank": 6
+      },
+      {
+        "index": "MTREE",
+        "value": 1359.6855,
+        "rank": 7
+      },
+      {
+        "index": "EGNAT",
+        "value": 1616.926,
+        "rank": 8
+      },
+      {
+        "index": "DIndex",
+        "value": 1708.6885000000002,
+        "rank": 9
+      },
+      {
+        "index": "MB+-tree",
+        "value": 1737.266,
+        "rank": 10
+      },
+      {
+        "index": "LC",
+        "value": 1959.1050000000002,
+        "rank": 11
+      }
+    ],
+    "time_ms": [
+      {
+        "index": "OmniR-tree",
+        "value": 0.167334,
+        "rank": 1
+      },
+      {
+        "index": "CPT",
+        "value": 0.2337185,
+        "rank": 2
+      },
+      {
+        "index": "PMTREE",
+        "value": 0.25444900000000004,
+        "rank": 3
+      },
+      {
+        "index": "EGNAT",
+        "value": 0.2569745,
+        "rank": 4
+      },
+      {
+        "index": "DSACLT",
+        "value": 0.27194799999999997,
+        "rank": 5
+      },
+      {
+        "index": "LC",
+        "value": 0.28369649999999996,
+        "rank": 6
+      },
+      {
+        "index": "SPBTree",
+        "value": 0.285285,
+        "rank": 7
+      },
+      {
+        "index": "MIndex*",
+        "value": 0.294402,
+        "rank": 8
+      },
+      {
+        "index": "MTREE",
+        "value": 0.35050749999999997,
+        "rank": 9
+      },
+      {
+        "index": "MB+-tree",
+        "value": 0.41281799999999996,
+        "rank": 10
+      },
+      {
+        "index": "DIndex",
+        "value": 6.288997350000001,
+        "rank": 11
+      }
+    ]
+  }
+}

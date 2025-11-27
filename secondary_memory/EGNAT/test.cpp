@@ -1,5 +1,5 @@
 #include <bits/stdc++.h>
-#include "egnat.hpp"                // tu EGNAT_Disk corregido
+#include "egnat.hpp"                
 #include "../../objectdb.hpp"
 #include "../../datasets/paths.hpp"
 
@@ -82,9 +82,7 @@ int main(int argc, char** argv) {
         // ---- Build físico ----
         egn.build(base);        // crea base.egn_index + base.egn_leaf
 
-        // ===================================================================
         // MRQ
-        // ===================================================================
         for (double sel : SELECTIVITIES) {
             if (!radii.count(sel)) continue;
 
@@ -128,9 +126,7 @@ int main(int argc, char** argv) {
               << "}";
         }
 
-        // ===================================================================
         // MkNN
-        // ===================================================================
         for (int k : K_VALUES) {
             long long totalD = 0, totalT = 0, totalPages = 0;
 

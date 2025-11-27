@@ -9,12 +9,10 @@ using namespace std;
 static const vector<double> SELECTIVITIES = {0.02, 0.04, 0.08, 0.16, 0.32};
 static const vector<int>    K_VALUES      = {5, 10, 20, 50, 100};
 
-// Para memoria secundaria, Chen fija l = 5 pivotes
+// Para memoria secundaria
 static const int NUM_PIVOTS_DISK = 5;
 
-// ------------------------------------------------------------
 // Autodetección 0-based / 1-based para IDs (igual que en otros tests)
-// ------------------------------------------------------------
 vector<int> auto_fix_ids(const vector<int> &ids, int nObjects) {
     if (ids.empty()) return ids;
 
@@ -31,7 +29,7 @@ vector<int> auto_fix_ids(const vector<int> &ids, int nObjects) {
         return ids;
     }
 
-    // Caso B: parecen 1-based → convertir todo a 0-based
+    // Caso B: parecen 1-based -> convertir todo a 0-based
     if (!hasZero) {
         vector<int> fixed;
         fixed.reserve(ids.size());
@@ -39,7 +37,7 @@ vector<int> auto_fix_ids(const vector<int> &ids, int nObjects) {
         return fixed;
     }
 
-    // Caso C: mezcla rara → corregir solo los que estén en 1..N
+    // Caso C: mezcla rara -> corregir solo los que estén en 1..N
     vector<int> fixed;
     fixed.reserve(ids.size());
     for (int v : ids) {
@@ -49,9 +47,7 @@ vector<int> auto_fix_ids(const vector<int> &ids, int nObjects) {
     return fixed;
 }
 
-// ------------------------------------------------------------
 // Cargar pivotes HFI desde JSON (mismo parser que en otros tests)
-// ------------------------------------------------------------
 vector<int> load_pivots_json(const string& path) {
     vector<int> piv;
 
@@ -75,9 +71,7 @@ vector<int> load_pivots_json(const string& path) {
     return piv;
 }
 
-// ------------------------------------------------------------
 // Test para un dataset (MIndex* en memoria secundaria, l=5 fijo)
-// ------------------------------------------------------------
 void test_dataset(const string& dataset) {
     cout << "\n\n";
     cout << "##########################################\n";
@@ -133,9 +127,7 @@ void test_dataset(const string& dataset) {
     auto t0 = chrono::high_resolution_clock::now();
     auto t1 = chrono::high_resolution_clock::now();
 
-    // ==========================================================
     // Cargar pivotes HFI para P = 5 (memoria secundaria)
-    // ==========================================================
     cout << "\n[BUILD] Construyendo índice M-Index* (P=5 fijo)...\n";
 
     string pivPath = path_pivots(dataset, NUM_PIVOTS_DISK);
@@ -162,9 +154,6 @@ void test_dataset(const string& dataset) {
 
     cout << "[BUILD] Tiempo: " << buildTime << " ms\n";
 
-    // ===================================================================
-    // EXPERIMENTO MRQ: variar selectividad (P=5 fijo)
-    // ===================================================================
     cout << "\n[EXP MRQ] Variando SELECTIVIDAD (P=5 fijo)\n";
 
     for (double selectivity : SELECTIVITIES) {
@@ -220,9 +209,7 @@ void test_dataset(const string& dataset) {
         cout << " OK (" << (int)avgD << " compdists)\n";
     }
 
-    // ===================================================================
     // EXPERIMENTO MkNN: variar k (P=5 fijo)
-    // ===================================================================
     cout << "\n[EXP MkNN] Variando K (P=5 fijo)\n";
 
     for (int k : K_VALUES) {
