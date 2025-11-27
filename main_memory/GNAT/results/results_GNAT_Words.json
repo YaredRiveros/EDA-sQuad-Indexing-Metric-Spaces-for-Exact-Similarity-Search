@@ -12,7 +12,7 @@
     "radius": 620,
     "k": 5,
     "compdists": 1987.16,
-    "time_ms": 0.76,
+    "time_ms": 0.77,
     "n_queries": 100,
     "run_id": "GNAT_Words_H3_k5"
   },
@@ -29,7 +29,7 @@
     "radius": 668,
     "k": 10,
     "compdists": 1992.74,
-    "time_ms": 0.77,
+    "time_ms": 0.79,
     "n_queries": 100,
     "run_id": "GNAT_Words_H3_k10"
   },
@@ -46,7 +46,7 @@
     "radius": 711,
     "k": 20,
     "compdists": 1995.25,
-    "time_ms": 0.76,
+    "time_ms": 0.79,
     "n_queries": 100,
     "run_id": "GNAT_Words_H3_k20"
   },
@@ -63,7 +63,7 @@
     "radius": 767,
     "k": 50,
     "compdists": 1996.83,
-    "time_ms": 0.76,
+    "time_ms": 0.8,
     "n_queries": 100,
     "run_id": "GNAT_Words_H3_k50"
   },
@@ -80,7 +80,7 @@
     "radius": 814,
     "k": 100,
     "compdists": 1998.25,
-    "time_ms": 0.76,
+    "time_ms": 0.8,
     "n_queries": 100,
     "run_id": "GNAT_Words_H3_k100"
   },
@@ -97,7 +97,7 @@
     "radius": 9.75,
     "k": null,
     "compdists": 1970.75,
-    "time_ms": 0.74,
+    "time_ms": 0.76,
     "n_queries": 100,
     "run_id": "GNAT_Words_H3_sel0.32"
   },
@@ -114,7 +114,7 @@
     "radius": 9.02,
     "k": null,
     "compdists": 1970.75,
-    "time_ms": 0.74,
+    "time_ms": 0.75,
     "n_queries": 100,
     "run_id": "GNAT_Words_H3_sel0.16"
   },
@@ -131,7 +131,7 @@
     "radius": 8.4,
     "k": null,
     "compdists": 1962.35,
-    "time_ms": 0.73,
+    "time_ms": 0.74,
     "n_queries": 100,
     "run_id": "GNAT_Words_H3_sel0.08"
   },
@@ -199,7 +199,7 @@
     "radius": 668,
     "k": 10,
     "compdists": 1973.74,
-    "time_ms": 0.76,
+    "time_ms": 0.77,
     "n_queries": 100,
     "run_id": "GNAT_Words_H5_k10"
   },
@@ -216,7 +216,7 @@
     "radius": 711,
     "k": 20,
     "compdists": 1985.16,
-    "time_ms": 0.77,
+    "time_ms": 0.78,
     "n_queries": 100,
     "run_id": "GNAT_Words_H5_k20"
   },
@@ -267,7 +267,7 @@
     "radius": 9.75,
     "k": null,
     "compdists": 1917.69,
-    "time_ms": 0.74,
+    "time_ms": 0.75,
     "n_queries": 100,
     "run_id": "GNAT_Words_H5_sel0.32"
   },
@@ -284,7 +284,7 @@
     "radius": 9.02,
     "k": null,
     "compdists": 1917.69,
-    "time_ms": 0.74,
+    "time_ms": 0.75,
     "n_queries": 100,
     "run_id": "GNAT_Words_H5_sel0.16"
   },
@@ -301,7 +301,7 @@
     "radius": 8.4,
     "k": null,
     "compdists": 1887.98,
-    "time_ms": 0.72,
+    "time_ms": 0.73,
     "n_queries": 100,
     "run_id": "GNAT_Words_H5_sel0.08"
   },
@@ -318,7 +318,7 @@
     "radius": 7.98,
     "k": null,
     "compdists": 1850.27,
-    "time_ms": 0.71,
+    "time_ms": 0.72,
     "n_queries": 100,
     "run_id": "GNAT_Words_H5_sel0.04"
   },
@@ -352,7 +352,7 @@
     "radius": 620,
     "k": 5,
     "compdists": 1927.94,
-    "time_ms": 0.77,
+    "time_ms": 0.82,
     "n_queries": 100,
     "run_id": "GNAT_Words_H10_k5"
   },
@@ -369,7 +369,7 @@
     "radius": 668,
     "k": 10,
     "compdists": 1954.03,
-    "time_ms": 0.78,
+    "time_ms": 0.83,
     "n_queries": 100,
     "run_id": "GNAT_Words_H10_k10"
   },
@@ -386,7 +386,7 @@
     "radius": 711,
     "k": 20,
     "compdists": 1973.31,
-    "time_ms": 0.79,
+    "time_ms": 0.81,
     "n_queries": 100,
     "run_id": "GNAT_Words_H10_k20"
   },
@@ -403,7 +403,7 @@
     "radius": 767,
     "k": 50,
     "compdists": 1984.48,
-    "time_ms": 0.8,
+    "time_ms": 0.81,
     "n_queries": 100,
     "run_id": "GNAT_Words_H10_k50"
   },
@@ -420,7 +420,7 @@
     "radius": 814,
     "k": 100,
     "compdists": 1991.28,
-    "time_ms": 0.8,
+    "time_ms": 0.81,
     "n_queries": 100,
     "run_id": "GNAT_Words_H10_k100"
   },
@@ -437,7 +437,7 @@
     "radius": 9.75,
     "k": null,
     "compdists": 1906.58,
-    "time_ms": 0.73,
+    "time_ms": 0.74,
     "n_queries": 100,
     "run_id": "GNAT_Words_H10_sel0.32"
   },
@@ -454,7 +454,7 @@
     "radius": 9.02,
     "k": null,
     "compdists": 1906.58,
-    "time_ms": 0.73,
+    "time_ms": 0.75,
     "n_queries": 100,
     "run_id": "GNAT_Words_H10_sel0.16"
   },
@@ -471,7 +471,7 @@
     "radius": 8.4,
     "k": null,
     "compdists": 1870.28,
-    "time_ms": 0.72,
+    "time_ms": 0.73,
     "n_queries": 100,
     "run_id": "GNAT_Words_H10_sel0.08"
   },
@@ -488,7 +488,7 @@
     "radius": 7.98,
     "k": null,
     "compdists": 1826.31,
-    "time_ms": 0.7,
+    "time_ms": 0.71,
     "n_queries": 100,
     "run_id": "GNAT_Words_H10_sel0.04"
   },
@@ -539,7 +539,7 @@
     "radius": 668,
     "k": 10,
     "compdists": 1954.03,
-    "time_ms": 0.79,
+    "time_ms": 0.8,
     "n_queries": 100,
     "run_id": "GNAT_Words_H15_k10"
   },
@@ -556,7 +556,7 @@
     "radius": 711,
     "k": 20,
     "compdists": 1973.31,
-    "time_ms": 0.79,
+    "time_ms": 0.81,
     "n_queries": 100,
     "run_id": "GNAT_Words_H15_k20"
   },
@@ -573,7 +573,7 @@
     "radius": 767,
     "k": 50,
     "compdists": 1984.48,
-    "time_ms": 0.8,
+    "time_ms": 0.81,
     "n_queries": 100,
     "run_id": "GNAT_Words_H15_k50"
   },
@@ -607,7 +607,7 @@
     "radius": 9.75,
     "k": null,
     "compdists": 1906.58,
-    "time_ms": 0.74,
+    "time_ms": 0.75,
     "n_queries": 100,
     "run_id": "GNAT_Words_H15_sel0.32"
   },
@@ -641,7 +641,7 @@
     "radius": 8.4,
     "k": null,
     "compdists": 1870.28,
-    "time_ms": 0.72,
+    "time_ms": 0.73,
     "n_queries": 100,
     "run_id": "GNAT_Words_H15_sel0.08"
   },
@@ -658,7 +658,7 @@
     "radius": 7.98,
     "k": null,
     "compdists": 1826.31,
-    "time_ms": 0.71,
+    "time_ms": 0.7,
     "n_queries": 100,
     "run_id": "GNAT_Words_H15_sel0.04"
   },
@@ -726,7 +726,7 @@
     "radius": 711,
     "k": 20,
     "compdists": 1973.31,
-    "time_ms": 0.79,
+    "time_ms": 0.8,
     "n_queries": 100,
     "run_id": "GNAT_Words_H20_k20"
   },
@@ -777,7 +777,7 @@
     "radius": 9.75,
     "k": null,
     "compdists": 1906.58,
-    "time_ms": 0.73,
+    "time_ms": 0.74,
     "n_queries": 100,
     "run_id": "GNAT_Words_H20_sel0.32"
   },

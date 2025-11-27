@@ -63,7 +63,7 @@
     "radius": 51913.4,
     "k": 50,
     "compdists": 302.5,
-    "time_ms": 0,
+    "time_ms": 0.01,
     "n_queries": 100,
     "run_id": "GNAT_LA_H3_k50"
   },
@@ -80,7 +80,7 @@
     "radius": 80955.3,
     "k": 100,
     "compdists": 454.48,
-    "time_ms": 0,
+    "time_ms": 0.01,
     "n_queries": 100,
     "run_id": "GNAT_LA_H3_k100"
   },
@@ -97,7 +97,7 @@
     "radius": 2431.3,
     "k": null,
     "compdists": 1127.05,
-    "time_ms": 0,
+    "time_ms": 0.01,
     "n_queries": 100,
     "run_id": "GNAT_LA_H3_sel0.32"
   },
@@ -250,7 +250,7 @@
     "radius": 80955.3,
     "k": 100,
     "compdists": 207.15,
-    "time_ms": 0,
+    "time_ms": 0.01,
     "n_queries": 100,
     "run_id": "GNAT_LA_H5_k100"
   },
@@ -267,7 +267,7 @@
     "radius": 2431.3,
     "k": null,
     "compdists": 837.09,
-    "time_ms": 0,
+    "time_ms": 0.01,
     "n_queries": 100,
     "run_id": "GNAT_LA_H5_sel0.32"
   },
@@ -284,7 +284,7 @@
     "radius": 1692,
     "k": null,
     "compdists": 624.05,
-    "time_ms": 0,
+    "time_ms": 0.01,
     "n_queries": 100,
     "run_id": "GNAT_LA_H5_sel0.16"
   },
@@ -420,7 +420,7 @@
     "radius": 80955.3,
     "k": 100,
     "compdists": 207.15,
-    "time_ms": 0,
+    "time_ms": 0.01,
     "n_queries": 100,
     "run_id": "GNAT_LA_H10_k100"
   },
@@ -437,7 +437,7 @@
     "radius": 2431.3,
     "k": null,
     "compdists": 837.09,
-    "time_ms": 0.01,
+    "time_ms": 0.02,
     "n_queries": 100,
     "run_id": "GNAT_LA_H10_sel0.32"
   },
@@ -454,7 +454,7 @@
     "radius": 1692,
     "k": null,
     "compdists": 624.05,
-    "time_ms": 0,
+    "time_ms": 0.01,
     "n_queries": 100,
     "run_id": "GNAT_LA_H10_sel0.16"
   },
@@ -471,7 +471,7 @@
     "radius": 1121.13,
     "k": null,
     "compdists": 433.18,
-    "time_ms": 0,
+    "time_ms": 0.01,
     "n_queries": 100,
     "run_id": "GNAT_LA_H10_sel0.08"
   },
@@ -590,7 +590,7 @@
     "radius": 80955.3,
     "k": 100,
     "compdists": 207.15,
-    "time_ms": 0,
+    "time_ms": 0.01,
     "n_queries": 100,
     "run_id": "GNAT_LA_H15_k100"
   },
@@ -607,7 +607,7 @@
     "radius": 2431.3,
     "k": null,
     "compdists": 837.09,
-    "time_ms": 0.01,
+    "time_ms": 0.02,
     "n_queries": 100,
     "run_id": "GNAT_LA_H15_sel0.32"
   },
@@ -624,7 +624,7 @@
     "radius": 1692,
     "k": null,
     "compdists": 624.05,
-    "time_ms": 0,
+    "time_ms": 0.01,
     "n_queries": 100,
     "run_id": "GNAT_LA_H15_sel0.16"
   },
@@ -641,7 +641,7 @@
     "radius": 1121.13,
     "k": null,
     "compdists": 433.18,
-    "time_ms": 0,
+    "time_ms": 0.01,
     "n_queries": 100,
     "run_id": "GNAT_LA_H15_sel0.08"
   },
@@ -760,7 +760,7 @@
     "radius": 80955.3,
     "k": 100,
     "compdists": 207.15,
-    "time_ms": 0,
+    "time_ms": 0.01,
     "n_queries": 100,
     "run_id": "GNAT_LA_H20_k100"
   },
@@ -777,7 +777,7 @@
     "radius": 2431.3,
     "k": null,
     "compdists": 837.09,
-    "time_ms": 0.01,
+    "time_ms": 0.02,
     "n_queries": 100,
     "run_id": "GNAT_LA_H20_sel0.32"
   },
@@ -794,7 +794,7 @@
     "radius": 1692,
     "k": null,
     "compdists": 624.05,
-    "time_ms": 0,
+    "time_ms": 0.01,
     "n_queries": 100,
     "run_id": "GNAT_LA_H20_sel0.16"
   },
@@ -811,7 +811,7 @@
     "radius": 1121.13,
     "k": null,
     "compdists": 433.18,
-    "time_ms": 0,
+    "time_ms": 0.01,
     "n_queries": 100,
     "run_id": "GNAT_LA_H20_sel0.08"
   },

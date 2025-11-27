@@ -12,7 +12,7 @@
     "radius": 299987,
     "k": 5,
     "compdists": 1737.52,
-    "time_ms": 0.35,
+    "time_ms": 0.39,
     "n_queries": 100,
     "run_id": "GNAT_Color_H3_k5"
   },
@@ -29,7 +29,7 @@
     "radius": 321521,
     "k": 10,
     "compdists": 1770.44,
-    "time_ms": 0.36,
+    "time_ms": 0.42,
     "n_queries": 100,
     "run_id": "GNAT_Color_H3_k10"
   },
@@ -46,7 +46,7 @@
     "radius": 344910,
     "k": 20,
     "compdists": 1817.43,
-    "time_ms": 0.36,
+    "time_ms": 0.5,
     "n_queries": 100,
     "run_id": "GNAT_Color_H3_k20"
   },
@@ -63,7 +63,7 @@
     "radius": 383032,
     "k": 50,
     "compdists": 1872.51,
-    "time_ms": 0.38,
+    "time_ms": 0.41,
     "n_queries": 100,
     "run_id": "GNAT_Color_H3_k50"
   },
@@ -80,7 +80,7 @@
     "radius": 423602,
     "k": 100,
     "compdists": 1912.51,
-    "time_ms": 0.38,
+    "time_ms": 0.54,
     "n_queries": 100,
     "run_id": "GNAT_Color_H3_k100"
   },
@@ -97,7 +97,7 @@
     "radius": 5702.49,
     "k": null,
     "compdists": 1940.75,
-    "time_ms": 0.38,
+    "time_ms": 0.62,
     "n_queries": 100,
     "run_id": "GNAT_Color_H3_sel0.32"
   },
@@ -114,7 +114,7 @@
     "radius": 5018.28,
     "k": null,
     "compdists": 1910.69,
-    "time_ms": 0.37,
+    "time_ms": 0.57,
     "n_queries": 100,
     "run_id": "GNAT_Color_H3_sel0.16"
   },
@@ -131,7 +131,7 @@
     "radius": 4519.71,
     "k": null,
     "compdists": 1872.87,
-    "time_ms": 0.37,
+    "time_ms": 0.56,
     "n_queries": 100,
     "run_id": "GNAT_Color_H3_sel0.08"
   },
@@ -148,7 +148,7 @@
     "radius": 4110.87,
     "k": null,
     "compdists": 1839.75,
-    "time_ms": 0.36,
+    "time_ms": 0.55,
     "n_queries": 100,
     "run_id": "GNAT_Color_H3_sel0.04"
   },
@@ -165,7 +165,7 @@
     "radius": 3729.37,
     "k": null,
     "compdists": 1808.21,
-    "time_ms": 0.35,
+    "time_ms": 0.53,
     "n_queries": 100,
     "run_id": "GNAT_Color_H3_sel0.02"
   },
@@ -182,7 +182,7 @@
     "radius": 299987,
     "k": 5,
     "compdists": 1330.85,
-    "time_ms": 0.28,
+    "time_ms": 0.39,
     "n_queries": 100,
     "run_id": "GNAT_Color_H5_k5"
   },
@@ -199,7 +199,7 @@
     "radius": 321521,
     "k": 10,
     "compdists": 1398.45,
-    "time_ms": 0.29,
+    "time_ms": 0.33,
     "n_queries": 100,
     "run_id": "GNAT_Color_H5_k10"
   },
@@ -216,7 +216,7 @@
     "radius": 344910,
     "k": 20,
     "compdists": 1472.14,
-    "time_ms": 0.31,
+    "time_ms": 0.39,
     "n_queries": 100,
     "run_id": "GNAT_Color_H5_k20"
   },
@@ -233,7 +233,7 @@
     "radius": 383032,
     "k": 50,
     "compdists": 1592.26,
-    "time_ms": 0.34,
+    "time_ms": 0.38,
     "n_queries": 100,
     "run_id": "GNAT_Color_H5_k50"
   },
@@ -250,7 +250,7 @@
     "radius": 423602,
     "k": 100,
     "compdists": 1691.77,
-    "time_ms": 0.38,
+    "time_ms": 0.49,
     "n_queries": 100,
     "run_id": "GNAT_Color_H5_k100"
   },
@@ -267,7 +267,7 @@
     "radius": 5702.49,
     "k": null,
     "compdists": 1814.1,
-    "time_ms": 0.37,
+    "time_ms": 0.43,
     "n_queries": 100,
     "run_id": "GNAT_Color_H5_sel0.32"
   },
@@ -284,7 +284,7 @@
     "radius": 5018.28,
     "k": null,
     "compdists": 1735.16,
-    "time_ms": 0.36,
+    "time_ms": 0.41,
     "n_queries": 100,
     "run_id": "GNAT_Color_H5_sel0.16"
   },
@@ -301,7 +301,7 @@
     "radius": 4519.71,
     "k": null,
     "compdists": 1652.77,
-    "time_ms": 0.35,
+    "time_ms": 0.42,
     "n_queries": 100,
     "run_id": "GNAT_Color_H5_sel0.08"
   },
@@ -318,7 +318,7 @@
     "radius": 4110.87,
     "k": null,
     "compdists": 1565.94,
-    "time_ms": 0.33,
+    "time_ms": 0.44,
     "n_queries": 100,
     "run_id": "GNAT_Color_H5_sel0.04"
   },
@@ -335,7 +335,7 @@
     "radius": 3729.37,
     "k": null,
     "compdists": 1470.73,
-    "time_ms": 0.3,
+    "time_ms": 0.41,
     "n_queries": 100,
     "run_id": "GNAT_Color_H5_sel0.02"
   },
@@ -352,7 +352,7 @@
     "radius": 299987,
     "k": 5,
     "compdists": 1330.85,
-    "time_ms": 0.29,
+    "time_ms": 0.36,
     "n_queries": 100,
     "run_id": "GNAT_Color_H10_k5"
   },
@@ -369,7 +369,7 @@
     "radius": 321521,
     "k": 10,
     "compdists": 1398.45,
-    "time_ms": 0.3,
+    "time_ms": 0.31,
     "n_queries": 100,
     "run_id": "GNAT_Color_H10_k10"
   },
@@ -386,7 +386,7 @@
     "radius": 344910,
     "k": 20,
     "compdists": 1472.14,
-    "time_ms": 0.31,
+    "time_ms": 0.33,
     "n_queries": 100,
     "run_id": "GNAT_Color_H10_k20"
   },
@@ -420,7 +420,7 @@
     "radius": 423602,
     "k": 100,
     "compdists": 1691.77,
-    "time_ms": 0.37,
+    "time_ms": 0.39,
     "n_queries": 100,
     "run_id": "GNAT_Color_H10_k100"
   },
@@ -437,7 +437,7 @@
     "radius": 5702.49,
     "k": null,
     "compdists": 1814.1,
-    "time_ms": 0.39,
+    "time_ms": 0.4,
     "n_queries": 100,
     "run_id": "GNAT_Color_H10_sel0.32"
   },
@@ -454,7 +454,7 @@
     "radius": 5018.28,
     "k": null,
     "compdists": 1735.16,
-    "time_ms": 0.37,
+    "time_ms": 0.38,
     "n_queries": 100,
     "run_id": "GNAT_Color_H10_sel0.16"
   },
@@ -471,7 +471,7 @@
     "radius": 4519.71,
     "k": null,
     "compdists": 1652.77,
-    "time_ms": 0.35,
+    "time_ms": 0.36,
     "n_queries": 100,
     "run_id": "GNAT_Color_H10_sel0.08"
   },
@@ -488,7 +488,7 @@
     "radius": 4110.87,
     "k": null,
     "compdists": 1565.94,
-    "time_ms": 0.33,
+    "time_ms": 0.35,
     "n_queries": 100,
     "run_id": "GNAT_Color_H10_sel0.04"
   },
@@ -505,7 +505,7 @@
     "radius": 3729.37,
     "k": null,
     "compdists": 1470.73,
-    "time_ms": 0.31,
+    "time_ms": 0.32,
     "n_queries": 100,
     "run_id": "GNAT_Color_H10_sel0.02"
   },
@@ -556,7 +556,7 @@
     "radius": 344910,
     "k": 20,
     "compdists": 1472.14,
-    "time_ms": 0.32,
+    "time_ms": 0.31,
     "n_queries": 100,
     "run_id": "GNAT_Color_H15_k20"
   },
@@ -573,7 +573,7 @@
     "radius": 383032,
     "k": 50,
     "compdists": 1592.26,
-    "time_ms": 0.34,
+    "time_ms": 0.35,
     "n_queries": 100,
     "run_id": "GNAT_Color_H15_k50"
   },
@@ -590,7 +590,7 @@
     "radius": 423602,
     "k": 100,
     "compdists": 1691.77,
-    "time_ms": 0.36,
+    "time_ms": 0.37,
     "n_queries": 100,
     "run_id": "GNAT_Color_H15_k100"
   },
@@ -624,7 +624,7 @@
     "radius": 5018.28,
     "k": null,
     "compdists": 1735.16,
-    "time_ms": 0.37,
+    "time_ms": 0.38,
     "n_queries": 100,
     "run_id": "GNAT_Color_H15_sel0.16"
   },
@@ -641,7 +641,7 @@
     "radius": 4519.71,
     "k": null,
     "compdists": 1652.77,
-    "time_ms": 0.36,
+    "time_ms": 0.37,
     "n_queries": 100,
     "run_id": "GNAT_Color_H15_sel0.08"
   },
@@ -658,7 +658,7 @@
     "radius": 4110.87,
     "k": null,
     "compdists": 1565.94,
-    "time_ms": 0.33,
+    "time_ms": 0.35,
     "n_queries": 100,
     "run_id": "GNAT_Color_H15_sel0.04"
   },
@@ -675,7 +675,7 @@
     "radius": 3729.37,
     "k": null,
     "compdists": 1470.73,
-    "time_ms": 0.31,
+    "time_ms": 0.34,
     "n_queries": 100,
     "run_id": "GNAT_Color_H15_sel0.02"
   },
@@ -692,7 +692,7 @@
     "radius": 299987,
     "k": 5,
     "compdists": 1330.85,
-    "time_ms": 0.28,
+    "time_ms": 0.29,
     "n_queries": 100,
     "run_id": "GNAT_Color_H20_k5"
   },
@@ -709,7 +709,7 @@
     "radius": 321521,
     "k": 10,
     "compdists": 1398.45,
-    "time_ms": 0.3,
+    "time_ms": 0.31,
     "n_queries": 100,
     "run_id": "GNAT_Color_H20_k10"
   },
@@ -811,7 +811,7 @@
     "radius": 4519.71,
     "k": null,
     "compdists": 1652.77,
-    "time_ms": 0.36,
+    "time_ms": 0.35,
     "n_queries": 100,
     "run_id": "GNAT_Color_H20_sel0.08"
   },
@@ -845,7 +845,7 @@
     "radius": 3729.37,
     "k": null,
     "compdists": 1470.73,
-    "time_ms": 0.31,
+    "time_ms": 0.32,
     "n_queries": 100,
     "run_id": "GNAT_Color_H20_sel0.02"
   }

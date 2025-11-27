@@ -14,7 +14,7 @@ Núcleo(s) por «socket»:                  8
 «Socket(s)»                              1
 Revisión:                                1
 Frequency boost:                         enabled
-CPU(s) scaling MHz:                      51%
+CPU(s) scaling MHz:                      40%
 CPU MHz máx.:                            4830,0000
 CPU MHz mín.:                            400,0000
 BogoMIPS:                                6388,19
@@ -45,7 +45,7 @@ Vulnerability Tsa:                       Vulnerable: Clear CPU buffers attempted
 Vulnerability Tsx async abort:           Not affected
 Vulnerability Vmscape:                   Mitigation; IBPB before exit to userspace
 
-Start time: lun 24 nov 2025 18:19:49 -05
-Dataset: Words
+Start time: lun 24 nov 2025 19:37:34 -05
+Dataset: Color
 
-End time: lun 24 nov 2025 18:20:39 -05
+End time: lun 24 nov 2025 19:38:08 -05

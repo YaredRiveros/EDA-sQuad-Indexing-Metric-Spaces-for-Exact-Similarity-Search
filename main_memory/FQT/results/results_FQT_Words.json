@@ -12,7 +12,7 @@
     "radius": 6.2,
     "k": 5,
     "compdists": 1780.22,
-    "time_ms": 0.55,
+    "time_ms": 0.54,
     "n_queries": 100,
     "run_id": "FQT_Words_b200_a4_k5"
   },
@@ -29,7 +29,7 @@
     "radius": 6.69,
     "k": 10,
     "compdists": 1827.86,
-    "time_ms": 0.55,
+    "time_ms": 0.56,
     "n_queries": 100,
     "run_id": "FQT_Words_b200_a4_k10"
   },
@@ -63,7 +63,7 @@
     "radius": 7.67,
     "k": 50,
     "compdists": 1909.99,
-    "time_ms": 0.95,
+    "time_ms": 0.96,
     "n_queries": 100,
     "run_id": "FQT_Words_b200_a4_k50"
   },
@@ -148,7 +148,7 @@
     "radius": 7.98,
     "k": null,
     "compdists": 1956.17,
-    "time_ms": 0.54,
+    "time_ms": 0.55,
     "n_queries": 100,
     "run_id": "FQT_Words_b200_a4_sel0.04"
   },
@@ -182,7 +182,7 @@
     "radius": 6.2,
     "k": 5,
     "compdists": 1794.14,
-    "time_ms": 0.54,
+    "time_ms": 0.55,
     "n_queries": 100,
     "run_id": "FQT_Words_b100_a4_k5"
   },
@@ -216,7 +216,7 @@
     "radius": 7.11,
     "k": 20,
     "compdists": 1899.66,
-    "time_ms": 0.66,
+    "time_ms": 0.67,
     "n_queries": 100,
     "run_id": "FQT_Words_b100_a4_k20"
   },
@@ -267,7 +267,7 @@
     "radius": 9.75,
     "k": null,
     "compdists": 1968.16,
-    "time_ms": 0.55,
+    "time_ms": 0.56,
     "n_queries": 100,
     "run_id": "FQT_Words_b100_a4_sel0.32"
   },
@@ -284,7 +284,7 @@
     "radius": 9.02,
     "k": null,
     "compdists": 1956.31,
-    "time_ms": 0.54,
+    "time_ms": 0.55,
     "n_queries": 100,
     "run_id": "FQT_Words_b100_a4_sel0.16"
   },
@@ -301,7 +301,7 @@
     "radius": 8.4,
     "k": null,
     "compdists": 1934.16,
-    "time_ms": 0.53,
+    "time_ms": 0.54,
     "n_queries": 100,
     "run_id": "FQT_Words_b100_a4_sel0.08"
   },
@@ -318,7 +318,7 @@
     "radius": 7.98,
     "k": null,
     "compdists": 1917.72,
-    "time_ms": 0.52,
+    "time_ms": 0.53,
     "n_queries": 100,
     "run_id": "FQT_Words_b100_a4_sel0.04"
   },
@@ -335,7 +335,7 @@
     "radius": 7.59,
     "k": null,
     "compdists": 1914.8,
-    "time_ms": 0.52,
+    "time_ms": 0.53,
     "n_queries": 100,
     "run_id": "FQT_Words_b100_a4_sel0.02"
   },
@@ -369,7 +369,7 @@
     "radius": 6.68,
     "k": 10,
     "compdists": 1672.04,
-    "time_ms": 0.51,
+    "time_ms": 0.52,
     "n_queries": 100,
     "run_id": "FQT_Words_b50_a4_k10"
   },
@@ -386,7 +386,7 @@
     "radius": 7.13,
     "k": 20,
     "compdists": 1776.74,
-    "time_ms": 0.62,
+    "time_ms": 0.63,
     "n_queries": 100,
     "run_id": "FQT_Words_b50_a4_k20"
   },
@@ -403,7 +403,7 @@
     "radius": 7.67,
     "k": 50,
     "compdists": 1827.61,
-    "time_ms": 0.92,
+    "time_ms": 0.94,
     "n_queries": 100,
     "run_id": "FQT_Words_b50_a4_k50"
   },
@@ -420,7 +420,7 @@
     "radius": 8.14,
     "k": 100,
     "compdists": 1879.38,
-    "time_ms": 1.71,
+    "time_ms": 1.78,
     "n_queries": 100,
     "run_id": "FQT_Words_b50_a4_k100"
   },
@@ -437,7 +437,7 @@
     "radius": 9.75,
     "k": null,
     "compdists": 1983.89,
-    "time_ms": 0.56,
+    "time_ms": 0.57,
     "n_queries": 100,
     "run_id": "FQT_Words_b50_a4_sel0.32"
   },
@@ -454,7 +454,7 @@
     "radius": 9.02,
     "k": null,
     "compdists": 1958.27,
-    "time_ms": 0.54,
+    "time_ms": 0.56,
     "n_queries": 100,
     "run_id": "FQT_Words_b50_a4_sel0.16"
   },
@@ -539,7 +539,7 @@
     "radius": 6.68,
     "k": 10,
     "compdists": 1653.57,
-    "time_ms": 0.51,
+    "time_ms": 0.52,
     "n_queries": 100,
     "run_id": "FQT_Words_b20_a4_k10"
   },
@@ -590,7 +590,7 @@
     "radius": 8.14,
     "k": 100,
     "compdists": 1851.05,
-    "time_ms": 1.68,
+    "time_ms": 1.7,
     "n_queries": 100,
     "run_id": "FQT_Words_b20_a4_k100"
   },
@@ -607,7 +607,7 @@
     "radius": 9.75,
     "k": null,
     "compdists": 2000.5,
-    "time_ms": 0.56,
+    "time_ms": 0.55,
     "n_queries": 100,
     "run_id": "FQT_Words_b20_a4_sel0.32"
   },
@@ -641,7 +641,7 @@
     "radius": 8.4,
     "k": null,
     "compdists": 1946.18,
-    "time_ms": 0.53,
+    "time_ms": 0.54,
     "n_queries": 100,
     "run_id": "FQT_Words_b20_a4_sel0.08"
   },
@@ -658,7 +658,7 @@
     "radius": 7.98,
     "k": null,
     "compdists": 1901.25,
-    "time_ms": 0.51,
+    "time_ms": 0.52,
     "n_queries": 100,
     "run_id": "FQT_Words_b20_a4_sel0.04"
   },
@@ -675,7 +675,7 @@
     "radius": 7.59,
     "k": null,
     "compdists": 1898.03,
-    "time_ms": 0.51,
+    "time_ms": 0.52,
     "n_queries": 100,
     "run_id": "FQT_Words_b20_a4_sel0.02"
   },
@@ -709,7 +709,7 @@
     "radius": 6.69,
     "k": 10,
     "compdists": 1691.49,
-    "time_ms": 0.55,
+    "time_ms": 0.54,
     "n_queries": 100,
     "run_id": "FQT_Words_b10_a4_k10"
   },
@@ -743,7 +743,7 @@
     "radius": 7.68,
     "k": 50,
     "compdists": 1845.12,
-    "time_ms": 0.94,
+    "time_ms": 0.99,
     "n_queries": 100,
     "run_id": "FQT_Words_b10_a4_k50"
   },
@@ -760,7 +760,7 @@
     "radius": 8.14,
     "k": 100,
     "compdists": 1893.29,
-    "time_ms": 1.72,
+    "time_ms": 1.8,
     "n_queries": 100,
     "run_id": "FQT_Words_b10_a4_k100"
   },
@@ -777,7 +777,7 @@
     "radius": 9.75,
     "k": null,
     "compdists": 2102.69,
-    "time_ms": 0.59,
+    "time_ms": 0.63,
     "n_queries": 100,
     "run_id": "FQT_Words_b10_a4_sel0.32"
   },
@@ -794,7 +794,7 @@
     "radius": 9.02,
     "k": null,
     "compdists": 2080.68,
-    "time_ms": 0.58,
+    "time_ms": 0.62,
     "n_queries": 100,
     "run_id": "FQT_Words_b10_a4_sel0.16"
   },
@@ -811,7 +811,7 @@
     "radius": 8.4,
     "k": null,
     "compdists": 2036.11,
-    "time_ms": 0.56,
+    "time_ms": 0.58,
     "n_queries": 100,
     "run_id": "FQT_Words_b10_a4_sel0.08"
   },
@@ -828,7 +828,7 @@
     "radius": 7.98,
     "k": null,
     "compdists": 1999.64,
-    "time_ms": 0.55,
+    "time_ms": 0.56,
     "n_queries": 100,
     "run_id": "FQT_Words_b10_a4_sel0.04"
   },

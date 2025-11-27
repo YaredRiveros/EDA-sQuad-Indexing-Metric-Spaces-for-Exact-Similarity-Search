@@ -63,7 +63,7 @@
     "radius": 885.735,
     "k": 50,
     "compdists": 214.66,
-    "time_ms": 0.04,
+    "time_ms": 0.03,
     "n_queries": 100,
     "run_id": "FQT_LA_b100_a5_k50"
   },
@@ -590,7 +590,7 @@
     "radius": 1041.29,
     "k": 100,
     "compdists": 242.5,
-    "time_ms": 0.11,
+    "time_ms": 0.1,
     "n_queries": 100,
     "run_id": "FQT_LA_b10_a5_k100"
   },
